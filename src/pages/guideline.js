@@ -36,7 +36,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           WORDMARK
         </h2>
         <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:680px; margin-bottom:14px;">
-          바이탈뷰티 영문·국문 워드마크입니다. 형태는 그리드 데이터로만 축소·확대하고, 주변 1X 여백과 최소 크기를 지킵니다. 출처: VITALBEAUTIE BI Guidelines.
+          바이탈뷰티 영문·국문 워드마크입니다. 형태는 그리드 데이터로만 축소·확대하고, 주변 1X 여백과 최소 크기를 지킵니다.<br>출처: VITALBEAUTIE BI Guidelines.
         </div>
         <button type="button" id="btn-copy-wm-code" style="background:none; border:none; padding:0; font-size:11px; color:#7A808C; cursor:pointer; letter-spacing:0.5px;">
           이 디자인 코드 복사
