@@ -1,0 +1,359 @@
+/* ═══════════════════════════════════════════════════════════════
+   Brand Guideline Page: WORDMARK & MONOGRAM (SYMBOL)
+   VITALBEAUTIE 공식 BI Guidelines SVG / PDF 원천 에셋 기반
+   불필요한 박스·라인 없이 클린한 2단 에디토리얼 레이아웃
+   ═══════════════════════════════════════════════════════════════ */
+import { copyToClipboard } from '../utils/helpers.js';
+
+export function renderGuidelinePage(container, targetSection = 'wordmark') {
+  const showWordmark = targetSection !== 'monogram';
+  const showMonogram = targetSection === 'monogram';
+
+  const incItems = [
+    { label: '다른 서체를 적용하지 마시오.', img: '/assets/guidelines/wm_inc_1.png' },
+    { label: '테두리를 넣지 마시오.', img: '/assets/guidelines/wm_inc_2.png' },
+    { label: '색상을 변경하지 마시오.', img: '/assets/guidelines/wm_inc_3.png' },
+    { label: '비례를 왜곡하지 마시오.', img: '/assets/guidelines/wm_inc_4.png' },
+    { label: '임의의 문자와 함께 사용하지 마시오.', img: '/assets/guidelines/wm_inc_5.png' },
+    { label: '간격을 임의로 조정하지 마시오.', img: '/assets/guidelines/wm_inc_6.png' },
+    { label: '라인으로 처리하지 마시오.', img: '/assets/guidelines/wm_inc_7.png' },
+    { label: '기울여 사용하지 마시오.', img: '/assets/guidelines/wm_inc_8.png' },
+    { label: '효과를 적용하지 마시오.', img: '/assets/guidelines/wm_inc_9.png' },
+  ];
+
+  const grayscaleTop = ['#E2E3E5', '#C8C9CC', '#AFB1B4', '#949699', '#7B7D80'];
+  const grayscaleBot = ['#626467', '#4A4C4F', '#333538', '#1C1E21', '#050709'];
+
+  container.innerHTML = `
+    ${showWordmark ? `
+    <!-- ════════════════════════════════════════════════════════
+         SECTION 1: WORDMARK
+         ════════════════════════════════════════════════════════ -->
+    <section class="guide-section" id="section-wordmark" style="margin-bottom:80px; scroll-margin-top:80px;">
+      <!-- Top Intro Header -->
+      <div style="margin-bottom:48px;">
+        <h2 style="font-family:var(--font-en); font-size:26px; font-weight:300; letter-spacing:2.5px; margin:0 0 18px 0; text-transform:uppercase; color:#101820;">
+          WORDMARK
+        </h2>
+        <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:680px; margin-bottom:14px;">
+          바이탈뷰티 영문·국문 워드마크입니다. 형태는 그리드 데이터로만 축소·확대하고, 주변 1X 여백과 최소 크기를 지킵니다. 출처: VITALBEAUTIE BI Guidelines.
+        </div>
+        <button type="button" id="btn-copy-wm-code" style="background:none; border:none; padding:0; font-size:11px; color:#7A808C; cursor:pointer; letter-spacing:0.5px;">
+          이 디자인 코드 복사
+        </button>
+      </div>
+
+      <!-- Block 1: CORE WORDMARK -->
+      <div class="guide-block" id="block-wm-1">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">CORE WORDMARK</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            바이탈뷰티의 기본 영문·국문 로고입니다. 로고타입의 형태를 임의로 바꾸면 본래 이미지가 손상되므로 반드시 표준 형태를 사용합니다.
+            <br><br>
+            <span style="color:#7A808C; font-size:12.5px;">
+              원본은 BI 가이드 PDF 3쪽에서 추출했습니다. 벡터 AI 원본이 있으면 원천 데이터에 등록해 다운로드용으로 바꿀 수 있습니다.
+            </span>
+          </div>
+          <div style="margin-top:20px;">
+            <a href="/assets/guidelines/VITALBEAUTIE_Brand_Identity_Guidelines.pdf" download="VITALBEAUTIE_Brand_Identity_Guidelines.pdf" style="font-family:var(--font-en); font-size:10.5px; font-weight:600; letter-spacing:1.2px; color:#101820; text-decoration:none;">
+              BI GUIDELINES PDF ↓
+            </a>
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div>
+            <!-- Top Row: English & Korean side by side (Only vertical center divider) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr;">
+              <div style="padding:56px 32px 44px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #ECEEF2;">
+                <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE English" style="max-width:290px; width:82%; height:auto; display:block;" />
+                <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:#8C929E; margin-top:22px;">ENGLISH</span>
+              </div>
+              <div style="padding:56px 32px 44px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <img src="/assets/logos/vitalbeautie_wordmark_ko_black.png" alt="바이탈뷰티 Korean" style="max-width:190px; width:62%; height:auto; display:block;" />
+                <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:#8C929E; margin-top:22px;">KOREAN</span>
+              </div>
+            </div>
+            <!-- Bottom Row: White on VITALBEAUTIE BLACK -->
+            <div style="background:#101820; padding:54px 32px 42px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <img src="/assets/logos/vitalbeautie_wordmark_en_white.png" alt="White on VITALBEAUTIE BLACK" style="max-width:260px; width:65%; height:auto; display:block;" />
+              <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:rgba(255,255,255,0.48); margin-top:20px;">WHITE ON VITALBEAUTIE BLACK</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 2: EXCLUSION ZONE -->
+      <div class="guide-block" id="block-wm-2">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">EXCLUSION ZONE</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            로고 타입은 명확히 인식시키기 위해 <b>1X 이상</b>을 깨끗한 공간으로 확보해야 합니다. 회색 표시 영역이 최소 여백입니다.
+            <br><br>
+            <span style="color:#7A808C; font-size:12.5px;">
+              가시성·패밀리룩 도구는 이 기준인 워드마크 높이의 <b style="color:#101820;">100% (1X)</b>로 여백을 계산합니다.
+            </span>
+          </div>
+          <div style="margin-top:20px;">
+            <a href="#/gov/logo-fit" style="font-family:var(--font-en); font-size:10.5px; font-weight:600; letter-spacing:1.2px; color:#101820; text-decoration:none;">
+              BRAND VISIBILITY →
+            </a>
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:flex; flex-direction:column; gap:32px; align-items:center;">
+            <img src="/assets/guidelines/pdf_p5_grid.png" alt="Wordmark Grid System" style="max-width:680px; width:100%; height:auto; display:block;" />
+            <img src="/assets/guidelines/pdf_p5_clearspace.png" alt="Wordmark Clear Space 1X & 20mm" style="max-width:680px; width:100%; height:auto; display:block;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 3: MINIMUM SIZE -->
+      <div class="guide-block" id="block-wm-3">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">MINIMUM SIZE</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            영문 워드마크는 가로폭 기준 <b>20mm 이하</b>로 사용하지 않습니다. 국문 워드마크는 <b>30mm 이하</b>로 사용하지 않습니다. 그 이하에서는 가독성이 떨어지고 왜곡이 생길 수 있습니다.
+            <br><br>
+            <span style="color:#7A808C; font-size:12.5px;">
+              도구의 기본 판정은 영문 로고 20mm입니다. 국문 원고는 별도로 30mm를 적용해야 합니다.
+            </span>
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:grid; grid-template-columns:1fr 1fr;">
+            <div style="padding:36px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #ECEEF2;">
+              <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="English 20mm" style="height:16px; width:auto; display:block;" />
+              <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">English · 20mm</span>
+            </div>
+            <div style="padding:36px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <img src="/assets/logos/vitalbeautie_wordmark_ko_black.png" alt="Korean 30mm" style="height:18px; width:auto; display:block;" />
+              <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">Korean · 30mm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 4: BACKGROUND USAGE -->
+      <div class="guide-block" id="block-wm-4">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">BACKGROUND USAGE</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            한글·영문 로고는 <b>블랙과 화이트로만</b> 사용합니다. 색상 배경에서는 White Color를 사용합니다.
+            <br><br>
+            배경이 사진이거나 단색일 때는 Black 로고를, 짙은 명도나 복잡한 배경에서는 White Color 로고를 사용합니다. 자사몰 브랜드관 등 커뮤니케이션 툴은 Black 배경과 White Color 로고를 적용합니다.
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:flex; flex-direction:column; gap:28px;">
+            <img src="/assets/guidelines/pdf_p8_wm_bg_usage.png" alt="Background Usage Rules" style="width:100%; height:auto; display:block;" />
+
+            <!-- Flush 5x2 Grayscale Matrix -->
+            <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:0;">
+              ${grayscaleTop.map(bg => `
+                <div style="background:${bg}; height:118px; display:flex; align-items:center; justify-content:center;">
+                  <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="Black Wordmark" style="height:10px; width:auto; display:block;" />
+                </div>
+              `).join('')}
+              ${grayscaleBot.map(bg => `
+                <div style="background:${bg}; height:118px; display:flex; align-items:center; justify-content:center;">
+                  <img src="/assets/logos/vitalbeautie_wordmark_en_white.png" alt="White Wordmark" style="height:10px; width:auto; display:block;" />
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 5: INCORRECT USAGE -->
+      <div class="guide-block" id="block-wm-5">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">INCORRECT USAGE</h3>
+          <div class="text-block-content" style="font-size:12.5px; color:#222; line-height:1.95;">
+            • 다른 서체를 적용하지 마시오.<br>
+            • 테두리를 넣지 마시오.<br>
+            • 색상을 변경하지 마시오.<br>
+            • 비례를 왜곡하지 마시오.<br>
+            • 임의의 문자와 함께 사용하지 마시오.<br>
+            • 간격을 임의로 조정하지 마시오.<br>
+            • 라인으로 처리하지 마시오.<br>
+            • 기울여 사용하지 마시오.<br>
+            • 효과를 적용하지 마시오.
+            <br><br>
+            <span style="color:#7A808C; font-size:12px; line-height:1.65; display:block;">
+              로고타입을 사용하는 경우에는 그리드 데이터를 이용해 정확하게 축소·확대해야 합니다.
+            </span>
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px 16px;">
+            ${incItems.map(item => `
+              <div>
+                <img src="${item.img}" alt="${item.label}" style="width:100%; height:auto; display:block;" />
+                <div style="font-size:11px; color:#666B75; margin-top:6px;">${item.label}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </section>
+    ` : ''}
+
+    ${showMonogram ? `
+    <!-- ════════════════════════════════════════════════════════
+         SECTION 2: SYMBOL (MONOGRAM · LAB PROVEN)
+         ════════════════════════════════════════════════════════ -->
+    <section class="guide-section" id="section-monogram" style="margin-bottom:80px; scroll-margin-top:80px;">
+      <!-- Top Intro Header -->
+      <div style="margin-bottom:48px;">
+        <h2 style="font-family:var(--font-en); font-size:26px; font-weight:300; letter-spacing:2.5px; margin:0 0 18px 0; text-transform:uppercase; color:#101820;">
+          SYMBOL
+        </h2>
+        <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:680px; margin-bottom:14px;">
+          바이탈뷰티의 기본 심볼 LAB PROVEN입니다. 최신의 웰니스가 바이탈뷰티랩에서 과학적으로 검증되어 완성된다는 메시지를 담습니다.
+        </div>
+        <button type="button" id="btn-copy-sym-code" style="background:none; border:none; padding:0; font-size:11px; color:#7A808C; cursor:pointer; letter-spacing:0.5px;">
+          이 디자인 코드 복사
+        </button>
+      </div>
+
+      <!-- Block 1: CORE SYMBOL -->
+      <div class="guide-block" id="block-mono-1">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">CORE SYMBOL</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            바이탈뷰티가 추구하는 최신의 웰니스(Lab-proven High Performance Wellness)는 바이탈뷰티랩에서 과학적으로 검증되어 완성된다는 메시지를 담습니다.
+            <br><br>
+            <span style="color:#7A808C; font-size:12.5px;">
+              링 카피: Lab Solution by V=B Laboratory · cooperation development
+            </span>
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center;">
+            <div style="padding:44px 24px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+              <img src="/assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN Black" style="width:176px; height:176px; display:block;" />
+            </div>
+            <div style="padding:44px 24px; display:flex; align-items:center; justify-content:center; background:#101820; min-height:264px;">
+              <img src="/assets/logos/vitalbeautie_monogram_lab_proven_white.png" alt="LAB PROVEN White" style="width:176px; height:176px; display:block;" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 2: SYSTEM -->
+      <div class="guide-block" id="block-mono-2">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">SYSTEM</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            심볼마크의 시각상징 색상은 로고와 같은 VITALBEAUTIE BLACK입니다. 워드마크와 함께 쓰거나, 패키지·사진 위에서는 White color 배경 심볼을 사용합니다.
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:flex; align-items:center; justify-content:center; gap:36px; padding:36px 0;">
+            <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE" style="height:17px; width:auto; display:block;" />
+            <img src="/assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN" style="width:82px; height:82px; display:block;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 3: PLACEMENT GUIDE -->
+      <div class="guide-block" id="block-mono-3">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">PLACEMENT GUIDE</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            제품 패키지에 적용할 경우 White color 배경 심볼을 사용합니다.
+            <br><br>
+            배경이 사진일 때 짙은 명도나 단색이면 White Color 배경 심볼을, 복잡한 사진이면 면적을 확보한 뒤 로고를 적용합니다.
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <img src="/assets/guidelines/pdf_p17_sym_exception.png" alt="Symbol Placement Guide" style="width:100%; height:auto; display:block;" />
+        </div>
+      </div>
+
+      <!-- Block 4: EXCLUSION ZONE -->
+      <div class="guide-block" id="block-mono-4">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">EXCLUSION ZONE</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            정해진 형태의 변형을 지양하며, 시각상징이 다른 요소의 침해 없이 전달되도록 최소 여백을 지킵니다. 인쇄 최소 크기는 15mm입니다.
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <img src="/assets/guidelines/pdf_p13_sym_exclusion.png" alt="Symbol Exclusion Zone" style="width:100%; height:auto; display:block;" />
+        </div>
+      </div>
+
+      <!-- Block 5: MINIMUM SIZE -->
+      <div class="guide-block" id="block-mono-5">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">MINIMUM SIZE</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            로고의 가독성 확보를 위해 최소 크기 15mm보다 줄여서 사용하지 않습니다.
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:flex; align-items:center; gap:22px; padding:18px 0 18px 40px;">
+            <img src="/assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="Printed 15mm" style="width:58px; height:58px; display:block;" />
+            <div style="width:1px; height:22px; background:#ECEEF2;"></div>
+            <span style="font-family:var(--font-en); font-size:12px; color:#101820;">Printed: 15mm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 6: INCORRECT USAGE -->
+      <div class="guide-block" id="block-mono-6">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">INCORRECT USAGE</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.95;">
+            • 색상을 변경하지 마시오.<br>
+            • 비례를 왜곡하지 마시오.<br>
+            • 기울여 사용하지 마시오.<br>
+            • 문자를 변경하지 마시오.
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <img src="/assets/guidelines/pdf_p14_sym_incorrect.png" alt="Symbol Incorrect Usage" style="width:100%; height:auto; display:block;" />
+        </div>
+      </div>
+
+      <!-- Block 7: BACKGROUND -->
+      <div class="guide-block" id="block-mono-7">
+        <div class="block-text-column">
+          <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">BACKGROUND</h3>
+          <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
+            심볼 색상은 VITALBEAUTIE BLACK과 White입니다. 배경 명도에 따라 블랙 심볼 또는 화이트 배경 심볼을 고릅니다.
+          </div>
+        </div>
+
+        <div class="block-visual-column">
+          <div style="display:flex; flex-direction:column; gap:36px;">
+            <img src="/assets/guidelines/pdf_p15_sym_color.png" alt="Symbol Color" style="width:100%; height:auto; display:block;" />
+            <img src="/assets/guidelines/pdf_p16_sym_bg_usage.png" alt="Symbol Background Usage" style="width:100%; height:auto; display:block;" />
+          </div>
+        </div>
+      </div>
+    </section>
+    ` : ''}
+  `;
+
+  const copyWmBtn = container.querySelector('#btn-copy-wm-code');
+  if (copyWmBtn) {
+    copyWmBtn.onclick = () => copyToClipboard('VITALBEAUTIE WORDMARK · Clearspace 1X · Min 20mm(EN)/30mm(KO) · #101820 / #FFFFFF');
+  }
+  const copySymBtn = container.querySelector('#btn-copy-sym-code');
+  if (copySymBtn) {
+    copySymBtn.onclick = () => copyToClipboard('VITALBEAUTIE SYMBOL (LAB PROVEN) · Min 15mm · #101820 / #FFFFFF');
+  }
+}

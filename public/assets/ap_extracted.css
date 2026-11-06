@@ -1,0 +1,1039 @@
+.guide-block, .visual-image-frame {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.block-header-full-width,
+    .block-text-column[style*="margin-bottom"] {
+        margin-bottom: 6px !important;
+    }
+    .brand-colors-showcase {
+        gap: 12px !important;
+    }
+    .brand-colors-showcase .color-group-title {
+        margin-bottom: 6px !important;
+    }
+    .brand-colors-showcase .color-cards-grid {
+        gap: 8px !important;
+    }
+
+    /* Interactive wordmark preview sizing adjustments on mobile */
+    .wordmark-preview-area {
+        padding: 38px 20px !important;
+    }
+    .slider-control-inner {
+        max-width: 100% !important;
+    }
+    #block-block_wm_2_2 .visual-image-svg-box {
+        padding: 12px 0 !important; /* Align to the left on mobile by removing padding */
+    }
+
+    /* Interactive controls responsive layout on mobile (kept in single row, with larger click target) */
+    .interactive-controls {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+    .interactive-controls .slider-control-container {
+        flex: 1 !important;
+        width: auto !important;
+    }
+    .interactive-controls .action-buttons-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+
+
+
+
+    /* Prevent iOS auto-zoom on input elements by forcing at least 16px font size */
+    input, select, textarea, .header-search-input, .search-bar-input {
+        font-size: 16px !important;
+    }
+
+    /* Wordmark Minimum Size responsive layout on mobile */
+    .minimum-size-container {
+        height: auto !important;
+    }
+    .minimum-size-text {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        white-space: normal !important;
+        line-height: 1.1 !important;
+        gap: 2px !important;
+    }
+    .minimum-size-text .ms-divider {
+        display: none !important;
+    }
+
+
+
+    /* CORE WORDMARK and CORE MONOGRAM occupies larger width on mobile with centering */
+    #block-block_wm_1 .visual-image-frame img {
+        width: 125% !important;
+        max-width: 125% !important;
+        display: block !important;
+        margin: 0 -12.5% !important;
+    }
+    #block-block_mono_1 .visual-image-frame img {
+        width: 90% !important;
+        max-width: 90% !important;
+        display: block !important;
+        margin: 0 auto !important;
+        translate: 6.07% 0 !important;
+    }
+
+
+}
+
+.block-title {
+    font-family: var(--font-en);
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--ap-white);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 4px;
+}
+
+.text-block-content {
+    font-size: 1.08rem; /* Original size for Korean page */
+    color: var(--ap-silver);
+    line-height: 1.6;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+.visual-image-frame {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.interactive-wordmark-frame,
+    .wordmark-preview-area {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .text-block-content,
+    .content-paragraph {
+        word-break: keep-all !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .content-header {
+        display: flex;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        padding: 0 13px 0 16px; /* Aligned left padding with content area (16px), right padding (13px) for exact visual 16px alignment of hamburger */
+        z-index: 1005;
+        margin-bottom: 0;
+        margin-left: 0;
+        margin-right: 0;
+        height: var(--header-height);
+        border-bottom: 1px solid var(--ap-border);
+    }
+    
+    .mobile-header-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+    
+    .mobile-logo {
+        cursor: pointer;
+        display: flex;
+        align-items: baseline;
+        gap: 8px; /* Reduced gap to 80% (from 10px) */
+    }
+    
+    .mobile-header-subtitle {
+        font-family: var(--font-en), sans-serif;
+        font-size: 15px;
+        font-weight: 400;
+        color: var(--ap-white);
+        letter-spacing: 1.5px; /* Reduced letter-spacing to 1.5px */
+        line-height: 1;
+        text-transform: uppercase;
+        margin-bottom: 0;
+        white-space: nowrap;
+        position: relative;
+        bottom: 2px;
+    }
+    
+    .mobile-actions {
+        display: flex;
+        align-items: center;
+        gap: 7px; /* Spacing between EN button and hamburger menu (7px) */
+    }
+    
+    .mobile-actions::before {
+        content: "";
+        display: block;
+        width: 1px;
+        height: 24px;
+        background-color: rgba(0, 0, 0, 0.2);
+        margin-right: 3px; /* Flex gap (7px) + margin-right (3px) = 10px spacing to EN button */
+        margin-left: 0px;
+    }
+    
+    .header-action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--ap-silver);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-smooth);
+    }
+    
+    #header-search-toggle {
+        width: 22px; /* Reduced width for tighter spacing */
+        height: 34px;
+        border: none;
+        background-color: transparent;
+        color: var(--ap-gray); /* Matches desktop search icon color (#555e70) */
+        padding: 0;
+    }
+    
+    #header-lang-toggle-btn {
+        width: 22px; /* Reduced width for tighter spacing */
+        height: 34px;
+        border: none;
+        background-color: transparent;
+        font-family: var(--font-en);
+        font-size: 1.04rem; /* 130% of original 0.8rem */
+        font-weight: 400;
+        letter-spacing: 0.5px;
+        padding: 0;
+        color: var(--ap-silver);
+    }
+    
+    #header-search-toggle:hover,
+    #header-lang-toggle-btn:hover {
+        color: #000000;
+    }
+    
+    .hamburger-btn {
+        width: 22px; /* Reduced width for tighter spacing */
+        height: 34px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        border: none; /* Removed border box */
+        background-color: transparent;
+        padding: 0;
+    }
+    
+    .hamburger-btn span {
+        display: block;
+        width: 16px;
+        height: 1.5px;
+        background-color: var(--ap-silver);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+    
+    .hamburger-btn.open span:nth-child(1) {
+        transform: translateY(5.5px) rotate(45deg);
+    }
+    
+    .hamburger-btn.open span:nth-child(2) {
+        opacity: 0;
+    }
+    
+    .hamburger-btn.open span:nth-child(3) {
+        transform: translateY(-5.5px) rotate(-45deg);
+    }
+    
+    .hamburger-btn:hover {
+        opacity: 0.7; /* Gentle opacity feedback instead of border hover */
+    }
+    
+    .mobile-menu-dropdown {
+        display: block;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        border-bottom: 1px solid var(--ap-border);
+        z-index: 1000;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, visibility 0.35s;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+    
+    .mobile-menu-dropdown.active {
+        max-height: 460px; /* Increased from 380px to accommodate search bar */
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .mobile-dropdown-search-container {
+        position: relative;
+        margin: 10px 19px 4px 19px; /* Increased margin by 3px on both sides */
+    }
+    
+    .mobile-dropdown-search-input {
+        width: 100%;
+        height: 34px;
+        padding: 0 28px 0 28px; /* Left padding for icon, right padding for clear button */
+        font-family: var(--font-en);
+        font-size: 16px !important; /* Exactly 16px to prevent iOS Safari auto-zoom on focus */
+        letter-spacing: 1px;
+        border: 1px solid var(--ap-border);
+        background: transparent;
+        outline: none;
+        color: var(--ap-silver);
+        box-sizing: border-box;
+        transition: var(--transition-smooth);
+    }
+    
+    .mobile-dropdown-search-input:focus {
+        border-color: var(--ap-silver);
+    }
+    
+    .mobile-dropdown-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--ap-gray);
+        transition: var(--transition-smooth);
+    }
+    
+    .mobile-dropdown-search-clear-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--ap-gray);
+        font-size: 0.85rem;
+        display: none; /* Controlled by JS */
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .mobile-dropdown-search-clear-btn:hover {
+        color: #000000;
+    }
+    
+    .mobile-menu-nav {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 24px 20px 24px; /* Reduced top padding slightly for balance with search */
+        gap: 12px;
+    }
+    
+    .mobile-menu-link {
+        display: block;
+        font-family: var(--font-en);
+        font-size: 1.05rem;
+        color: var(--ap-gray);
+        text-decoration: none;
+        text-transform: uppercase;
+        font-weight: 400;
+        letter-spacing: 1.5px;
+        padding: 6px 0;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+        text-align: left;
+        transform-origin: left center;
+    }
+    
+    .mobile-menu-link:hover,
+    .mobile-menu-link.active {
+        color: #000000 !important;
+        transform: scale(1.03);
+    }
+    
+    .main-page-title-container {
+        display: none !important;
+    }
+    
+    .main-page-title {
+        font-size: 1.8rem;
+        line-height: 1.4;
+        letter-spacing: 3px;
+        position: static;
+        top: auto;
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+    }
+    
+    .content-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .footer-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .footer-actions .btn {
+        flex: 1;
+    }
+
+    /* 50% spacing optimization for mobile viewport */
+    .guide-section {
+        margin-bottom: 52px !important;
+    }
+    .guide-section > div:first-of-type {
+        margin-bottom: 2.6px !important;
+    }
+    .guide-block:first-of-type {
+        padding-top: 7.8px !important;
+    }
+    .guide-block.block-full-width:first-of-type {
+        padding-top: 3.9px !important;
+    }
+    .block-title {
+        margin-bottom: 4.8px !important;
+        padding-bottom: 1.5px !important;
+    }
+    .guide-block {
+        padding: 38.2px 0 !important;
+        gap: 9px !important;
+    }
+    .content-paragraph {
+        margin-bottom: 0.72rem !important;
+    }
+    .guide-block.block-full-width {
+        padding: 19.1px 0 !important;
+    }
+    .guide-block[style*="padding"] {
+        padding: 38.2px 0 !important;
+    }
+    .block-header-full-width,
+    .block-text-column[style*="margin-bottom"] {
+        margin-bottom: 6px !important;
+    }
+    .brand-colors-showcase {
+        gap: 12px !important;
+    }
+    .brand-colors-showcase .color-group-title {
+        margin-bottom: 6px !important;
+    }
+    .brand-colors-showcase .color-cards-grid {
+        gap: 8px !important;
+    }
+
+    /* Interactive wordmark preview sizing adjustments on mobile */
+    .wordmark-preview-area {
+        padding: 38px 20px !important;
+    }
+    .slider-control-inner {
+        max-width: 100% !important;
+    }
+    #block-block_wm_2_2 .visual-image-svg-box {
+        padding: 12px 0 !important; /* Align to the left on mobile by removing padding */
+    }
+
+    /* Interactive controls responsive layout on mobile (kept in single row, with larger click target) */
+    .interactive-controls {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+    .interactive-controls .slider-control-container {
+        flex: 1 !important;
+        width: auto !important;
+    }
+    .interactive-controls .action-buttons-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+
+
+
+
+    /* Prevent iOS auto-zoom on input elements by forcing at least 16px font size */
+    input, select, textarea, .header-search-input, .search-bar-input {
+        font-size: 16px !important;
+    }
+
+    /* Wordmark Minimum Size responsive layout on mobile */
+    .minimum-size-container {
+        height: auto !important;
+    }
+    .minimum-size-text {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        white-space: normal !important;
+        line-height: 1.1 !important;
+        gap: 2px !important;
+    }
+    .minimum-size-text .ms-divider {
+        display: none !important;
+    }
+
+
+
+    /* CORE WORDMARK and CORE MONOGRAM occupies larger width on mobile with centering */
+    #block-block_wm_1 .visual-image-frame img {
+        width: 125% !important;
+        max-width: 125% !important;
+        display: block !important;
+        margin: 0 -12.5% !important;
+    }
+    #block-block_mono_1 .visual-image-frame img {
+        width: 90% !important;
+        max-width: 90% !important;
+        display: block !important;
+        margin: 0 auto !important;
+        translate: 6.07% 0 !important;
+    }
+
+
+}
+
+.wordmark-preview-area {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .text-block-content,
+    .content-paragraph {
+        word-break: keep-all !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .content-header {
+        display: flex;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        padding: 0 13px 0 16px; /* Aligned left padding with content area (16px), right padding (13px) for exact visual 16px alignment of hamburger */
+        z-index: 1005;
+        margin-bottom: 0;
+        margin-left: 0;
+        margin-right: 0;
+        height: var(--header-height);
+        border-bottom: 1px solid var(--ap-border);
+    }
+    
+    .mobile-header-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+    
+    .mobile-logo {
+        cursor: pointer;
+        display: flex;
+        align-items: baseline;
+        gap: 8px; /* Reduced gap to 80% (from 10px) */
+    }
+    
+    .mobile-header-subtitle {
+        font-family: var(--font-en), sans-serif;
+        font-size: 15px;
+        font-weight: 400;
+        color: var(--ap-white);
+        letter-spacing: 1.5px; /* Reduced letter-spacing to 1.5px */
+        line-height: 1;
+        text-transform: uppercase;
+        margin-bottom: 0;
+        white-space: nowrap;
+        position: relative;
+        bottom: 2px;
+    }
+    
+    .mobile-actions {
+        display: flex;
+        align-items: center;
+        gap: 7px; /* Spacing between EN button and hamburger menu (7px) */
+    }
+    
+    .mobile-actions::before {
+        content: "";
+        display: block;
+        width: 1px;
+        height: 24px;
+        background-color: rgba(0, 0, 0, 0.2);
+        margin-right: 3px; /* Flex gap (7px) + margin-right (3px) = 10px spacing to EN button */
+        margin-left: 0px;
+    }
+    
+    .header-action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--ap-silver);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-smooth);
+    }
+    
+    #header-search-toggle {
+        width: 22px; /* Reduced width for tighter spacing */
+        height: 34px;
+        border: none;
+        background-color: transparent;
+        color: var(--ap-gray); /* Matches desktop search icon color (#555e70) */
+        padding: 0;
+    }
+    
+    #header-lang-toggle-btn {
+        width: 22px; /* Reduced width for tighter spacing */
+        height: 34px;
+        border: none;
+        background-color: transparent;
+        font-family: var(--font-en);
+        font-size: 1.04rem; /* 130% of original 0.8rem */
+        font-weight: 400;
+        letter-spacing: 0.5px;
+        padding: 0;
+        color: var(--ap-silver);
+    }
+    
+    #header-search-toggle:hover,
+    #header-lang-toggle-btn:hover {
+        color: #000000;
+    }
+    
+    .hamburger-btn {
+        width: 22px; /* Reduced width for tighter spacing */
+        height: 34px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        border: none; /* Removed border box */
+        background-color: transparent;
+        padding: 0;
+    }
+    
+    .hamburger-btn span {
+        display: block;
+        width: 16px;
+        height: 1.5px;
+        background-color: var(--ap-silver);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+    
+    .hamburger-btn.open span:nth-child(1) {
+        transform: translateY(5.5px) rotate(45deg);
+    }
+    
+    .hamburger-btn.open span:nth-child(2) {
+        opacity: 0;
+    }
+    
+    .hamburger-btn.open span:nth-child(3) {
+        transform: translateY(-5.5px) rotate(-45deg);
+    }
+    
+    .hamburger-btn:hover {
+        opacity: 0.7; /* Gentle opacity feedback instead of border hover */
+    }
+    
+    .mobile-menu-dropdown {
+        display: block;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        border-bottom: 1px solid var(--ap-border);
+        z-index: 1000;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, visibility 0.35s;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+    
+    .mobile-menu-dropdown.active {
+        max-height: 460px; /* Increased from 380px to accommodate search bar */
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .mobile-dropdown-search-container {
+        position: relative;
+        margin: 10px 19px 4px 19px; /* Increased margin by 3px on both sides */
+    }
+    
+    .mobile-dropdown-search-input {
+        width: 100%;
+        height: 34px;
+        padding: 0 28px 0 28px; /* Left padding for icon, right padding for clear button */
+        font-family: var(--font-en);
+        font-size: 16px !important; /* Exactly 16px to prevent iOS Safari auto-zoom on focus */
+        letter-spacing: 1px;
+        border: 1px solid var(--ap-border);
+        background: transparent;
+        outline: none;
+        color: var(--ap-silver);
+        box-sizing: border-box;
+        transition: var(--transition-smooth);
+    }
+    
+    .mobile-dropdown-search-input:focus {
+        border-color: var(--ap-silver);
+    }
+    
+    .mobile-dropdown-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--ap-gray);
+        transition: var(--transition-smooth);
+    }
+    
+    .mobile-dropdown-search-clear-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--ap-gray);
+        font-size: 0.85rem;
+        display: none; /* Controlled by JS */
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .mobile-dropdown-search-clear-btn:hover {
+        color: #000000;
+    }
+    
+    .mobile-menu-nav {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 24px 20px 24px; /* Reduced top padding slightly for balance with search */
+        gap: 12px;
+    }
+    
+    .mobile-menu-link {
+        display: block;
+        font-family: var(--font-en);
+        font-size: 1.05rem;
+        color: var(--ap-gray);
+        text-decoration: none;
+        text-transform: uppercase;
+        font-weight: 400;
+        letter-spacing: 1.5px;
+        padding: 6px 0;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+        text-align: left;
+        transform-origin: left center;
+    }
+    
+    .mobile-menu-link:hover,
+    .mobile-menu-link.active {
+        color: #000000 !important;
+        transform: scale(1.03);
+    }
+    
+    .main-page-title-container {
+        display: none !important;
+    }
+    
+    .main-page-title {
+        font-size: 1.8rem;
+        line-height: 1.4;
+        letter-spacing: 3px;
+        position: static;
+        top: auto;
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+    }
+    
+    .content-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .footer-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .footer-actions .btn {
+        flex: 1;
+    }
+
+    /* 50% spacing optimization for mobile viewport */
+    .guide-section {
+        margin-bottom: 52px !important;
+    }
+    .guide-section > div:first-of-type {
+        margin-bottom: 2.6px !important;
+    }
+    .guide-block:first-of-type {
+        padding-top: 7.8px !important;
+    }
+    .guide-block.block-full-width:first-of-type {
+        padding-top: 3.9px !important;
+    }
+    .block-title {
+        margin-bottom: 4.8px !important;
+        padding-bottom: 1.5px !important;
+    }
+    .guide-block {
+        padding: 38.2px 0 !important;
+        gap: 9px !important;
+    }
+    .content-paragraph {
+        margin-bottom: 0.72rem !important;
+    }
+    .guide-block.block-full-width {
+        padding: 19.1px 0 !important;
+    }
+    .guide-block[style*="padding"] {
+        padding: 38.2px 0 !important;
+    }
+    .block-header-full-width,
+    .block-text-column[style*="margin-bottom"] {
+        margin-bottom: 6px !important;
+    }
+    .brand-colors-showcase {
+        gap: 12px !important;
+    }
+    .brand-colors-showcase .color-group-title {
+        margin-bottom: 6px !important;
+    }
+    .brand-colors-showcase .color-cards-grid {
+        gap: 8px !important;
+    }
+
+    /* Interactive wordmark preview sizing adjustments on mobile */
+    .wordmark-preview-area {
+        padding: 38px 20px !important;
+    }
+    .slider-control-inner {
+        max-width: 100% !important;
+    }
+    #block-block_wm_2_2 .visual-image-svg-box {
+        padding: 12px 0 !important; /* Align to the left on mobile by removing padding */
+    }
+
+    /* Interactive controls responsive layout on mobile (kept in single row, with larger click target) */
+    .interactive-controls {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+    .interactive-controls .slider-control-container {
+        flex: 1 !important;
+        width: auto !important;
+    }
+    .interactive-controls .action-buttons-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+
+
+
+
+    /* Prevent iOS auto-zoom on input elements by forcing at least 16px font size */
+    input, select, textarea, .header-search-input, .search-bar-input {
+        font-size: 16px !important;
+    }
+
+    /* Wordmark Minimum Size responsive layout on mobile */
+    .minimum-size-container {
+        height: auto !important;
+    }
+    .minimum-size-text {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        white-space: normal !important;
+        line-height: 1.1 !important;
+        gap: 2px !important;
+    }
+    .minimum-size-text .ms-divider {
+        display: none !important;
+    }
+
+
+
+    /* CORE WORDMARK and CORE MONOGRAM occupies larger width on mobile with centering */
+    #block-block_wm_1 .visual-image-frame img {
+        width: 125% !important;
+        max-width: 125% !important;
+        display: block !important;
+        margin: 0 -12.5% !important;
+    }
+    #block-block_mono_1 .visual-image-frame img {
+        width: 90% !important;
+        max-width: 90% !important;
+        display: block !important;
+        margin: 0 auto !important;
+        translate: 6.07% 0 !important;
+    }
+
+
+}
+
+.interactive-controls {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+    .interactive-controls .slider-control-container {
+        flex: 1 !important;
+        width: auto !important;
+    }
+    .interactive-controls .action-buttons-container {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+
+
+
+
+    /* Prevent iOS auto-zoom on input elements by forcing at least 16px font size */
+    input, select, textarea, .header-search-input, .search-bar-input {
+        font-size: 16px !important;
+    }
+
+    /* Wordmark Minimum Size responsive layout on mobile */
+    .minimum-size-container {
+        height: auto !important;
+    }
+    .minimum-size-text {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        white-space: normal !important;
+        line-height: 1.1 !important;
+        gap: 2px !important;
+    }
+    .minimum-size-text .ms-divider {
+        display: none !important;
+    }
+
+
+
+    /* CORE WORDMARK and CORE MONOGRAM occupies larger width on mobile with centering */
+    #block-block_wm_1 .visual-image-frame img {
+        width: 125% !important;
+        max-width: 125% !important;
+        display: block !important;
+        margin: 0 -12.5% !important;
+    }
+    #block-block_mono_1 .visual-image-frame img {
+        width: 90% !important;
+        max-width: 90% !important;
+        display: block !important;
+        margin: 0 auto !important;
+        translate: 6.07% 0 !important;
+    }
+
+
+}
+
+.interactive-control-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 0px !important; /* Sharp edges like original download badge */
+    border: 1px solid var(--control-btn-border, var(--ap-border)) !important;
+    background-color: var(--control-btn-bg, var(--ap-bg-card)) !important;
+    color: var(--control-text-color, var(--ap-white)) !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease !important;
+    opacity: 0.9;
+    box-sizing: border-box;
+}
+
+.minimum-size-container {
+        height: auto !important;
+    }
+    .minimum-size-text {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        white-space: normal !important;
+        line-height: 1.1 !important;
+        gap: 2px !important;
+    }
+    .minimum-size-text .ms-divider {
+        display: none !important;
+    }
+
+
+
+    /* CORE WORDMARK and CORE MONOGRAM occupies larger width on mobile with centering */
+    #block-block_wm_1 .visual-image-frame img {
+        width: 125% !important;
+        max-width: 125% !important;
+        display: block !important;
+        margin: 0 -12.5% !important;
+    }
+    #block-block_mono_1 .visual-image-frame img {
+        width: 90% !important;
+        max-width: 90% !important;
+        display: block !important;
+        margin: 0 auto !important;
+        translate: 6.07% 0 !important;
+    }
+
+
+}
+
+.incorrect-warning-callout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: rgba(224, 108, 117, 0.06); /* Soft red background matching var(--ap-error) */
+    border-left: 3px solid var(--ap-error);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    width: 100%;
+}
