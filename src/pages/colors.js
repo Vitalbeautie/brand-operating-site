@@ -60,7 +60,16 @@ export function renderColorPage(container) {
   }
 
   container.innerHTML = `
-    <section class="guide-section" id="section-colors" style="margin-bottom:80px;">
+    <section class="guide-section" id="section-colors" style="margin-bottom:80px; scroll-margin-top:80px;">
+      <!-- Top Intro Header -->
+      <div style="margin-bottom:48px;">
+        <h2 style="font-family:var(--font-en); font-size:26px; font-weight:300; letter-spacing:2.5px; margin:0 0 18px 0; text-transform:uppercase; color:#101820;">
+          BRAND COLOR
+        </h2>
+        <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:680px; margin-bottom:14px;">
+          바이탈뷰티 주요 아이덴티티 색상 및 제품 라인업별 팬톤 매핑입니다.
+        </div>
+      </div>
       <!-- Block 1: MAIN COLORS -->
       <div class="guide-block" id="block-color-main">
         <div class="block-text-column">

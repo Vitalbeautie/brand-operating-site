@@ -1,13 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════
-   Brand Guideline Page: WORDMARK & MONOGRAM (SYMBOL)
-   VITALBEAUTIE 공식 BI Guidelines SVG / PDF 원천 에셋 기반
-   불필요한 박스·라인 없이 클린한 2단 에디토리얼 레이아웃
+   Brand Guideline Page: DESIGN GUIDE UNIFIED SCROLL
+   WORDMARK → MONOGRAM → SLOGAN → BRAND COLOR → TYPOGRAPHY
+   전체 디자인 가이드를 스크롤로 한 번에 탐색하며
+   스크롤 위치에 따라 사이드바 해당 항목이 블랙+볼드로 실시간 하이라이트
    ═══════════════════════════════════════════════════════════════ */
 import { copyToClipboard } from '../utils/helpers.js';
+import { renderStrategyPage } from './strategy.js';
+import { renderColorPage } from './colors.js';
+import { renderTypographyPage } from './typography.js';
+import { setDesignGuideScrollActive } from '../components/sidebar.js';
 
 export function renderGuidelinePage(container, targetSection = 'wordmark') {
-  const showWordmark = targetSection !== 'monogram';
-  const showMonogram = targetSection === 'monogram';
 
   const incItems = [
     { label: '다른 서체를 적용하지 마시오.', img: '/assets/guidelines/wm_inc_1.png' },
@@ -25,7 +28,6 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
   const grayscaleBot = ['#626467', '#4A4C4F', '#333538', '#1C1E21', '#050709'];
 
   container.innerHTML = `
-    ${showWordmark ? `
     <!-- ════════════════════════════════════════════════════════
          SECTION 1: WORDMARK
          ════════════════════════════════════════════════════════ -->
@@ -201,9 +203,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         </div>
       </div>
     </section>
-    ` : ''}
 
-    ${showMonogram ? `
     <!-- ════════════════════════════════════════════════════════
          SECTION 2: SYMBOL (MONOGRAM · LAB PROVEN)
          ════════════════════════════════════════════════════════ -->
@@ -345,9 +345,34 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         </div>
       </div>
     </section>
-    ` : ''}
+
+    <!-- ════════════════════════════════════════════════════════
+         SECTION 3: SLOGAN
+         ════════════════════════════════════════════════════════ -->
+    <div id="dg-mount-slogan"></div>
+
+    <!-- ════════════════════════════════════════════════════════
+         SECTION 4: BRAND COLOR
+         ════════════════════════════════════════════════════════ -->
+    <div id="dg-mount-colors"></div>
+
+    <!-- ════════════════════════════════════════════════════════
+         SECTION 5: TYPOGRAPHY
+         ════════════════════════════════════════════════════════ -->
+    <div id="dg-mount-typography"></div>
   `;
 
+  // Mount Slogan, Color, Typography sections seamlessly
+  const sloganMount = container.querySelector('#dg-mount-slogan');
+  if (sloganMount) renderStrategyPage(sloganMount);
+
+  const colorsMount = container.querySelector('#dg-mount-colors');
+  if (colorsMount) renderColorPage(colorsMount);
+
+  const typoMount = container.querySelector('#dg-mount-typography');
+  if (typoMount) renderTypographyPage(typoMount);
+
+  // Copy code buttons
   const copyWmBtn = container.querySelector('#btn-copy-wm-code');
   if (copyWmBtn) {
     copyWmBtn.onclick = () => copyToClipboard('VITALBEAUTIE WORDMARK · Clearspace 1X · Min 20mm(EN)/30mm(KO) · #101820 / #FFFFFF');
@@ -356,4 +381,105 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
   if (copySymBtn) {
     copySymBtn.onclick = () => copyToClipboard('VITALBEAUTIE SYMBOL (LAB PROVEN) · Min 15mm · #101820 / #FFFFFF');
   }
+
+  // Setup Scroll-Spy for live black+bold active highlighting
+  setupDesignGuideScrollSpy();
+
+  // Initial scroll if a specific section was targeted
+  const targetIdMap = {
+    wordmark: 'section-wordmark',
+    monogram: 'section-monogram',
+    slogan: 'section-slogan',
+    colors: 'section-colors',
+    typography: 'section-typography',
+  };
+  const targetId = targetIdMap[targetSection];
+  if (targetId && targetSection !== 'wordmark') {
+    setTimeout(() => {
+      const el = document.getElementById(targetId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 90);
+  } else if (targetSection === 'wordmark') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+/**
+ * Scroll-Spy: 스크롤 위치를 추적하여
+ * 현재 화면에 보이는 Design Guide 섹션 및 서브 블록을
+ * 사이드바에 실시간으로 블랙 글씨 + 볼드 처리 (#000000, 700)
+ */
+function setupDesignGuideScrollSpy() {
+  if (window.__dgScrollSpy) {
+    window.removeEventListener('scroll', window.__dgScrollSpy);
+  }
+
+  const SECTIONS = [
+    { id: 'section-wordmark', path: '/guideline/wordmark' },
+    { id: 'section-monogram', path: '/guideline/monogram' },
+    { id: 'section-slogan', path: '/strategy' },
+    { id: 'section-colors', path: '/colors' },
+    { id: 'section-typography', path: '/typography' },
+  ];
+
+  const BLOCKS = [
+    { id: 'block-wm-1', path: '/guideline/wordmark' },
+    { id: 'block-wm-2', path: '/guideline/wordmark' },
+    { id: 'block-wm-3', path: '/guideline/wordmark' },
+    { id: 'block-wm-4', path: '/guideline/wordmark' },
+    { id: 'block-wm-5', path: '/guideline/wordmark' },
+    { id: 'block-mono-1', path: '/guideline/monogram' },
+    { id: 'block-mono-2', path: '/guideline/monogram' },
+    { id: 'block-mono-3', path: '/guideline/monogram' },
+    { id: 'block-mono-4', path: '/guideline/monogram' },
+    { id: 'block-mono-5', path: '/guideline/monogram' },
+    { id: 'block-mono-6', path: '/guideline/monogram' },
+    { id: 'block-mono-7', path: '/guideline/monogram' },
+  ];
+
+  let ticking = false;
+  const onScroll = () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const triggerPoint = 160;
+        let activePath = '/guideline/wordmark';
+
+        // Check if user scrolled near the bottom of the page
+        const scrollBottom = window.innerHeight + window.scrollY;
+        const docHeight = document.documentElement.scrollHeight;
+        if (docHeight - scrollBottom < 80) {
+          activePath = '/typography';
+        } else {
+          for (const s of SECTIONS) {
+            const el = document.getElementById(s.id);
+            if (!el) continue;
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= triggerPoint) {
+              activePath = s.path;
+            }
+          }
+        }
+
+        let activeBlockId = null;
+        for (const b of BLOCKS) {
+          const el = document.getElementById(b.id);
+          if (!el) continue;
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= triggerPoint + 60 && b.path === activePath) {
+            activeBlockId = b.id;
+          }
+        }
+
+        setDesignGuideScrollActive(activePath, activeBlockId);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  };
+
+  window.__dgScrollSpy = onScroll;
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Initial trigger after layout settles
+  setTimeout(onScroll, 60);
 }

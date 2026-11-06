@@ -223,9 +223,36 @@ input, textarea, select {
 .nav-link.active,
 .sidebar-link.active {
   color: #000000 !important;
-  font-weight: 600;
+  font-weight: 700 !important;
   transform: scale(1.04);
   background: transparent !important;
+}
+
+.nav-sub-link {
+  display: block;
+  font-family: var(--font-en);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: #7A808C;
+  font-weight: 400;
+  text-decoration: none;
+  line-height: 1.4;
+  transition: color 0.15s ease, font-weight 0.15s ease;
+}
+
+.nav-sub-link:hover,
+.nav-sub-link.active {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.guide-section,
+.guide-block {
+  scroll-margin-top: 88px;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* ─── Sidebar Footer Controls ─── */

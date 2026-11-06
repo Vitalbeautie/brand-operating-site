@@ -4,12 +4,27 @@
 import { getBrand } from '../utils/brand.js';
 import { getCurrentPath } from '../utils/router.js';
 
+const DESIGN_GUIDE_PATHS = new Set([
+  '/',
+  '/guideline',
+  '/guideline/wordmark',
+  '/guideline/monogram',
+  '/strategy',
+  '/colors',
+  '/typography',
+]);
+
+export function isDesignGuidePath(path) {
+  return DESIGN_GUIDE_PATHS.has(path);
+}
+
 const NAV_SECTIONS = [
   {
     section: 'DESIGN GUIDE',
     items: [
       {
         path: '/guideline/wordmark',
+        sectionId: 'section-wordmark',
         label: 'WORDMARK',
         num: '01',
         subItems: [
@@ -22,6 +37,7 @@ const NAV_SECTIONS = [
       },
       {
         path: '/guideline/monogram',
+        sectionId: 'section-monogram',
         label: 'MONOGRAM',
         num: '02',
         subItems: [
@@ -34,9 +50,9 @@ const NAV_SECTIONS = [
           { target: 'block-mono-7', label: 'BACKGROUND' },
         ],
       },
-      { path: '/strategy', label: 'SLOGAN', num: '03' },
-      { path: '/colors', label: 'BRAND COLOR', num: '04' },
-      { path: '/typography', label: 'TYPOGRAPHY', num: '05' },
+      { path: '/strategy', sectionId: 'section-slogan', label: 'SLOGAN', num: '03' },
+      { path: '/colors', sectionId: 'section-colors', label: 'BRAND COLOR', num: '04' },
+      { path: '/typography', sectionId: 'section-typography', label: 'TYPOGRAPHY', num: '05' },
     ]
   },
   {
@@ -77,16 +93,18 @@ export function renderSidebar(container) {
       const isGovRoot = item.path === '/gov/logo-fit' && (currentPath === '/gov/logo-fit' || currentPath === '/gov/icon-generator' || currentPath === '/gov/visual-dna');
       const active = (item.path === currentPath || isWmRoot || isGovRoot) ? ' active' : '';
       navHtml += `
-        <a href="#${item.path}" class="nav-link${active}" data-path="${item.path}">
+        <a href="#${item.path}" class="nav-link${active}" data-path="${item.path}" ${item.sectionId ? `data-section="${item.sectionId}"` : ''}>
           <span>${item.label}</span>
         </a>`;
       if (item.subItems) {
         navHtml += `<div class="nav-sub-list" data-parent="${item.path}" style="display:${active ? 'flex' : 'none'};flex-direction:column;gap:8px;padding:4px 0 12px 12px;">
-          ${item.subItems.map(sub => {
+          ${item.subItems.map((sub, sIdx) => {
             const subHref = sub.path ? `#${sub.path}` : `#${item.path}`;
-            const isSubActive = sub.path && (currentPath === sub.path || (sub.path === '/gov/icon-generator' && currentPath === '/gov/visual-dna'));
+            const isSubActive = sub.path
+              ? (currentPath === sub.path || (sub.path === '/gov/icon-generator' && currentPath === '/gov/visual-dna'))
+              : (active && sIdx === 0);
             return `
-            <a href="${subHref}" class="nav-sub-link${isSubActive ? ' active' : ''}" ${sub.target ? `data-scroll="${sub.target}"` : ''} ${sub.path ? `data-subpath="${sub.path}"` : ''} style="font-family:var(--font-en);font-size:10px;letter-spacing:1.2px;color:${isSubActive ? '#101820' : '#7A808C'};font-weight:${isSubActive ? '600' : '400'};text-decoration:none;line-height:1.4;">
+            <a href="${subHref}" class="nav-sub-link${isSubActive ? ' active' : ''}" ${sub.target ? `data-scroll="${sub.target}"` : ''} ${sub.path ? `data-subpath="${sub.path}"` : ''} style="font-family:var(--font-en);font-size:10px;letter-spacing:1.2px;color:${isSubActive ? '#000000' : '#7A808C'};font-weight:${isSubActive ? '700' : '400'};text-decoration:none;line-height:1.4;">
               ${sub.label}
             </a>`;
           }).join('')}
@@ -147,11 +165,23 @@ function setupSidebarEvents(container) {
     });
   }
 
-  // Close drawer on link click for mobile
+  // Close drawer on link click for mobile & handle smooth scrolling inside Design Guide
   container.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
+    link.addEventListener('click', (e) => {
       container.classList.remove('sidebar-open');
       if (overlay) overlay.classList.remove('active');
+
+      const sectionId = link.getAttribute('data-section');
+      const linkPath = link.getAttribute('data-path');
+      const currentPath = getCurrentPath();
+      if (sectionId && isDesignGuidePath(currentPath)) {
+        const targetEl = document.getElementById(sectionId);
+        if (targetEl) {
+          e.preventDefault();
+          history.replaceState(null, '', '#' + linkPath);
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
     });
   });
 
@@ -162,17 +192,19 @@ function setupSidebarEvents(container) {
       const targetHref = sub.getAttribute('href') || '';
       const targetPath = targetHref.replace(/^#/, '');
       const currentPath = getCurrentPath();
-      const isSameWm = targetPath === '/guideline/wordmark' && (currentPath === '/' || currentPath === '/guideline' || currentPath === '/guideline/wordmark');
-      if (currentPath === targetPath || isSameWm) {
-        e.preventDefault();
+      if (isDesignGuidePath(currentPath)) {
         const el = document.getElementById(targetId);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        setTimeout(() => {
-          const el = document.getElementById(targetId);
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }, 80);
+        if (el) {
+          e.preventDefault();
+          history.replaceState(null, '', '#' + targetPath);
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
       }
+      setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
     });
   });
 
@@ -238,7 +270,33 @@ export function updateSidebarActive() {
     const sp = sub.getAttribute('data-subpath');
     const active = currentPath === sp || (sp === '/gov/icon-generator' && currentPath === '/gov/visual-dna');
     sub.classList.toggle('active', active);
-    sub.style.color = active ? '#101820' : '#7A808C';
-    sub.style.fontWeight = active ? '600' : '400';
+    sub.style.color = active ? '#000000' : '#7A808C';
+    sub.style.fontWeight = active ? '700' : '400';
+  });
+}
+
+/**
+ * Design Guide 통합 페이지에서 스크롤 위치에 따라
+ * 현재 보고 있는 섹션(WORDMARK ~ TYPOGRAPHY) 및 하위 블록을 블랙+볼드로 실시간 활성화
+ */
+export function setDesignGuideScrollActive(activePath, activeBlockId = null) {
+  document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+    const p = link.getAttribute('data-path');
+    const isMatch = p === activePath;
+    link.classList.toggle('active', isMatch);
+  });
+
+  document.querySelectorAll('.nav-sub-list').forEach(subList => {
+    const parent = subList.getAttribute('data-parent');
+    if (parent === '/gov/logo-fit') return; // governance sub-list 별도 유지
+    subList.style.display = parent === activePath ? 'flex' : 'none';
+  });
+
+  document.querySelectorAll('.nav-sub-link[data-scroll]').forEach(sub => {
+    const scrollTarget = sub.getAttribute('data-scroll');
+    const active = scrollTarget === activeBlockId;
+    sub.classList.toggle('active', active);
+    sub.style.color = active ? '#000000' : '#7A808C';
+    sub.style.fontWeight = active ? '700' : '400';
   });
 }

@@ -3,7 +3,7 @@
    ═══════════════════════════════════════ */
 import { loadBrand } from './utils/brand.js';
 import { registerRoute, startRouter } from './utils/router.js';
-import { renderSidebar, updateSidebarActive } from './components/sidebar.js';
+import { renderSidebar, updateSidebarActive, isDesignGuidePath } from './components/sidebar.js';
 import { renderHeader } from './components/header.js';
 import { renderGuidelinePage } from './pages/guideline.js';
 import { renderStrategyPage } from './pages/strategy.js';
@@ -21,15 +21,15 @@ function init() {
   renderSidebar(document.getElementById('sidebar'));
   renderHeader(document.getElementById('header'));
 
-  // Register routes (Brand Guideline as default / primary)
-  registerRoute('/', (el) => renderGuidelinePage(el, 'all'));
-  registerRoute('/guideline', (el) => renderGuidelinePage(el, 'all'));
+  // Register routes (Brand Guideline as unified continuous scroll: Wordmark → Typography)
+  registerRoute('/', (el) => renderGuidelinePage(el, 'wordmark'));
+  registerRoute('/guideline', (el) => renderGuidelinePage(el, 'wordmark'));
   registerRoute('/guideline/wordmark', (el) => renderGuidelinePage(el, 'wordmark'));
   registerRoute('/guideline/monogram', (el) => renderGuidelinePage(el, 'monogram'));
-  registerRoute('/strategy', (el) => renderStrategyPage(el));
+  registerRoute('/strategy', (el) => renderGuidelinePage(el, 'slogan'));
   registerRoute('/assets', (el) => renderAssetPage(el));
-  registerRoute('/colors', (el) => renderColorPage(el));
-  registerRoute('/typography', (el) => renderTypographyPage(el));
+  registerRoute('/colors', (el) => renderGuidelinePage(el, 'colors'));
+  registerRoute('/typography', (el) => renderGuidelinePage(el, 'typography'));
   registerRoute('/versions', (el) => renderVersionPage(el));
   registerRoute('/gov/logo-fit', (el) => renderLogoFitPage(el, 'layout'));
   registerRoute('/gov/icon-generator', (el) => renderLogoFitPage(el, 'icon'));
@@ -40,6 +40,10 @@ function init() {
 
   // Start router immediately
   startRouter((path) => {
+    if (!isDesignGuidePath(path) && window.__dgScrollSpy) {
+      window.removeEventListener('scroll', window.__dgScrollSpy);
+      window.__dgScrollSpy = null;
+    }
     updateSidebarActive();
     renderHeader(document.getElementById('header'));
   });
