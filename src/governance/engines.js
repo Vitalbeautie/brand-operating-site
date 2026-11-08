@@ -979,6 +979,39 @@ export function parseKoreanPackageFile(svgText, fileName = 'uploaded.svg') {
 }
 
 /**
+ * 식품의약품안전처 공식 건강기능식품 15mm 인증 마크 벡터 SVG
+ * 사용자가 첨부한 mark.svg 원본 벡터 패스 기반 (viewBox: 274.74 398.8 45.04 45.04)
+ */
+export function getHffMarkSvg(x, y, size = 15) {
+  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="274.74 398.8 45.04 45.04" opacity="0.95">
+    <path fill="#ffffff" d="m293.63,411.69c-.12.18-.29.34-.49.47-.21.13-.44.25-.7.34-.27.1-.53.19-.81.27l.38.46c.25-.06.5-.14.75-.24.25-.09.49-.2.71-.33.22-.13.41-.29.58-.47.17-.18.29-.39.37-.62h1.5v2.37h.38c.13,0,.21-.03.25-.08.04-.06.06-.15.06-.3v-4.14h-.69v1.55h-1.42v-.44c0-.18-.01-.33-.05-.45-.04-.12-.1-.21-.17-.28-.08-.07-.17-.12-.3-.14-.12-.03-.26-.04-.43-.04h-1.7v.58h1.57c.17,0,.27.03.32.1.05.07.07.18.07.35v.38c0,.25-.06.47-.18.66"/>
+    <path fill="#ffffff" d="m296.69,415.58s.06-.11.06-.2v-.32h-3.17s-.07-.05-.07-.13v-1.38h-.69v1.59c0,.15.05.28.14.37.09.1.22.15.37.15h3.15c.1,0,.16-.03.21-.07"/>
+    <path fill="#ffffff" d="m298.78,413.39c-.19.1-.36.24-.49.41-.13.17-.2.39-.2.67s.07.49.19.67c.13.17.29.3.48.4.2.09.41.16.64.19.23.04.44.05.65.05s.41-.02.64-.05c.22-.04.43-.1.62-.19.19-.1.35-.23.47-.4.13-.18.2-.39.2-.66s-.07-.5-.2-.67c-.13-.17-.28-.31-.47-.41-.19-.1-.4-.17-.62-.21-.23-.03-.44-.05-.64-.05s-.41.02-.63.05c-.22.04-.44.11-.64.21m1.28.32c.11,0,.24,0,.37.03.15.02.28.06.4.11.13.06.24.13.33.23.09.1.13.22.13.38s-.04.28-.13.38c-.09.09-.19.17-.32.22-.12.05-.26.09-.41.1-.14.02-.27.03-.38.03s-.25,0-.39-.03c-.15-.02-.29-.06-.42-.1-.13-.05-.24-.13-.33-.22-.1-.09-.14-.22-.14-.38s.04-.29.14-.38c.09-.1.2-.18.33-.23.13-.05.28-.09.42-.11.14-.02.28-.03.39-.03"/>
+    <path fill="#ffffff" d="m298.43,412.76c.3-.12.56-.26.79-.43.22-.17.4-.38.53-.62.14-.24.2-.52.2-.84v-.34c0-.18-.02-.33-.05-.45-.03-.12-.09-.21-.17-.28-.07-.07-.17-.12-.3-.14-.12-.03-.26-.04-.43-.04h-1.7v.59h1.57c.16,0,.28.03.32.1.05.07.07.18.07.35v.25c0,.26-.06.48-.18.66-.12.18-.28.34-.49.47-.2.13-.43.24-.69.33-.26.09-.53.17-.8.24l.38.47c.33-.09.64-.19.94-.3"/>
+    <path fill="#ffffff" d="m301.84,412.93c.05-.06.06-.15.06-.27v-1.3h.86v-.59h-.86v-1.35h-.68v3.6h.38c.12,0,.2-.03.24-.08"/>
+    <path fill="#ffffff" d="m291.09,423.44c.06-.06.07-.16.07-.3v-5.85h-.68v6.23h.36c.12,0,.2-.03.25-.08"/>
+    <path fill="#ffffff" d="m288.39,420.09c-.04.11-.08.22-.15.32-.06.1-.13.2-.22.29-.08.09-.17.18-.26.26-.1.08-.21.17-.33.24-.13.07-.26.14-.4.2-.14.06-.28.11-.42.16-.14.05-.28.09-.41.13l.38.49c.39-.09.74-.22,1.05-.37.3-.16.56-.34.78-.53.22-.21.4-.44.54-.7.13-.26.2-.54.2-.84v-1.13c0-.18-.02-.33-.06-.45-.04-.13-.1-.23-.18-.3-.08-.07-.2-.13-.32-.17-.13-.04-.29-.06-.48-.06h-1.73v.6h1.61c.2,0,.32.03.38.09.06.06.09.17.09.33v1.09c0,.12-.02.24-.06.35"/>
+    <path fill="#ffffff" d="m292.86,417.37c-.07-.09-.17-.14-.27-.14h-.33v1.75c0,.25.05.4.15.49.1.08.26.12.48.12h3.28c.1,0,.17-.03.21-.07.05-.04.07-.11.07-.2v-.32h-3.4s-.07,0-.08-.03c-.01-.02-.01-.06-.01-.11v-1.18c0-.12-.04-.22-.1-.31"/>
+    <path fill="#ffffff" d="m295.12,421.2c-.24-.06-.51-.09-.79-.09-.3,0-.58.03-.83.08-.26.05-.48.13-.67.24-.19.11-.34.24-.45.4-.11.16-.16.34-.16.56s.06.41.17.56c.11.16.27.29.46.39.19.1.41.18.67.23.25.05.52.07.8.07.3,0,.58-.03.83-.08.25-.05.47-.14.66-.25.18-.11.33-.24.42-.39.11-.16.16-.33.16-.53,0-.21-.06-.39-.17-.55-.11-.16-.26-.3-.44-.4-.19-.11-.41-.19-.67-.24m.49,1.46c-.07.08-.17.16-.28.22-.12.06-.27.1-.44.13-.17.03-.35.04-.55.04s-.4-.01-.58-.05c-.17-.03-.31-.07-.44-.13-.12-.05-.21-.13-.27-.21-.07-.08-.1-.17-.1-.27,0-.21.12-.38.36-.5.24-.12.59-.18,1.04-.18.2,0,.38.01.55.05.16.03.31.08.43.14.12.06.22.13.29.21.07.08.1.18.1.28s-.03.19-.09.27"/>
+    <path fill="#ffffff" d="m297.1,420.62l-.23-.23c.1-.05.19-.11.3-.17v-.1h-5.7v.6h5.41c.1,0,.17-.04.22-.1"/>
+    <path fill="#ffffff" d="m301.89,423.53c.11,0,.19-.03.24-.09.05-.06.08-.16.08-.31v-1.39c0-.16-.05-.27-.14-.35-.1-.08-.22-.12-.37-.12h-3.37v.59h3.11c.06,0,.09.03.09.09v1.58h.36Z"/>
+    <path fill="#ffffff" d="m297.1,420.62l.22.23c.34-.18.64-.38.89-.61.25-.23.45-.45.6-.66.09.1.19.21.31.31.12.11.25.22.38.32.14.1.27.19.41.28.14.09.28.16.4.21l.39-.45c-.21-.11-.41-.22-.6-.34-.19-.12-.35-.25-.5-.38-.14-.13-.26-.28-.34-.44-.08-.16-.12-.33-.12-.51v-.91c0-.09-.02-.17-.05-.22-.03-.06-.1-.08-.22-.08h-.44v1.2c0,.2-.05.38-.14.55-.09.17-.21.34-.36.49-.15.16-.33.3-.51.43-.1.06-.19.11-.28.16v.18c0,.1-.03.17-.07.22"/>
+    <path fill="#ffffff" d="m302.23,417.29h-.69v3.63h.36c.13,0,.22-.04.26-.1.05-.07.07-.18.07-.31v-3.22Z"/>
+    <path fill="#ffffff" d="m308.12,420.72c.19,0,.29-.11.29-.32v-.28h-5.7v.6h2.52v.61h-1.7v1.55c0,.22.06.39.18.5.11.11.25.17.41.17h2.68c.29,0,.5-.08.63-.23.13-.15.2-.37.2-.64v-1.35h-1.72v-.61h2.21Zm-1.18,1.19v.81c0,.1-.02.17-.08.2-.06.03-.12.04-.22.04h-2.3c-.09,0-.14-.05-.14-.16v-.89h2.75Z"/>
+    <path fill="#ffffff" d="m307.97,419.33v-.25h-.89s.02-.1.03-.14c0-.05.01-.1.01-.14v-.87h.71v-.57h-4.53v.57h.71v.87s0,.1.01.15c0,.05.02.09.03.14h-.87v.57h4.49c.2,0,.3-.11.3-.32m-1.53-.53c0,.09-.01.15-.04.2-.03.05-.08.07-.16.07h-1.35c-.07,0-.12-.03-.15-.07-.03-.05-.05-.11-.05-.2v-.88h1.75v.88Z"/>
+    <path fill="#ffffff" d="m312.85,420.15c.04.16.06.31.06.47,0,3.02-7.01,5.48-15.66,5.48s-15.65-2.45-15.65-5.48c0-.16.02-.31.06-.47-1.11.81-1.73,1.73-1.73,2.7,0,3.43,7.75,6.19,17.32,6.19s17.33-2.77,17.33-6.19c0-.97-.62-1.89-1.73-2.7"/>
+    <rect fill="#ffffff" x="288.82" y="434.97" width=".9" height=".57"/>
+    <path fill="#ffffff" d="m301.58,434.96c-.62,0-.62,1.22,0,1.22s.62-1.22,0-1.22"/>
+    <path fill="#ffffff" d="m292.03,434.94c-.63,0-.63,1.53,0,1.53s.64-1.53,0-1.53"/>
+    <rect fill="#ffffff" x="298.11" y="437.01" width="1.6" height=".5"/>
+    <path fill="#ffffff" d="m295.11,434.96c-.65,0-.67,1.08,0,1.08s.63-1.08,0-1.08"/>
+    <rect fill="#ffffff" x="288.47" y="437.01" width="1.6" height=".5"/>
+    <path fill="#ffffff" d="m297.26,398.8c-12.43,0-22.51,10.08-22.51,22.52s10.08,22.51,22.51,22.51,22.52-10.08,22.52-22.51-10.08-22.52-22.52-22.52m-12.72,37.29c.44-.22.91-.57.91-1.09v-.36h.47v.36c0,.5.44.87.91,1.1l-.18.33c-.38-.13-.74-.43-.99-.73-.12.23-.58.63-.95.73l-.17-.33Zm2.91,1.73h-.48v-.85h-2.07v-.32h2.54v1.17Zm0-1.35h-.48v-1.89h.48v1.89Zm3.24-.05h-1.19v.26h1.04v1.14h-2.54v-1.14h1.04v-.26h-1.19v-.32h2.84v.32Zm-2.69-1.45v-.32h2.54v.32h-.36v.57h.36v.32h-2.54v-.32h.35v-.57h-.35Zm5.9,2.85h-.47v-.43c-.25.1-.44.11-.71.11h-1.67v-.31h1.79c.22,0,.37-.04.57-.1.02-.02.02-2.51.02-2.51h.47v3.24Zm-1.86-3.21c1.26,0,1.28,2.18,0,2.18s-1.26-2.18,0-2.18m3.08,0c1.29,0,1.29,1.79,0,1.79s-1.3-1.79,0-1.79m1.87,3.21h-.47v-.88h-2.07v-.32h2.54v1.2Zm.37-2.49h-.37v.32h.37v.36h-.37v.42h-.47v-1.85h.47v.39h.37v.35Zm2.99,1.1h-1.19v.26h1.04v1.14h-2.54v-1.14h1.04v-.26h-1.19v-.32h2.85v.32Zm-2.69-1.45v-.32h2.54v.32h-.36v.57h.36v.32h-2.54v-.32h.35v-.57h-.35Zm3.93-.36c1.25,0,1.24,1.93,0,1.93s-1.24-1.93,0-1.93m1.87,3.21h-2.46v-1.02h.47v.71h1.99v.32Zm.33-2.07h-.37v1.18h-.47v-2.35h.47v.82h.37v.36Zm.05.47c.44-.23.91-.55.91-1.09v-.16h-.73v-.32h1.91v.32h-.71v.16c0,.5.47.89.9,1.09l-.17.33c-.36-.12-.76-.42-.97-.7-.16.2-.62.59-.97.7l-.18-.33Zm1.96-.58v-.32h.47v-.75h.47v2.32h-.47v-1.25h-.47Zm.97,2.17h-2.49v-1.07h.43v.75h2.07v.32Zm2.25-.29c-.33-.14-.66-.47-.87-.76-.16.29-.57.62-.87.76l-.19-.32c.54-.35.82-.71.82-1.37v-.73h-.62v-.32h.62v-.29h.46v.29h.63v.32h-.63v.74c0,.6.3,1.05.82,1.36l-.18.32Zm.89.29h-.46v-1.86h-.55v-.32h.55v-1.07h.46v3.24Zm-30.36-5.3c-2.06-3.24-3.24-7.08-3.24-11.2,0-11.57,9.38-20.96,20.94-20.96s20.95,9.38,20.95,20.96c0,4.12-1.19,7.96-3.25,11.2h-35.41Z"/>
+    <rect fill="#ffffff" x="298.47" y="434.97" width=".9" height=".57"/>
+  </svg>`;
+}
+
+/**
  * 인식된 국문 패키지 레이아웃을 기반으로 국가별(KR / US / JP) 시뮬레이션 SVG 생성
  * - 원본에서 인식한 각 문안의 Y좌표(mm)·역할·폰트 계층을 유지하면서
  * - US(FDA Dietary Supplement / Nutrition Facts 규정: Net Wt + oz 병기, Supplement Facts 뱃지, FDA 면책문구)
@@ -1019,13 +1052,13 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
       ? (isHff ? '機能性表示食品 · 届出番号 J-VB01 (消費者庁基準)' : '食品表示基準適合 · 栄養成分表示裏面記載')
       : (isHff ? '식품의약품안전처 건강기능식품 표시기준 적합' : '식품등의 표시기준(제2026-37호) 적합');
 
-  const markBlock = country === 'KR' && isHff ? `
-    <g transform="translate(${W - 18} ${H - 18})" opacity="0.9">
-      <circle cx="7.5" cy="7.5" r="7.2" fill="none" stroke="#FFFFFF" stroke-width="0.4"/>
-      <text x="7.5" y="5.5" text-anchor="middle" fill="#FFFFFF" font-size="2.3" font-weight="700">건강</text>
-      <text x="7.5" y="8.2" text-anchor="middle" fill="#FFFFFF" font-size="2.1" font-weight="700">기능식품</text>
-      <text x="7.5" y="12.2" text-anchor="middle" fill="#FFFFFF" font-size="1.4">식약처</text>
-    </g>` : country === 'US' ? `
+  const markSize = 15;
+  const markX = W - 3 - markSize;
+  const markY = H - 3 - markSize;
+
+  const markBlock = country === 'KR' && isHff
+    ? getHffMarkSvg(markX, markY, markSize)
+    : country === 'US' ? `
     <g transform="translate(${W - 23} ${H - 14.5})">
       <rect x="0" y="0" width="20" height="7" fill="rgba(0,0,0,0.28)" stroke="#FFFFFF" stroke-width="0.3"/>
       <text x="10" y="3.1" text-anchor="middle" fill="#CEDC00" font-size="1.75" font-weight="700">FDA 21 CFR</text>
@@ -1057,20 +1090,31 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
 
   const nodesSvg = translatedNodes.map(n => {
     const px = n.renderPt * PT_MM;
+    const isCap = n.role === 'capacity';
+    
+    // 내용량: 중앙정렬 1순위 유지 + 15mm 마크 간섭 시 위치를 살짝 위로 이동
+    let effY = n.yMm;
+    if (isCap && isHff && country === 'KR') {
+      const approxW = n.trText.length * px * 0.58;
+      if ((W / 2) + (approxW / 2) > markX - 1.5) {
+        effY = Math.min(n.yMm, markY - 2.5);
+      }
+    }
+
     const maxChars = Math.max(12, Math.floor((W - 8) / (px * (lang === 'en' ? 0.52 : 0.82))));
     const lines = wrapSvgLines(n.trText, maxChars);
-    const weight = n.role === 'title' ? 700 : n.role === 'capacity' ? 600 : 400;
+    const weight = n.role === 'title' ? 700 : isCap ? 600 : 400;
     const opacity = !isHff && n.role === 'ingredient' ? 0.78 : 1;
     const badgeColor = n.role === 'title' ? '#CEDC00' : n.role === 'ingredient' ? '#78BE20' : '#41B6E6';
 
     return `
       <g opacity="${opacity}">
         <!-- 인식된 문안 좌표 마커 -->
-        <line x1="2.2" y1="${n.yMm}" x2="${W - 2.2}" y2="${n.yMm}" stroke="${badgeColor}" stroke-width="0.18" stroke-dasharray="1 1" opacity="0.65"/>
-        <rect x="1.5" y="${n.yMm - px * 0.95}" width="11.5" height="2.8" fill="${badgeColor}" rx="0.5" opacity="0.9"/>
-        <text x="7.25" y="${n.yMm - px * 0.95 + 2}" text-anchor="middle" fill="#101820" font-size="1.65" font-weight="700" font-family="sans-serif">${n.role.toUpperCase()} Y:${n.yMm}</text>
+        <line x1="2.2" y1="${effY}" x2="${W - 2.2}" y2="${effY}" stroke="${badgeColor}" stroke-width="0.18" stroke-dasharray="1 1" opacity="0.65"/>
+        <rect x="1.5" y="${effY - px * 0.95}" width="11.5" height="2.8" fill="${badgeColor}" rx="0.5" opacity="0.9"/>
+        <text x="7.25" y="${effY - px * 0.95 + 2}" text-anchor="middle" fill="#101820" font-size="1.65" font-weight="700" font-family="sans-serif">${n.role.toUpperCase()} Y:${effY.toFixed(1)}</text>
         ${lines.map((l, idx) => `
-          <text x="${W / 2}" y="${n.yMm + idx * px * 1.18}" text-anchor="middle" fill="#FFFFFF" font-size="${px}" font-weight="${weight}" font-family="${LOCALE_TYPO[lang]?.font || 'sans-serif'}">${l}</text>
+          <text x="${W / 2}" y="${effY + idx * px * 1.18}" text-anchor="middle" fill="#FFFFFF" font-size="${px}" font-weight="${weight}" font-family="${LOCALE_TYPO[lang]?.font || 'sans-serif'}">${l}</text>
         `).join('')}
       </g>`;
   }).join('');
@@ -1588,18 +1632,30 @@ export function renderPackageFrontSvg(s, showGuides = true) {
   }
   const lastTitleY = nameY1 + (titleRows.length - 1) * nameLineStep;
 
-  // 용량(내용량) 항상 단상자 정중앙(W / 2) 정렬 + 가로폭 초과 시 자동 줄바꿈
+  // 용량(내용량) 항상 단상자 정중앙(W / 2) 정렬 + 15mm 마크 간섭 시 위치를 살짝 위로 이동
   const capPx = s.capPt * PT_MM;
   const capLineStep = capPx * 1.22;
-  const markSize = s.type === 'hff' ? s.markMm : 0;
+  const markSize = s.type === 'hff' ? (s.markMm || 15) : 0;
   const markX = W - TYPO.sideSafe - markSize, markY = H - s.bottomMargin - markSize;
-  const capMaxW = s.type === 'hff' && markSize > 0
-    ? Math.max(16, (markX - 1.5 - W / 2) * 2)
-    : safeW;
   const capText = (s.type === 'hff' && s.capPrefix ? '건강기능식품  ' : '') + s.capacity;
-  const capLines = wrapSvgTextToWidth(capText, capPx, capMaxW, s.capScale / 100);
-  const capX = W / 2;
-  const capBottomY = H - s.bottomMargin - capPx * 0.2;
+  
+  // 내용량 텍스트 길이 추정 (장평 capScale 반영)
+  const approxCapW = capText.length * capPx * 0.58 * (s.capScale / 100);
+
+  // 간섭 판정: 중앙정렬된 내용량의 오른쪽 끝이 15mm 마크의 왼쪽 경계(markX - 1.5mm)를 침범하는지 확인
+  const isInterferingWithMark = markSize > 0 && ((W / 2) + (approxCapW / 2) > markX - 1.5);
+
+  // 중앙정렬 1순위: safeW 전체를 기준으로 줄바꿈하여 억지로 쪼개지는 현상 방지
+  const capMaxW = isInterferingWithMark ? safeW : Math.min(safeW, Math.max(16, (markX - 1.5 - W / 2) * 2));
+  const capLines = wrapSvgTextToWidth(capText, capPx, isInterferingWithMark ? safeW : capMaxW, s.capScale / 100);
+
+  const capX = W / 2; // 중앙 정렬 1순위 고정
+
+  // 간섭 시: 중앙정렬을 1순위로 유지하고 위치를 15mm 마크 위쪽(markY - 2.5mm)으로 살짝 이동
+  // 비간섭 시: 기존 하단 3mm 기준선 유지
+  const capBottomY = isInterferingWithMark
+    ? markY - 2.5
+    : (H - s.bottomMargin - capPx * 0.2);
   const capStartY = capBottomY - (capLines.length - 1) * capLineStep;
 
   // 원재료명 / 원료명 가로폭 초과 시 자동 줄바꿈
@@ -1699,15 +1755,8 @@ export function renderPackageFrontSvg(s, showGuides = true) {
       <g transform="translate(${capX} ${capStartY}) scale(${s.capScale / 100} 1)">
         ${capLines.map((line, i) => `<text x="0" y="${i * capLineStep}" text-anchor="middle" fill="${s.textColor}" font-size="${capPx}" font-weight="${s.capWeight === 'Bold' ? 700 : 500}" letter-spacing="${s.capTracking * 0.004}em" font-family="'RIX-신고딕se-pro','Noto Sans KR',sans-serif">${line}</text>`).join('')}
       </g>
-      <!-- 건강기능식품 15mm 마크 -->
-      ${markSize > 0 ? `
-        <g transform="translate(${markX} ${markY})" opacity="0.88">
-          <circle cx="${markSize / 2}" cy="${markSize / 2}" r="${markSize / 2 - 0.3}" fill="none" stroke="#FFFFFF" stroke-width="0.45"/>
-          <path d="M1.4,${markSize * 0.68} Q${markSize / 2},${markSize * 0.56} ${markSize - 1.4},${markSize * 0.68}" fill="none" stroke="#FFFFFF" stroke-width="0.4"/>
-          <text x="${markSize / 2}" y="${markSize * 0.34}" text-anchor="middle" fill="#FFFFFF" font-size="${markSize * 0.16}" font-weight="700" font-family="'Noto Sans KR',sans-serif">건강</text>
-          <text x="${markSize / 2}" y="${markSize * 0.52}" text-anchor="middle" fill="#FFFFFF" font-size="${markSize * 0.15}" font-weight="700" font-family="'Noto Sans KR',sans-serif">기능식품</text>
-          <text x="${markSize / 2}" y="${markSize * 0.82}" text-anchor="middle" fill="#FFFFFF" font-size="${markSize * 0.095}" font-family="'Noto Sans KR',sans-serif">식품의약품안전처</text>
-        </g>` : ''}
+      <!-- 건강기능식품 15mm 마크 (공식 mark.svg 벡터) -->
+      ${markSize > 0 ? getHffMarkSvg(markX, markY, markSize) : ''}
     </g>
     <rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="0.25"/>
     ${guides}

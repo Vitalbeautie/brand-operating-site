@@ -712,7 +712,7 @@ export function renderLocalizationPage(el) {
       ? [
           { role: 'title', text: `${p.lineName} ${p.productName}`, xMm: +(p.w / 2).toFixed(1), yMm: +(p.topLine + p.tagH + p.gapTagName + 8).toFixed(1), yRatio: 0.2, pt: p.namePt },
           { role: 'ingredient', text: p.ingredient.replace(/\n/g, ', '), xMm: +(p.w / 2).toFixed(1), yMm: +(p.topLine + p.tagH + p.gapTagName + 21).toFixed(1), yRatio: 0.32, pt: p.ingPt },
-          { role: 'capacity', text: `건강기능식품 ${p.capacity}`, xMm: +(p.w / 2).toFixed(1), yMm: +(p.h - p.bottomMargin - 1).toFixed(1), yRatio: 0.94, pt: p.capPt },
+          { role: 'capacity', text: `건강기능식품 ${p.capacity}`, xMm: +(p.w / 2).toFixed(1), yMm: +(p.h - 18 - 2.5).toFixed(1), yRatio: +((p.h - 20.5) / p.h).toFixed(2), pt: p.capPt },
         ]
       : [
           { role: 'title', text: `${p.lineName} ${p.productName}`, xMm: +(p.w / 2).toFixed(1), yMm: +(p.topLine + p.tagH + p.gapTagName + 8).toFixed(1), yRatio: 0.2, pt: p.namePt },
