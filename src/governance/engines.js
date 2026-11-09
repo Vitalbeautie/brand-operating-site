@@ -525,7 +525,7 @@ export function resolveGlobalFunctionColor(funcText = '') {
 
 export function suggestChips(options = {}, count = 8) {
   const opts = Array.isArray(options) ? { extraHex: options } : options;
-  const minDeltaE = opts.minDeltaE || PACKAGE_LINES.familyRules.minDeltaE;
+  const minDeltaE = opts.minDeltaE != null ? opts.minDeltaE : (PACKAGE_LINES.familyRules.minDeltaE || 10);
   const funcText = opts.funcText || '';
   const selectedToneId = opts.selectedToneId || 'auto';
   const offset = opts.offset || 0;
@@ -533,9 +533,29 @@ export function suggestChips(options = {}, count = 8) {
   const globalAnalysis = resolveGlobalFunctionColor(funcText);
   const selectedChipObj = REPRESENTATIVE_COLOR_CHIPS.find(c => c.id === selectedToneId) || REPRESENTATIVE_COLOR_CHIPS[0];
 
+  const CHIP_FAMILY_MAP = {
+    purple: ['purple'],
+    lavender: ['purple'],
+    blue: ['blue'],
+    navy: ['navy'],
+    teal: ['mint', 'blue'],
+    mint: ['mint'],
+    green: ['green', 'lime'],
+    yellow: ['yellow'],
+    gold: ['yellow', 'brown'],
+    orange: ['orange'],
+    coral: ['pink', 'orange'],
+    red: ['red'],
+    wine: ['red'],
+    pink: ['pink'],
+    brown: ['brown'],
+    beige: ['beige'],
+    gray: ['navy', 'beige'],
+  };
+
   // 대상 컬러 패밀리 결정: 대표 컬러칩을 직접 선택한 경우 해당 패밀리 우선, 'auto'인 경우 키워드 기반 글로벌 추천 패밀리 적용
   const targetFamilies = selectedToneId !== 'auto'
-    ? [selectedToneId]
+    ? (CHIP_FAMILY_MAP[selectedToneId] || [selectedToneId])
     : globalAnalysis.preferredTones;
 
   // 바이탈뷰티 기존 전 제품 팬톤칩 DB (중복 제외 대상)
@@ -1109,10 +1129,6 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
 
     return `
       <g opacity="${opacity}">
-        <!-- 인식된 문안 좌표 마커 -->
-        <line x1="2.2" y1="${effY}" x2="${W - 2.2}" y2="${effY}" stroke="${badgeColor}" stroke-width="0.18" stroke-dasharray="1 1" opacity="0.65"/>
-        <rect x="1.5" y="${effY - px * 0.95}" width="11.5" height="2.8" fill="${badgeColor}" rx="0.5" opacity="0.9"/>
-        <text x="7.25" y="${effY - px * 0.95 + 2}" text-anchor="middle" fill="#101820" font-size="1.65" font-weight="700" font-family="sans-serif">${n.role.toUpperCase()} Y:${effY.toFixed(1)}</text>
         ${lines.map((l, idx) => `
           <text x="${W / 2}" y="${effY + idx * px * 1.18}" text-anchor="middle" fill="#FFFFFF" font-size="${px}" font-weight="${weight}" font-family="${LOCALE_TYPO[lang]?.font || 'sans-serif'}">${l}</text>
         `).join('')}
@@ -1133,23 +1149,21 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
       <polygon points="${tx0},${tagY0} ${bx0},${tagY1} ${bx1},${tagY1} ${tx1},${tagY0}" fill="#CEDC00"/>
       <rect x="0" y="0" width="${W}" height="${topLine}" fill="#CEDC00"/>
       <g transform="translate(${logoTx} ${logoTy}) scale(${PT_MM * logoScale})" fill="#1D1D1B">
+        <path d="m305.17,288.82l-.13-.3-.12.3-3.86,9.04-.04.09h1.13l1.07-2.51c.04-.08.12-.14.21-.14h3.21c.09,0,.18.06.21.14l1.02,2.51h1.2l-3.91-9.13Zm-.1,2.32c1.2,2.88,1.23,2.96,1.16,3.08-.04.06-.11.1-.19.1h-2.04c-.07,0-.15-.04-.18-.1-.04-.06-.05-.14-.02-.22l1.19-2.86.04-.09.04.09Z"/>
         <polygon points="253.47 288.83 251.29 294.18 249.03 288.83 247.01 288.83 251.32 298.37 255.43 288.83 253.47 288.83"/>
         <rect x="257.31" y="288.83" width="1.89" height="9.16"/>
         <polygon points="260.95 288.83 260.95 290.58 263.5 290.58 263.5 297.99 265.39 297.99 265.39 290.58 267.93 290.58 267.93 288.83 260.95 288.83"/>
         <polygon points="272.26 288.45 268.04 297.99 270 297.99 272.23 292.62 274.44 297.99 276.46 297.99 272.26 288.45"/>
         <polygon points="279.63 296.24 279.63 288.83 277.74 288.83 277.74 297.99 282.33 297.99 284.1 296.24 279.63 296.24"/>
-        <path d="m290.67,293.07c-.08-.02-.14-.09-.15-.18,0-.09.04-.17.11-.21.47-.24.98-.71.98-1.62,0-1.4-.96-2.23-2.57-2.23h-3.15v9.12h3.4c1.87,0,2.98-.99,2.98-2.66,0-1.1-.55-1.91-1.61-2.21Z"/>
-        <path d="m295.43,297.04v-2.95h3.49v-.89h-3.49v-3.04h4v-.91h-5.28v9.12h5.48v-.91h-4.2Z"/>
-        <path d="m305.17,288.82l-.13-.3-.12.3-3.86,9.04h1.13l1.07-2.51h3.42l1.02,2.51h1.2l-3.73-9.04Z"/>
+        <path d="m290.67,293.07c-.08-.02-.14-.09-.15-.18,0-.09.04-.17.11-.21.47-.24.98-.71.98-1.62,0-1.4-.96-2.23-2.57-2.23h-3.15v9.12h3.4c1.87,0,2.98-.99,2.98-2.66,0-1.1-.55-1.91-1.61-2.21m-1.71-.5h-1.8c-.12,0-.21-.09-.21-.21v-2.45c0-.12.09-.21.21-.21h1.8c1.05,0,1.59.47,1.59,1.4s-.53,1.47-1.59,1.47m-2.01,1c0-.12.09-.21.21-.21h1.98c1.29,0,2.04.68,2.04,1.87s-.68,1.85-1.97,1.85h-2.05c-.12,0-.21-.09-.21-.21v-3.29Z"/>
+        <path d="m295.43,297.04c-.11,0-.21-.09-.21-.21v-2.74c0-.12.09-.21.21-.21h3.49v-.89h-3.49c-.11,0-.21-.09-.21-.21v-2.83c0-.12.09-.21.21-.21h4v-.91h-5.28v9.12h5.48v-.91h-4.2Z"/>
         <path d="m316.06,288.83v5.88c0,1.59-.8,2.43-2.33,2.43s-2.34-.84-2.34-2.43v-5.88h-1.07v5.96c0,2.06,1.28,3.28,3.42,3.28s3.4-1.23,3.4-3.28v-5.96h-1.08Z"/>
-        <path d="m318.66,288.83v.91h2.82v8h1.07v-8h2.82v-.91h-6.71Z"/>
+        <path d="m318.66,288.83v.91h2.61c.11,0,.21.09.21.21v8h1.07v-8c0-.12.09-.21.21-.21h2.61v-.91h-6.71Z"/>
         <rect x="326.96" y="288.83" width="1.07" height="9.12"/>
-        <path d="m332.19,297.04v-2.95h3.49v-.89h-3.49v-3.04h4v-.91h-5.28v9.12h5.48v-.91h-4.2Z"/>
+        <path d="m332.19,297.04c-.11,0-.21-.09-.21-.21v-2.74c0-.12.09-.21.21-.21h3.49v-.89h-3.49c-.11,0-.21-.09-.21-.21v-2.83c0-.12.09-.21.21-.21h4v-.91h-5.28v9.12h5.48v-.91h-4.2Z"/>
       </g>
       ${nodesSvg}
       ${markBlock}
-      <rect x="0" y="${H - 3.2}" width="${W}" height="3.2" fill="rgba(0,0,0,0.32)"/>
-      <text x="${W / 2}" y="${H - 1.1}" text-anchor="middle" fill="#CEDC00" font-size="1.75" font-family="sans-serif">${countryFooter}</text>
     </g>
     <rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#101820" stroke-width="0.3"/>
     <text x="${W / 2}" y="-1.8" text-anchor="middle" fill="#E52421" font-size="2.3" font-weight="700" font-family="sans-serif">${W} × ${H}mm (${parsed.areaCm2}㎠)</text>
@@ -1632,31 +1646,34 @@ export function renderPackageFrontSvg(s, showGuides = true) {
   }
   const lastTitleY = nameY1 + (titleRows.length - 1) * nameLineStep;
 
-  // 용량(내용량) 항상 단상자 정중앙(W / 2) 정렬 + 15mm 마크 간섭 시 위치를 살짝 위로 이동
+  // 하단 표기 문안(용량/내용량)은 항상 하단에서 3mm 기준선 고정 & 단상자 정중앙(W / 2) 정렬
   const capPx = s.capPt * PT_MM;
   const capLineStep = capPx * 1.22;
   const markSize = s.type === 'hff' ? (s.markMm || 15) : 0;
-  const markX = W - TYPO.sideSafe - markSize, markY = H - s.bottomMargin - markSize;
+  const markX = W - TYPO.sideSafe - markSize;
   const capText = (s.type === 'hff' && s.capPrefix ? '건강기능식품  ' : '') + s.capacity;
-  
+  const capX = W / 2; // 중앙 정렬 1순위 고정
+
+  // 하단 3mm 기준선 고정 (문안 위치는 하단 3mm 불변)
+  const capBottomY = H - s.bottomMargin - capPx * 0.2;
+
   // 내용량 텍스트 길이 추정 (장평 capScale 반영)
   const approxCapW = capText.length * capPx * 0.58 * (s.capScale / 100);
 
-  // 간섭 판정: 중앙정렬된 내용량의 오른쪽 끝이 15mm 마크의 왼쪽 경계(markX - 1.5mm)를 침범하는지 확인
-  const isInterferingWithMark = markSize > 0 && ((W / 2) + (approxCapW / 2) > markX - 1.5);
-
-  // 중앙정렬 1순위: safeW 전체를 기준으로 줄바꿈하여 억지로 쪼개지는 현상 방지
-  const capMaxW = isInterferingWithMark ? safeW : Math.min(safeW, Math.max(16, (markX - 1.5 - W / 2) * 2));
-  const capLines = wrapSvgTextToWidth(capText, capPx, isInterferingWithMark ? safeW : capMaxW, s.capScale / 100);
-
-  const capX = W / 2; // 중앙 정렬 1순위 고정
-
-  // 간섭 시: 중앙정렬을 1순위로 유지하고 위치를 15mm 마크 위쪽(markY - 2.5mm)으로 살짝 이동
-  // 비간섭 시: 기존 하단 3mm 기준선 유지
-  const capBottomY = isInterferingWithMark
-    ? markY - 2.5
-    : (H - s.bottomMargin - capPx * 0.2);
+  // 문안이 짧을 때는 하단 우측 15mm 마크와 간섭되지 않으므로 마크를 피해서 wrap,
+  // 문안이 길어서 넘어갈 때는 마크가 문안 위로 이동하므로 전체 safeW 폭을 활용하여 한 줄로 여유 있게 배치
+  const doesFitBesideMark = markSize === 0 || ((W / 2) + (approxCapW / 2) <= markX - 1.5);
+  const capMaxW = doesFitBesideMark ? Math.max(16, (markX - 1.5 - W / 2) * 2) : safeW;
+  const capLines = wrapSvgTextToWidth(capText, capPx, capMaxW, s.capScale / 100);
   const capStartY = capBottomY - (capLines.length - 1) * capLineStep;
+
+  // 건강기능식품 15mm 마크 배치:
+  // - 문안이 짧을 때: 하단 3mm 기준선에 배치 (H - bottomMargin - markSize)
+  // - 문안이 넘어갈 때: 문안 위쪽으로 마크 배치 (capStartY - markSize - 2.5mm)
+  const isOverflowing = !doesFitBesideMark || ((W / 2) + (approxCapW / 2) > markX - 1.5);
+  const markY = isOverflowing
+    ? Math.max(capStartY - markSize - 2.5, H * 0.65)
+    : (H - s.bottomMargin - markSize);
 
   // 원재료명 / 원료명 가로폭 초과 시 자동 줄바꿈
   const ingPx = s.ingPt * PT_MM;

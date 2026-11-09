@@ -69,7 +69,7 @@ const NAV_SECTIONS = [
       },
       { path: '/gov/family-look', label: '02 FAMILY LOOK', num: 'G2' },
       { path: '/gov/localization', label: '03 LOCALIZATION', num: 'G3' },
-      { path: '/gov/package-front', label: '04 PACKAGE FRONT', num: 'G4' },
+      { path: '/gov/asset-library', label: '04 ASSET LIBRARY', num: 'G4' },
     ]
   },
   {

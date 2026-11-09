@@ -261,7 +261,6 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
     }
 
     if (score > 0) {
-      // Outline 아이콘을 기본 선호하되 Filled도 적절히 포함
       if (setCode === 'L' || setCode === 'T') score += 6;
       scored.push({
         id,
@@ -277,14 +276,10 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
     }
   }
 
-  // 점수순 상위 풀 확보 (최소 48개 확보)
   scored.sort((a, b) => (b.isLearned - a.isLearned) || (b.score - a.score) || (a.complexity - b.complexity));
-
-  // 동일 모양 중복 억제를 위해 상위 풀에서 다양성 있게 추출
   const poolSize = Math.min(scored.length, 72);
   const topPool = scored.slice(0, poolSize);
 
-  // 페이지 오프셋에 따라 12개 샘플링
   const pageStride = 12;
   const start = (offsetPage * pageStride) % Math.max(1, topPool.length);
   const rotated = [...topPool.slice(start), ...topPool.slice(0, start)];
@@ -299,13 +294,11 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
     if (picked.length === 12) break;
   }
 
-  // 만약 12개 미만이면 나머지 채우기
   for (const item of rotated) {
     if (picked.length >= 12) break;
     if (!picked.includes(item)) picked.push(item);
   }
 
-  // 복잡도(심플 → 복잡) 순으로 정렬하되, 사용자가 이전에 선택한(learned) 아이콘은 맨 앞에 배치
   picked.sort((a, b) => {
     if (a.isLearned !== b.isLearned) return b.isLearned - a.isLearned;
     return a.complexity - b.complexity;
@@ -320,6 +313,290 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
     keyword: raw,
     enCopy,
     candidates,
+  };
+}
+
+/**
+ * 모티프별 4단계 복잡도(1단계 심플 ~ 4단계 컴플렉스) 프리셋 & 스마트 클러스터링 엔진
+ */
+function getIconFromIndexOrFallback(indexData, name, fallbackSvg = '') {
+  const icons = indexData?.icons || [];
+  const found = icons.find(i => i[0] === name) || icons.find(i => i[0].includes(name));
+  if (found) {
+    const [n, setCode, tagStr, innerSvg, comp] = found;
+    return {
+      id: `${setCode}:${n}`,
+      name: n,
+      setCode,
+      setName: setCode === 'L' ? 'Lucide' : setCode === 'T' ? 'Tabler Outline' : 'Tabler Filled',
+      innerSvg: fallbackSvg || innerSvg,
+      complexity: comp || 10,
+    };
+  }
+  return {
+    id: `custom:${name}`,
+    name,
+    setCode: 'T',
+    setName: 'VB Master Icon',
+    innerSvg: fallbackSvg || '<circle cx="12" cy="12" r="9"/>',
+    complexity: 12,
+  };
+}
+
+const WELLNESS_MOTIF_PRESETS = [
+  {
+    keys: ['수면', '숙면', '잠', '밤', '나이트', 'sleep', 'night'],
+    enCopy: 'good sleep',
+    motifs: [
+      {
+        id: 'moon',
+        title: '달 (Moon)',
+        enTitle: 'Moon & Night Sky',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '초승달 미니멀 실루엣 라인', iconName: 'moon' },
+          { level: 2, label: '2단계 베이직', desc: '초승달과 반짝이는 작은 별 포인트', iconName: 'moon-star' },
+          { level: 3, label: '3단계 스탠다드', desc: '밤하늘 구름과 달의 조화로운 결합', iconName: 'cloud-moon' },
+          { level: 4, label: '4단계 컴플렉스', desc: '달 + 별무리 + 편안히 잠든 달의 표정', iconName: 'moon', customSvg: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 2v3M20.5 3.5h-3"/><path d="M7.5 11.5c.3.3.7.3 1 0M11 11.5c.3.3.7.3 1 0"/><path d="M9 14c.6.4 1.4.4 2 0"/>' },
+        ],
+      },
+      {
+        id: 'bed',
+        title: '침대 (Bed)',
+        enTitle: 'Comfort Bed',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '플랫 싱글베드 간결한 라인', iconName: 'bed-flat' },
+          { level: 2, label: '2단계 베이직', desc: '헤드보드와 베개가 있는 안락한 침대', iconName: 'bed-single' },
+          { level: 3, label: '3단계 스탠다드', desc: '포근한 더블베드와 침구 디테일', iconName: 'bed-double' },
+          { level: 4, label: '4단계 컴플렉스', desc: '침대 + 은은한 별빛 조명 수면 케어', iconName: 'bed', customSvg: '<path d="M3 7v11M21 7v11M3 11h18M3 16h18M7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM17 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v3M10.5 3.5h3"/>' },
+        ],
+      },
+      {
+        id: 'star',
+        title: '별 (Stars)',
+        enTitle: 'Night Stars & Glow',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '단일 5각 별 간결한 라인', iconName: 'star' },
+          { level: 2, label: '2단계 베이직', desc: '듀얼 스파클 별빛 포인트', iconName: 'sparkle' },
+          { level: 3, label: '3단계 스탠다드', desc: '사방으로 퍼지는 빛나는 별무리', iconName: 'sparkles' },
+          { level: 4, label: '4단계 컴플렉스', desc: '밤하늘을 비추는 별과 오로라 비전', iconName: 'cloud-moon-rain' },
+        ],
+      },
+      {
+        id: 'face',
+        title: '자는 얼굴 (Sleep Face)',
+        enTitle: 'Sleep Face & Relax',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '편안한 미소 곡선 라인', iconName: 'smile' },
+          { level: 2, label: '2단계 베이직', desc: '지그시 눈을 감은 평온한 얼굴', iconName: 'face-slightly-smiling' },
+          { level: 3, label: '3단계 스탠다드', desc: '달콤한 숙면을 알리는 Zzz 심볼', iconName: 'zzz' },
+          { level: 4, label: '4단계 컴플렉스', desc: '깊은 릴렉스와 안정을 주는 하트 케어', iconName: 'heart-handshake' },
+        ],
+      },
+      {
+        id: 'routine',
+        title: '시계 / 나이트 루틴 (Routine)',
+        enTitle: 'Circadian Routine',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '심플 원형 시계 윤곽', iconName: 'clock' },
+          { level: 2, label: '2단계 베이직', desc: '자명종 알람시계 클래식', iconName: 'alarm-clock' },
+          { level: 3, label: '3단계 스탠다드', desc: '시간의 흐름을 나타내는 모래시계', iconName: 'hourglass' },
+          { level: 4, label: '4단계 컴플렉스', desc: '수면 주기 & 나이트 케어 캘린더', iconName: 'sun-moon' },
+        ],
+      },
+    ],
+  },
+  {
+    keys: ['디톡스', '클렌즈', '배출', '정화', 'detox', 'cleanse'],
+    enCopy: 'detox care',
+    motifs: [
+      {
+        id: 'droplet',
+        title: '물방울 (Water Drop)',
+        enTitle: 'Hydra Droplet',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '단일 물방울 클린 라인', iconName: 'droplet' },
+          { level: 2, label: '2단계 베이직', desc: '정화되는 다중 물방울', iconName: 'droplets' },
+          { level: 3, label: '3단계 스탠다드', desc: '순환하는 워터 웨이브 파동', iconName: 'waves' },
+          { level: 4, label: '4단계 컴플렉스', desc: '독소를 걸러내는 정밀 필터 시스템', iconName: 'filter' },
+        ],
+      },
+      {
+        id: 'cycle',
+        title: '순환 / 리사이클 (Cycle)',
+        enTitle: 'Body Circulation',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '심플 회전 리프레시 화살표', iconName: 'refresh-cw' },
+          { level: 2, label: '2단계 베이직', desc: '3방향 순환 리사이클 심볼', iconName: 'recycle' },
+          { level: 3, label: '3단계 스탠다드', desc: '무한 신진대사 인피니티 루프', iconName: 'infinity' },
+          { level: 4, label: '4단계 컴플렉스', desc: '활성화되는 클린 에너지 볼텍스', iconName: 'sparkles' },
+        ],
+      },
+      {
+        id: 'leaf',
+        title: '보태니컬 잎 (Leaf)',
+        enTitle: 'Botanical Sprout',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '단일 어린 찻잎 실루엣', iconName: 'leaf' },
+          { level: 2, label: '2단계 베이직', desc: '새싹이 움트는 클린 스프라우트', iconName: 'sprout' },
+          { level: 3, label: '3단계 스탠다드', desc: '풍성한 자연 숲과 나무', iconName: 'trees' },
+          { level: 4, label: '4단계 컴플렉스', desc: '정화의 정점 로터스 플라워', iconName: 'flower' },
+        ],
+      },
+    ],
+  },
+  {
+    keys: ['콜라겐', '피부', '탄력', '뷰티', 'collagen', 'inner beauty'],
+    enCopy: 'inner beauty',
+    motifs: [
+      {
+        id: 'glow',
+        title: '광채 (Inner Glow)',
+        enTitle: 'Skin Radiance',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '심플 단일 빛 포인트', iconName: 'sparkle' },
+          { level: 2, label: '2단계 베이직', desc: '사방으로 퍼지는 광채 스파클', iconName: 'sparkles' },
+          { level: 3, label: '3단계 스탠다드', desc: '빛을 굴절시키는 프리즘 젬스톤', iconName: 'gem' },
+          { level: 4, label: '4단계 컴플렉스', desc: '보석 같은 다이아몬드 피부결', iconName: 'diamond' },
+        ],
+      },
+      {
+        id: 'layer',
+        title: '탄력 레이어 (Layer)',
+        enTitle: 'Dermal Elasticity',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '심플 코어 서클', iconName: 'circle-dot' },
+          { level: 2, label: '2단계 베이직', desc: '진피층 3중 밀도 레이어', iconName: 'layers' },
+          { level: 3, label: '3단계 스탠다드', desc: '피부 장벽 쉴드 베리어', iconName: 'shield' },
+          { level: 4, label: '4단계 컴플렉스', desc: '콜라겐 구조 DNA 나선 체인', iconName: 'dna' },
+        ],
+      },
+      {
+        id: 'flower',
+        title: '플로럴 (Floral)',
+        enTitle: 'Floral Bloom',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '심플 꽃잎 실루엣', iconName: 'flower' },
+          { level: 2, label: '2단계 베이직', desc: '입체적인 플라워 블룸', iconName: 'flower-2' },
+          { level: 3, label: '3단계 스탠다드', desc: '피어나는 연꽃 모티프', iconName: 'flower' },
+          { level: 4, label: '4단계 컴플렉스', desc: '프리미엄 뷰티 크라운 왕관', iconName: 'crown' },
+        ],
+      },
+    ],
+  },
+  {
+    keys: ['다이어트', '슬리밍', '체지방', '더블컷', '체중', 'diet', 'slim'],
+    enCopy: 'slim double cut',
+    motifs: [
+      {
+        id: 'scale',
+        title: '체중계 (Scale)',
+        enTitle: 'Body Scale',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '심플 체중계 실루엣', iconName: 'scale' },
+          { level: 2, label: '2단계 베이직', desc: '체지방 다운 게이지 메터', iconName: 'gauge' },
+          { level: 3, label: '3단계 스탠다드', desc: '하향 안정화 다운 트렌드', iconName: 'trending-down' },
+          { level: 4, label: '4단계 컴플렉스', desc: '실시간 바디 액티비티 파동', iconName: 'activity' },
+        ],
+      },
+      {
+        id: 'cut',
+        title: '더블컷 (Cut & Slash)',
+        enTitle: 'Double Cut',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '단일 컷 슬래시 라인', iconName: 'slash' },
+          { level: 2, label: '2단계 베이직', desc: '칼로리 분해 가위 심볼', iconName: 'scissors' },
+          { level: 3, label: '3단계 스탠다드', desc: '탄수화물 흡수 차단 밴 마크', iconName: 'ban' },
+          { level: 4, label: '4단계 컴플렉스', desc: '검증된 다이어트 쉴드 체크', iconName: 'shield-check' },
+        ],
+      },
+      {
+        id: 'burn',
+        title: '버닝 / 연소 (Burn)',
+        enTitle: 'Metabolic Burn',
+        levels: [
+          { level: 1, label: '1단계 심플', desc: '심플 스피드 번개 펄스', iconName: 'zap' },
+          { level: 2, label: '2단계 베이직', desc: '체지방 연소 서멀 플레임', iconName: 'flame' },
+          { level: 3, label: '3단계 스탠다드', desc: '지속 순환 에너지 오빗', iconName: 'orbit' },
+          { level: 4, label: '4단계 컴플렉스', desc: '활력 부스팅 심장 박동 펄스', iconName: 'heart-pulse' },
+        ],
+      },
+    ],
+  },
+];
+
+/**
+ * 키워드에 대해 여러 가지 버전의 모티프(예: 수면 -> 달, 침대, 별, 자는 얼굴 등)를 제안하고,
+ * 각 모티프마다 바툴 슬라이더로 1단계(심플) ~ 4단계(컴플렉스) 복잡도를 즉시 조절할 수 있도록 번들링
+ */
+export function searchMotifClusters(indexData, rawKeyword) {
+  const kw = (rawKeyword || '수면').trim();
+  const lower = kw.toLowerCase();
+
+  // 1. 사전 정의된 웰니스 모티프 매칭 확인
+  for (const preset of WELLNESS_MOTIF_PRESETS) {
+    if (preset.keys.some(k => lower === k || lower.includes(k) || k.includes(lower))) {
+      const hydratedMotifs = preset.motifs.map(m => ({
+        id: m.id,
+        title: m.title,
+        enTitle: m.enTitle,
+        currentLevel: 1,
+        levels: m.levels.map(lvl => ({
+          level: lvl.level,
+          label: lvl.label,
+          desc: lvl.desc,
+          icon: getIconFromIndexOrFallback(indexData, lvl.iconName, lvl.customSvg),
+        })),
+      }));
+      return {
+        keyword: kw,
+        enCopy: preset.enCopy,
+        motifs: hydratedMotifs,
+      };
+    }
+  }
+
+  // 2. 사전에 없는 경우 글로벌 인덱스 검색 결과로부터 3개 모티프 동적 생성
+  const searchRes = searchCandidateIcons(indexData, kw, 0);
+  const candidates = searchRes.candidates;
+
+  // 후보들을 3개 그룹(모티프)으로 나누고 각각 4단계 복잡도 부여
+  const motif1Icons = candidates.slice(0, 4);
+  const motif2Icons = candidates.slice(4, 8);
+  const motif3Icons = candidates.slice(8, 12);
+
+  const makeLevels = (group, baseName) => [
+    { level: 1, label: '1단계 심플', desc: `${baseName} 간결한 미니멀 실루엣`, icon: group[0] || candidates[0] },
+    { level: 2, label: '2단계 베이직', desc: `${baseName} 기본 윤곽 및 특징 표현`, icon: group[1] || candidates[1] || group[0] },
+    { level: 3, label: '3단계 스탠다드', desc: `${baseName} 디테일 및 균형 잡힌 결합`, icon: group[2] || candidates[2] || group[0] },
+    { level: 4, label: '4단계 컴플렉스', desc: `${baseName} 풍부한 요소와 복합 비주얼`, icon: group[3] || candidates[3] || group[0] },
+  ];
+
+  return {
+    keyword: kw,
+    enCopy: searchRes.enCopy,
+    motifs: [
+      {
+        id: 'motif-1',
+        title: `모티프 1 · ${candidates[0]?.name || kw}`,
+        enTitle: `${searchRes.enCopy} Core`,
+        currentLevel: 1,
+        levels: makeLevels(motif1Icons, candidates[0]?.name || '핵심 심볼'),
+      },
+      {
+        id: 'motif-2',
+        title: `모티프 2 · ${candidates[4]?.name || '연관 모티프'}`,
+        enTitle: `${searchRes.enCopy} Variant`,
+        currentLevel: 1,
+        levels: makeLevels(motif2Icons, candidates[4]?.name || '서브 심볼'),
+      },
+      {
+        id: 'motif-3',
+        title: `모티프 3 · ${candidates[8]?.name || '확장 모티프'}`,
+        enTitle: `${searchRes.enCopy} Extended`,
+        currentLevel: 1,
+        levels: makeLevels(motif3Icons, candidates[8]?.name || '확장 심볼'),
+      },
+    ],
   };
 }
 

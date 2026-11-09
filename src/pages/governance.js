@@ -13,6 +13,7 @@ import {
 import {
   loadIconIndex,
   searchCandidateIcons,
+  searchMotifClusters,
   saveLearnedPreference,
   VB_ICON_VARIANTS,
   renderVbStyledIconSvg,
@@ -446,6 +447,8 @@ function setupIconGenerator(el) {
     }
   };
 
+  const motifLevels = {};
+
   const renderAllKeywordBlocks = () => {
     if (!indexData) return;
     const rawKeywords = (kwInput.value || '수면, 디톡스')
@@ -457,43 +460,68 @@ function setupIconGenerator(el) {
     if (activeKwIdx >= keywords.length) activeKwIdx = 0;
 
     currentBlocks = keywords.map(kw => {
-      const offset = pageOffsets[kw] || 0;
-      const res = searchCandidateIcons(indexData, kw, offset);
-      const savedCandId = selectedCandByKw[kw];
-      const selectedCandidate = res.candidates.find(c => c.id === savedCandId) || res.candidates[0];
-      if (selectedCandidate) {
-        selectedCandByKw[kw] = selectedCandidate.id;
-      }
+      const cluster = searchMotifClusters(indexData, kw);
       return {
-        keyword: res.keyword,
-        enCopy: res.enCopy,
-        candidates: res.candidates,
-        selectedCandidate,
+        keyword: cluster.keyword,
+        enCopy: cluster.enCopy,
+        motifs: cluster.motifs,
       };
     });
 
     kwListEl.innerHTML = currentBlocks.map((block, bIdx) => {
-      const candsHtml = block.candidates.map(cand => {
-        const isSelected = block.selectedCandidate && block.selectedCandidate.id === cand.id;
-        return `
-          <button type="button" class="ig-cand-tile ${isSelected ? 'active' : ''}" data-kw-idx="${bIdx}" data-cand-id="${cand.id}" title="${cand.setName}: ${cand.name}">
-            <div class="ig-cand-svg">${renderCandidateThumbSvg(cand)}</div>
-            <span class="ig-cand-tier">${cand.tierLabel}</span>
-          </button>`;
-      }).join('');
+      const motifsHtml = block.motifs.map((motif, mIdx) => {
+        const key = `${block.keyword}:${motif.id}`;
+        const curLevel = motifLevels[key] || 1;
+        const levelObj = motif.levels[curLevel - 1] || motif.levels[0];
+        const activeIcon = levelObj.icon;
 
-      const variantsHtml = VB_ICON_VARIANTS.map((v, vIdx) => {
-        const isActiveVar = bIdx === activeKwIdx && v.id === activeVariantId;
-        const svg = renderVbStyledIconSvg(block.selectedCandidate, v.id, {
-          koText: block.keyword,
-          enText: block.enCopy,
-          uid: `b${bIdx}-v${vIdx}`,
-        });
+        const variantsHtml = VB_ICON_VARIANTS.map((v, vIdx) => {
+          const svg = renderVbStyledIconSvg(activeIcon, v.id, {
+            koText: block.keyword,
+            enText: block.enCopy,
+            uid: `b${bIdx}-m${mIdx}-v${vIdx}`,
+          });
+          return `
+            <div class="ig-motif-var-item">
+              <div class="ig-motif-var-svg">${svg}</div>
+              <span class="ig-motif-var-label">${v.label}</span>
+            </div>`;
+        }).join('');
+
         return `
-          <button type="button" class="ig-var-tile ${isActiveVar ? 'active' : ''}" data-kw-idx="${bIdx}" data-var-id="${v.id}">
-            <div class="ig-var-svg">${svg}</div>
-            <span class="ig-var-name">${v.label}</span>
-          </button>`;
+          <div class="ig-motif-card" data-kw="${block.keyword}" data-motif-id="${motif.id}">
+            <div class="ig-motif-card-head">
+              <div class="ig-motif-title-group">
+                <span class="ig-motif-badge-num">모티프 ${mIdx + 1}</span>
+                <strong class="ig-motif-title">${motif.title}</strong>
+              </div>
+              <span class="ig-motif-lvl-badge">Lv.${curLevel} ${levelObj.label}</span>
+            </div>
+
+            <div class="ig-slider-box">
+              <div class="ig-slider-desc-row">
+                <span class="ig-slider-desc">특징: ${levelObj.desc}</span>
+                <span class="ig-slider-hint">바툴로 복잡도 실시간 조절</span>
+              </div>
+              <input type="range" min="1" max="4" step="1" value="${curLevel}" class="ig-complexity-range" data-kw="${block.keyword}" data-motif-id="${motif.id}">
+              <div class="ig-slider-ticks">
+                <span class="${curLevel === 1 ? 'active' : ''}">① 심플</span>
+                <span class="${curLevel === 2 ? 'active' : ''}">② 베이직</span>
+                <span class="${curLevel === 3 ? 'active' : ''}">③ 스탠다드</span>
+                <span class="${curLevel === 4 ? 'active' : ''}">④ 컴플렉스</span>
+              </div>
+            </div>
+
+            <div class="ig-sub-label">바이탈뷰티 6가지 배지 스타일 실시간 시뮬레이션</div>
+            <div class="ig-motif-variants-grid">
+              ${variantsHtml}
+            </div>
+
+            <div class="ig-motif-action-row">
+              <button type="button" class="btn btn-sm btn-outline ig-dl-ai-single" data-kw="${block.keyword}" data-motif-id="${motif.id}">.AI 벡터 다운로드</button>
+              <button type="button" class="btn btn-sm btn-outline ig-dl-svg-single" data-kw="${block.keyword}" data-motif-id="${motif.id}">.SVG 다운로드</button>
+            </div>
+          </div>`;
       }).join('');
 
       return `
@@ -501,57 +529,64 @@ function setupIconGenerator(el) {
           <div class="ig-kw-head">
             <div>
               <strong class="ig-kw-ko">${block.keyword}</strong>
-              <span class="ig-kw-en">${block.enCopy}</span>
+              <span class="ig-kw-en">${block.enCopy} · 모티프 ${block.motifs.length}종 제안</span>
             </div>
-            <button type="button" class="ig-cycle-btn" data-cycle-kw="${block.keyword}">↻ 다른 형태</button>
           </div>
-
-          <div class="ig-tier-bar">
-            <span>형태 후보 · 심플</span>
-            <span>복잡</span>
-          </div>
-
-          <div class="ig-cand-grid">
-            ${candsHtml}
-          </div>
-
-          <div class="ig-sub-label">선택한 형태의 바이탈뷰티 버전</div>
-          <div class="ig-var-grid">
-            ${variantsHtml}
+          <div style="margin-top:14px;">
+            ${motifsHtml}
           </div>
         </div>`;
     }).join('');
 
-    // 이벤트 바인딩: 다른 형태 순환 버튼
-    kwListEl.querySelectorAll('.ig-cycle-btn').forEach(btn => {
+    // 이벤트 바인딩: 각 모티프별 복잡도 조절 슬라이더
+    kwListEl.querySelectorAll('.ig-complexity-range').forEach(slider => {
+      slider.oninput = e => {
+        const kw = e.target.getAttribute('data-kw');
+        const motifId = e.target.getAttribute('data-motif-id');
+        motifLevels[`${kw}:${motifId}`] = +e.target.value;
+        renderAllKeywordBlocks();
+      };
+    });
+
+    // 이벤트 바인딩: 개별 모티프 .AI 다운로드
+    kwListEl.querySelectorAll('.ig-dl-ai-single').forEach(btn => {
       btn.onclick = () => {
-        const kw = btn.getAttribute('data-cycle-kw');
-        pageOffsets[kw] = (pageOffsets[kw] || 0) + 1;
-        delete selectedCandByKw[kw];
-        renderAllKeywordBlocks();
+        const kw = btn.getAttribute('data-kw');
+        const motifId = btn.getAttribute('data-motif-id');
+        const block = currentBlocks.find(b => b.keyword === kw);
+        const motif = block?.motifs.find(m => m.id === motifId);
+        if (!motif) return;
+        const curLevel = motifLevels[`${kw}:${motif.id}`] || 1;
+        const levelObj = motif.levels[curLevel - 1] || motif.levels[0];
+        const exportSvg = buildSingleIconExportSvg(levelObj.icon, 'circle-line', {
+          koText: block.keyword,
+          enText: block.enCopy,
+        });
+        const safeKw = block.keyword.replace(/\s+/g, '_');
+        const blob = buildIllustratorAiBlob(exportSvg, `VITALBEAUTIE_${safeKw}_${motif.id}_Lv${curLevel}`);
+        triggerDownload(blob, `VITALBEAUTIE_Icon_${safeKw}_${motif.id}_Lv${curLevel}.ai`);
+        showToast(`${block.keyword} - ${motif.title} (Lv.${curLevel}) .ai 파일이 다운로드되었습니다`);
       };
     });
 
-    // 이벤트 바인딩: 후보 픽토그램 12개 중 선택
-    kwListEl.querySelectorAll('.ig-cand-tile').forEach(tile => {
-      tile.onclick = () => {
-        const bIdx = +tile.getAttribute('data-kw-idx');
-        const candId = tile.getAttribute('data-cand-id');
-        const block = currentBlocks[bIdx];
-        if (!block) return;
-        selectedCandByKw[block.keyword] = candId;
-        saveLearnedPreference(block.keyword, candId);
-        activeKwIdx = bIdx;
-        renderAllKeywordBlocks();
-      };
-    });
-
-    // 이벤트 바인딩: 6가지 바이탈뷰티 버전 중 선택
-    kwListEl.querySelectorAll('.ig-var-tile').forEach(tile => {
-      tile.onclick = () => {
-        activeKwIdx = +tile.getAttribute('data-kw-idx');
-        activeVariantId = tile.getAttribute('data-var-id');
-        renderAllKeywordBlocks();
+    // 이벤트 바인딩: 개별 모티프 .SVG 다운로드
+    kwListEl.querySelectorAll('.ig-dl-svg-single').forEach(btn => {
+      btn.onclick = () => {
+        const kw = btn.getAttribute('data-kw');
+        const motifId = btn.getAttribute('data-motif-id');
+        const block = currentBlocks.find(b => b.keyword === kw);
+        const motif = block?.motifs.find(m => m.id === motifId);
+        if (!motif) return;
+        const curLevel = motifLevels[`${kw}:${motif.id}`] || 1;
+        const levelObj = motif.levels[curLevel - 1] || motif.levels[0];
+        const exportSvg = buildSingleIconExportSvg(levelObj.icon, 'circle-line', {
+          koText: block.keyword,
+          enText: block.enCopy,
+        });
+        const safeKw = block.keyword.replace(/\s+/g, '_');
+        const blob = new Blob([exportSvg], { type: 'image/svg+xml;charset=utf-8' });
+        triggerDownload(blob, `VITALBEAUTIE_Icon_${safeKw}_${motif.id}_Lv${curLevel}.svg`);
+        showToast(`${block.keyword} - ${motif.title} (Lv.${curLevel}) .svg 파일이 다운로드되었습니다`);
       };
     });
 
@@ -584,15 +619,16 @@ export function renderVisualDnaPage(el) {
   renderLogoFitPage(el, 'icon');
 }
 
-/* ─── 3. Family Look (성분·기능 키워드 & 대표 컬러칩 선택 기반 글로벌 통용 팬톤칩 제안) ─── */
+/* ─── 3. Family Look (성분·기능 키워드 & 17개 대표 컬러칩 선택 기반 글로벌 통용 팬톤칩 제안 및 기존 제품과 1:1 비교) ─── */
 export function renderFamilyLookPage(el) {
-  let selectedToneId = 'auto';
+  let selectedToneId = 'pink';
+  let selectedMinDe = 10;
   let pageOffset = 0;
 
   const chipsHtml = REPRESENTATIVE_COLOR_CHIPS.map(chip => `
-    <button type="button" class="fl-fashion-chip ${chip.id === selectedToneId ? 'active' : ''}" data-tone-id="${chip.id}">
-      <span class="fl-fashion-swatch" style="background:${chip.swatch}; ${chip.id === 'beige' ? 'border-color:#C5BFB0;' : ''}"></span>
-      <span class="fl-fashion-label">${chip.label}</span>
+    <button type="button" class="fl-round-chip ${chip.id === selectedToneId ? 'active' : ''}" data-tone-id="${chip.id}" title="${chip.label}">
+      <span class="fl-round-swatch" style="background:${chip.swatch}; ${chip.id === 'beige' ? 'border-color:#C5BFB0;' : ''}"></span>
+      <span class="fl-round-label">${chip.label}</span>
     </button>
   `).join('');
 
@@ -602,32 +638,41 @@ export function renderFamilyLookPage(el) {
     `건강기능식품·일반식품의 성분이나 기능 키워드를 입력하면 글로벌 시장에서 통용되는 대표 컬러 계열과 그 선정 근거를 제시하고, 바이탈뷰티 기존 제품군(${PACKAGE_LINES.allProducts.length}종)과 겹치지 않는 공식 PANTONE Solid Coated 컬러칩을 제안합니다.`
   )}
     <div class="gov-layout">
-      <!-- 좌측: 성분·기능 키워드 입력 & 패션몰 스타일 대표 컬러칩 선택 -->
+      <!-- 좌측: 성분 또는 기능 & 대표 컬러(17개) & 최소 색차 (ΔE2000) -->
       <div class="card gov-panel">
-        <div class="pf-sec-title" style="margin-top:0;padding-top:0;border-top:none">신제품 성분 · 기능 &amp; 컬러톤 선택</div>
+        <label class="gov-label" for="fl-func" style="font-size:14px;font-weight:700;color:#101820;margin-bottom:8px;">성분 또는 기능</label>
+        <input id="fl-func" class="gov-input" value="콜라겐" placeholder="예: 수면, 콜라겐, 유산균, 홍삼">
 
-        <label class="gov-label" for="fl-func">성분 · 기능 키워드 입력</label>
-        <input id="fl-func" class="gov-input" value="수면" placeholder="예: 수면, 콜라겐, 비타민, 슬리밍, 유산균, 눈, 간, 홍삼, 관절, 애사비, 효소...">
-
-        <label class="gov-label" style="margin-top:18px;">원하는 컬러톤 선택</label>
-        <div class="fl-fashion-chip-grid" id="fl-tone-chips">
+        <label class="gov-label" style="font-size:14px;font-weight:700;color:#101820;margin-top:24px;margin-bottom:4px;">대표 컬러 (선택)</label>
+        <div class="fl-chip-grid-17" id="fl-chips-17">
           ${chipsHtml}
         </div>
+
+        <label class="gov-label" style="font-size:14px;font-weight:700;color:#101820;margin-top:24px;margin-bottom:4px;">기존 컬러와 최소 색차 (ΔE2000)</label>
+        <div class="fl-de-bar" id="fl-de-bar">
+          <button type="button" class="fl-de-btn ${selectedMinDe === 6 ? 'active' : ''}" data-de="6">6</button>
+          <button type="button" class="fl-de-btn ${selectedMinDe === 10 ? 'active' : ''}" data-de="10">10</button>
+          <button type="button" class="fl-de-btn ${selectedMinDe === 15 ? 'active' : ''}" data-de="15">15</button>
+          <button type="button" class="fl-de-btn ${selectedMinDe === 20 ? 'active' : ''}" data-de="20">20</button>
+        </div>
+        <p class="fl-de-desc">
+          숫자가 클수록 기존 제품과 더 확실히 다른 색만 남깁니다. 10이면 매대에서 나란히 놓아도 구분되는 수준입니다. 각 제안 아래에는 그 색과 가장 가까운 기존 제품의 컬러와 Pantone 번호를 나란히 비교합니다.
+        </p>
       </div>
 
-      <!-- 우측: 글로벌 컬러 추천 근거 & 팬톤 컬러칩 시뮬레이션 -->
+      <!-- 우측: 제안 팬톤칩과 기존 제품 실시간 1:1 비교 -->
       <div class="gov-result">
         <div class="card" style="padding:24px">
-          <div class="gov-cand-top" style="align-items:flex-start; margin-bottom:16px;">
+          <div class="gov-cand-top" style="align-items:flex-start; margin-bottom:18px;">
             <div style="flex:1; padding-right:16px;">
               <div id="fl-cat-title" style="font-size:15px; font-weight:700; color:#101820; margin-bottom:4px;"></div>
-              <div id="fl-global-color-badge" style="font-size:12.5px; font-weight:600; color:#101820; margin-bottom:10px;"></div>
+              <div id="fl-global-color-badge" style="font-size:12.5px; font-weight:600; color:#101820; margin-bottom:8px;"></div>
               <div id="fl-global-reason" style="font-size:13px; color:#4A505C; line-height:1.65; background:#F8F9FB; border-left:3px solid #101820; padding:12px 14px;"></div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline" id="fl-re" style="flex-shrink:0;">조합 다시 생성</button>
+            <button type="button" class="btn btn-sm btn-outline" id="fl-re" style="flex-shrink:0;">다른 조합 제안</button>
           </div>
 
-          <div class="fl-pantone-only-grid" id="fl-sug"></div>
+          <div style="display:flex; flex-direction:column; gap:16px;" id="fl-sug"></div>
         </div>
       </div>
     </div>`;
@@ -638,8 +683,9 @@ export function renderFamilyLookPage(el) {
     const res = suggestChips({
       funcText: $('fl-func').value,
       selectedToneId,
+      minDeltaE: selectedMinDe,
       offset: pageOffset,
-    }, 8);
+    }, 6);
 
     const ga = res.globalAnalysis;
     $('fl-cat-title').textContent = ga.categoryTitle;
@@ -648,44 +694,76 @@ export function renderFamilyLookPage(el) {
       : `글로벌 통용 컬러: ${ga.globalColorName} · 선택 필터: ${res.selectedChipObj.label}`;
     $('fl-global-reason').textContent = ga.globalReason;
 
-    $('fl-sug').innerHTML = res.picked.map(p => `
-      <div class="fl-pantone-chip-card" data-pantone="${p.pantoneCode}" data-hex="${p.hex}" title="클릭하여 ${p.pantoneCode} (${p.hex}) 복사">
-        <div class="fl-pantone-chip-color" style="background:${p.hex}"></div>
-        <div class="fl-pantone-chip-footer">
-          <strong class="fl-pantone-chip-code">${p.pantoneCode}</strong>
-          <span class="fl-pantone-chip-hex">${p.hex}</span>
-        </div>
-      </div>
-    `).join('');
+    if (!res.picked.length) {
+      $('fl-sug').innerHTML = `
+        <div style="padding:40px 20px;text-align:center;color:#7A808C;background:#F8F9FB;border:1px dashed #D5D8DE;">
+          최소 색차 ΔE ${selectedMinDe} 기준을 만족하는 신규 팬톤 후보가 없습니다. 최소 색차 기준을 낮추거나 다른 대표 컬러를 선택하세요.
+        </div>`;
+      return;
+    }
 
-    el.querySelectorAll('.fl-pantone-chip-card').forEach(card => {
-      card.onclick = () => {
-        const code = card.getAttribute('data-pantone');
-        const hex = card.getAttribute('data-hex');
-        copyToClipboard(`${code} (${hex})`);
-      };
-    });
+    $('fl-sug').innerHTML = res.picked.map(p => {
+      const deLabel = p.minD >= 12 ? '매대 구분 매우 확실' : p.minD >= 10 ? '매대 구분 명확' : '식별 가능 수준';
+      return `
+        <div class="fl-comp-card">
+          <div class="fl-comp-row">
+            <!-- 제안 컬러 -->
+            <div class="fl-comp-chip-box">
+              <div class="fl-comp-swatch-lg" style="background:${p.hex}"></div>
+              <div class="fl-comp-meta">
+                <span class="fl-comp-role" style="color:#00843D;">신규 추천 PANTONE</span>
+                <strong class="fl-comp-title">${p.pantoneCode}</strong>
+                <span class="fl-comp-sub">${p.hex}</span>
+              </div>
+            </div>
+
+            <!-- 색차 델타E 배지 -->
+            <div class="fl-comp-divider">
+              <span class="fl-de-pill">ΔE ${p.minD.toFixed(1)}</span>
+              <small style="font-size:10.5px;color:#7A808C;margin-top:4px;white-space:nowrap;">${deLabel}</small>
+            </div>
+
+            <!-- 가장 가까운 기존 제품 -->
+            <div class="fl-comp-chip-box">
+              <div class="fl-comp-swatch-lg" style="background:${p.nearestHex}"></div>
+              <div class="fl-comp-meta">
+                <span class="fl-comp-role" style="color:#101820;">가장 가까운 기존 제품</span>
+                <strong class="fl-comp-title">${p.nearestName}</strong>
+                <span class="fl-comp-sub">${p.nearestPantone} (${p.nearestHex})</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 설명 코멘트 -->
+          <div class="fl-comp-footer">
+            기존 제품 <b>「${p.nearestName}」</b> (${p.nearestPantone}) 대비 색차 <b>ΔE2000 = ${p.minD.toFixed(1)}</b>을 확보하여, 올리브영 등 매대에 나란히 진열되어도 소비자에게 혼동을 주지 않고 신제품만의 고유한 식별력을 가집니다.
+          </div>
+        </div>`;
+    }).join('');
   };
 
-  // 키워드 입력 시 자동으로 키워드 맞춤 추천('auto')으로 전환하여 즉시 성분/기능에 맞는 글로벌 컬러 제안
   $('fl-func').oninput = () => {
     pageOffset = 0;
-    if (selectedToneId !== 'auto') {
-      selectedToneId = 'auto';
-      el.querySelectorAll('#fl-tone-chips .fl-fashion-chip').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-tone-id') === 'auto');
-      });
-    }
     renderSuggestions();
   };
 
-  // 대표 컬러칩 클릭 시 해당 톤으로 필터링
-  el.querySelectorAll('#fl-tone-chips .fl-fashion-chip').forEach(btn => {
+  el.querySelectorAll('#fl-chips-17 .fl-round-chip').forEach(btn => {
     btn.onclick = () => {
       selectedToneId = btn.getAttribute('data-tone-id');
       pageOffset = 0;
-      el.querySelectorAll('#fl-tone-chips .fl-fashion-chip').forEach(b => {
+      el.querySelectorAll('#fl-chips-17 .fl-round-chip').forEach(b => {
         b.classList.toggle('active', b.getAttribute('data-tone-id') === selectedToneId);
+      });
+      renderSuggestions();
+    };
+  });
+
+  el.querySelectorAll('#fl-de-bar .fl-de-btn').forEach(btn => {
+    btn.onclick = () => {
+      selectedMinDe = +btn.getAttribute('data-de');
+      pageOffset = 0;
+      el.querySelectorAll('#fl-de-bar .fl-de-btn').forEach(b => {
+        b.classList.toggle('active', +b.getAttribute('data-de') === selectedMinDe);
       });
       renderSuggestions();
     };
@@ -750,7 +828,14 @@ export function renderLocalizationPage(el) {
           <div><label class="gov-label">인식된 높이(mm)</label><input id="lc-h" type="number" step="0.1" class="gov-input"></div>
           <div><label class="gov-label">주표시면 면적</label><input id="lc-area" class="gov-input" disabled></div>
         </div>
-        <div class="pf-sec-title">2. 자동 인식된 문안 위치 & 역할 (편집 가능)</div>
+
+        <div class="pf-sec-title">2. 제품명 크기 직접 조절 (pt)</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+          <input id="lc-title-pt-range" class="vb-range" type="range" min="14" max="44" step="1" value="26" style="flex:1">
+          <input id="lc-title-pt" type="number" min="10" max="60" step="0.5" class="gov-input" value="26" style="width:84px;text-align:center;font-weight:700">
+        </div>
+
+        <div class="pf-sec-title">3. 자동 인식된 문안 위치 &amp; 역할 (편집 가능)</div>
         <div id="lc-nodes-editor" class="lc-nodes-list"></div>
       </div>
 
@@ -767,6 +852,12 @@ export function renderLocalizationPage(el) {
     $('lc-h').value = parsed.hMm;
     $('lc-area').value = `${parsed.areaCm2} ㎠ (${parsed.type === 'hff' ? '건강기능식품' : '일반식품'})`;
     $('lc-file-status').innerHTML = `인식 완료: <b>${parsed.fileName}</b> · 폭 <b>${parsed.wMm}mm</b> × 높이 <b>${parsed.hMm}mm</b> · 문안 블록 <b>${parsed.nodes.length}개</b> 추출`;
+
+    const titleNode = parsed.nodes.find(n => n.role === 'title');
+    if (titleNode) {
+      $('lc-title-pt-range').value = titleNode.pt || 26;
+      $('lc-title-pt').value = titleNode.pt || 26;
+    }
 
     $('lc-nodes-editor').innerHTML = parsed.nodes.map((n, idx) => `
       <div class="lc-node-item">
@@ -812,6 +903,21 @@ export function renderLocalizationPage(el) {
           <div class="lc-tr-box">${translatedRows}</div>
         </div>`;
     }).join('');
+  };
+
+  $('lc-title-pt-range').oninput = e => {
+    const val = +e.target.value;
+    $('lc-title-pt').value = val;
+    const tn = parsed.nodes.find(n => n.role === 'title');
+    if (tn) tn.pt = val;
+    renderSimulations();
+  };
+  $('lc-title-pt').oninput = e => {
+    const val = +e.target.value;
+    $('lc-title-pt-range').value = val;
+    const tn = parsed.nodes.find(n => n.role === 'title');
+    if (tn) tn.pt = val;
+    renderSimulations();
   };
 
   $('lc-upload').onchange = async e => {

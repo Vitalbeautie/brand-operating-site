@@ -17,7 +17,8 @@ const PAGE_INFO = {
   '/gov/visual-dna': { title: 'BRAND VISIBILITY', section: 'BI / PI GOVERNANCE' },
   '/gov/family-look': { title: '02 FAMILY LOOK', section: 'BI / PI GOVERNANCE' },
   '/gov/localization': { title: '03 LOCALIZATION', section: 'BI / PI GOVERNANCE' },
-  '/gov/package-front': { title: '04 PACKAGE FRONT', section: 'BI / PI GOVERNANCE' },
+  '/gov/asset-library': { title: '04 ASSET LIBRARY', section: 'BI / PI GOVERNANCE' },
+  '/gov/package-front': { title: '04 ASSET LIBRARY', section: 'BI / PI GOVERNANCE' },
   '/assets': { title: 'ASSET LIBRARY', section: 'ARCHIVE' },
   '/versions': { title: 'VERSION HISTORY', section: 'ARCHIVE' }
 };

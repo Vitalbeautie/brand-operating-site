@@ -4,22 +4,26 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * 패션몰 스타일 대표 컬러칩 필터 (사용자가 직접 텍스트 입력 대신 클릭하여 선택)
+ * 대표 컬러칩 필터 (17개 컬러칩 · 레퍼런스 가이드 100% 동일 구성)
  */
 export const REPRESENTATIVE_COLOR_CHIPS = [
-  { id: 'auto', label: '키워드 자동 추천', swatch: 'conic-gradient(#E4002B, #FF8200, #FFD100, #00B140, #0072CE, #753BBD, #E4002B)', isAuto: true },
-  { id: 'pink', label: '핑크 · 코랄', swatch: '#F479C9', hues: [[315, 360], [0, 14]], L: [50, 88], C: [24, 85] },
-  { id: 'red', label: '레드 · 버건디', swatch: '#D22630', hues: [[350, 360], [0, 28]], L: [28, 62], C: [38, 88] },
-  { id: 'orange', label: '오렌지 · 피치', swatch: '#FF671F', hues: [[25, 65]], L: [50, 82], C: [40, 92] },
-  { id: 'yellow', label: '옐로우 · 앰버', swatch: '#FFD100', hues: [[66, 102]], L: [68, 93], C: [40, 95] },
-  { id: 'lime', label: '라임 · 연두', swatch: '#97D700', hues: [[100, 134]], L: [58, 88], C: [36, 90] },
-  { id: 'green', label: '그린 · 보태니컬', swatch: '#00843D', hues: [[130, 168]], L: [28, 72], C: [28, 85] },
-  { id: 'mint', label: '민트 · 터콰이즈', swatch: '#00BFB3', hues: [[165, 205]], L: [45, 86], C: [22, 76] },
-  { id: 'blue', label: '블루 · 아쿠아', swatch: '#0084D5', hues: [[206, 265]], L: [38, 82], C: [24, 82] },
-  { id: 'navy', label: '네이비 · 인디고', swatch: '#002F6C', hues: [[245, 295]], L: [14, 42], C: [20, 75] },
-  { id: 'purple', label: '퍼플 · 라벤더', swatch: '#753BBD', hues: [[280, 328]], L: [26, 82], C: [22, 80] },
-  { id: 'brown', label: '브라운 · 골드', swatch: '#86724C', hues: [[30, 85]], L: [20, 62], C: [12, 48] },
-  { id: 'beige', label: '베이지 · 크림', swatch: '#E0C8AD', hues: [[40, 95]], L: [72, 92], C: [6, 30] },
+  { id: 'purple', label: '퍼플', swatch: '#753BBD', family: 'purple' },
+  { id: 'lavender', label: '라벤더', swatch: '#BCA7E8', family: 'purple' },
+  { id: 'blue', label: '블루', swatch: '#1D70B8', family: 'blue' },
+  { id: 'navy', label: '네이비', swatch: '#1D2A44', family: 'navy' },
+  { id: 'teal', label: '틸', swatch: '#008B8B', family: 'mint' },
+  { id: 'mint', label: '민트', swatch: '#7ED9B5', family: 'mint' },
+  { id: 'green', label: '그린', swatch: '#1F8A43', family: 'green' },
+  { id: 'yellow', label: '옐로', swatch: '#F7D02C', family: 'yellow' },
+  { id: 'gold', label: '골드', swatch: '#BFA054', family: 'yellow' },
+  { id: 'orange', label: '오렌지', swatch: '#ED6B22', family: 'orange' },
+  { id: 'coral', label: '코랄', swatch: '#F28E79', family: 'pink' },
+  { id: 'red', label: '레드', swatch: '#D9272E', family: 'red' },
+  { id: 'wine', label: '와인', swatch: '#6E1D2D', family: 'red' },
+  { id: 'pink', label: '핑크', swatch: '#E95A8B', family: 'pink' },
+  { id: 'brown', label: '브라운', swatch: '#6B3E26', family: 'brown' },
+  { id: 'beige', label: '베이지', swatch: '#E5D3BA', family: 'beige' },
+  { id: 'gray', label: '그레이', swatch: '#7B8590', family: 'navy' },
 ];
 
 /**

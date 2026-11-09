@@ -7,11 +7,11 @@ import { renderSidebar, updateSidebarActive, isDesignGuidePath } from './compone
 import { renderHeader } from './components/header.js';
 import { renderGuidelinePage } from './pages/guideline.js';
 import { renderStrategyPage } from './pages/strategy.js';
-import { renderAssetPage } from './pages/assets.js';
+import { renderAssetPage, renderAssetLibraryPage } from './pages/assets.js';
 import { renderColorPage } from './pages/colors.js';
 import { renderTypographyPage } from './pages/typography.js';
 import { renderVersionPage } from './pages/versions.js';
-import { renderLogoFitPage, renderVisualDnaPage, renderFamilyLookPage, renderLocalizationPage, renderPackageFrontPage } from './pages/governance.js';
+import { renderLogoFitPage, renderVisualDnaPage, renderFamilyLookPage, renderLocalizationPage } from './pages/governance.js';
 
 function init() {
   // Load brand synchronously (0ms)
@@ -36,7 +36,8 @@ function init() {
   registerRoute('/gov/visual-dna', (el) => renderLogoFitPage(el, 'icon'));
   registerRoute('/gov/family-look', (el) => renderFamilyLookPage(el));
   registerRoute('/gov/localization', (el) => renderLocalizationPage(el));
-  registerRoute('/gov/package-front', (el) => renderPackageFrontPage(el));
+  registerRoute('/gov/asset-library', (el) => renderAssetLibraryPage(el));
+  registerRoute('/gov/package-front', (el) => renderAssetLibraryPage(el));
 
   // Start router immediately
   startRouter((path) => {

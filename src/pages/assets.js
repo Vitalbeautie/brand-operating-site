@@ -3,6 +3,8 @@
    ═══════════════════════════════════════ */
 import { getBrand } from '../utils/brand.js';
 import { showToast } from '../utils/helpers.js';
+import { buildIllustratorAiBlob, getHffMarkSvg } from '../governance/engines.js';
+import { renderVbStyledIconSvg } from '../governance/iconGenerator.js';
 
 export function renderAssetPage(container) {
   const brand = getBrand();
@@ -348,4 +350,370 @@ function setupAssetCards(brand) {
       detail.scrollIntoView({ behavior: 'smooth' });
     });
   });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   04 ASSET LIBRARY — 통합 브랜드 공식 에셋 다운로드 센터
+   - 공식 영문/국문 워드마크 (Black & White)
+   - LAB PROVEN 심볼 모노그램 (Black & White)
+   - 식약처 공식 건강기능식품 15mm 마크 & GMP 마크
+   - 웰니스 핵심 기능 아이콘 6종
+   - 모든 에셋 .ai, .png(300DPI), .jpg(300DPI), .svg 원클릭 다운로드
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const EN_WORDMARK_INNER_BLACK = `
+  <polygon points="253.47 288.83 251.29 294.18 249.03 288.83 247.01 288.83 251.32 298.37 255.43 288.83 253.47 288.83" fill="#1D1D1B"/>
+  <rect x="257.31" y="288.83" width="1.89" height="9.16" fill="#1D1D1B"/>
+  <polygon points="260.95 288.83 260.95 290.58 263.5 290.58 263.5 297.99 265.39 297.99 265.39 290.58 267.93 290.58 267.93 288.83 260.95 288.83" fill="#1D1D1B"/>
+  <polygon points="272.26 288.45 268.04 297.99 270 297.99 272.23 292.62 274.44 297.99 276.46 297.99 272.26 288.45" fill="#1D1D1B"/>
+  <polygon points="279.63 296.24 279.63 288.83 277.74 288.83 277.74 297.99 282.33 297.99 284.1 296.24 279.63 296.24" fill="#1D1D1B"/>
+  <path d="m290.67,293.07c-.08-.02-.14-.09-.15-.18,0-.09.04-.17.11-.21.47-.24.98-.71.98-1.62,0-1.4-.96-2.23-2.57-2.23h-3.15v9.12h3.4c1.87,0,2.98-.99,2.98-2.66,0-1.1-.55-1.91-1.61-2.21m-1.71-.5h-1.8c-.12,0-.21-.09-.21-.21v-2.45c0-.12.09-.21.21-.21h1.8c1.05,0,1.59.47,1.59,1.4s-.53,1.47-1.59,1.47m-2.01,1c0-.12.09-.21.21-.21h1.98c1.29,0,2.04.68,2.04,1.87s-.68,1.85-1.97,1.85h-2.05c-.12,0-.21-.09-.21-.21v-3.29Z" fill="#1D1D1B"/>
+  <path d="m295.43,297.04c-.11,0-.21-.09-.21-.21v-2.74c0-.12.09-.21.21-.21h3.49v-.89h-3.49c-.11,0-.21-.09-.21-.21v-2.83c0-.12.09-.21.21-.21h4v-.91h-5.28v9.12h5.48v-.91h-4.2Z" fill="#1D1D1B"/>
+  <path d="m305.17,288.82l-.13-.3-.12.3-3.86,9.04-.04.09h1.13l1.07-2.51c.04-.08.12-.14.21-.14h3.21c.09,0,.18.06.21.14l1.02,2.51h1.2l-3.91-9.13Zm-.1,2.32c1.2,2.88,1.23,2.96,1.16,3.08-.04.06-.11.1-.19.1h-2.04c-.07,0-.15-.04-.18-.1-.04-.06-.05-.14-.02-.22l1.19-2.86.04-.09.04.09Z" fill="#1D1D1B"/>
+  <path d="m316.06,288.83v5.88c0,1.59-.8,2.43-2.33,2.43s-2.34-.84-2.34-2.43v-5.88h-1.07v5.96c0,2.06,1.28,3.28,3.42,3.28s3.4-1.23,3.4-3.28v-5.96h-1.08Z" fill="#1D1D1B"/>
+  <path d="m318.66,288.83v.91h2.61c.11,0,.21.09.21.21v8h1.07v-8c0-.12.09-.21.21-.21h2.61v-.91h-6.71Z" fill="#1D1D1B"/>
+  <rect x="326.96" y="288.83" width="1.07" height="9.12" fill="#1D1D1B"/>
+  <path d="m332.19,297.04c-.11,0-.21-.09-.21-.21v-2.74c0-.12.09-.21.21-.21h3.49v-.89h-3.49c-.11,0-.21-.09-.21-.21v-2.83c0-.12.09-.21.21-.21h4v-.91h-5.28v9.12h5.48v-.91h-4.2Z" fill="#1D1D1B"/>
+`;
+
+const EN_WORDMARK_INNER_WHITE = EN_WORDMARK_INNER_BLACK.replace(/fill="#1D1D1B"/g, 'fill="#FFFFFF"');
+
+const KO_WORDMARK_INNER_BLACK = `
+  <g fill="#1D1D1B">
+    <path d="M48.2 24.5h7.2v46.8h-7.2V50.2H25.4v21.1h-7.2V24.5h7.2v19.4h22.8V24.5z"/>
+    <path d="M72.4 24.5h7.2v46.8h-7.2V48.5H62.6v-6.3h9.8V24.5zM98.6 30.2v6.2H87.4v34.9h-7.2V24.5h25.4v5.7H98.6z"/>
+    <path d="M125.4 24.5h7.2v46.8h-7.2V49.2h-18.4v-6.3h18.4V24.5zM148.6 24.5h7.2v46.8h-7.2V24.5z"/>
+    <path d="M178.4 24.5h26.4v6.2h-19.2v14.1h17.6v6.2h-17.6v20.3h-7.2V24.5zM218.4 24.5h7.2v46.8h-7.2V24.5z"/>
+    <path d="M256.4 24.5h7.2v46.8h-7.2V49.2h-18.4v-6.3h18.4V24.5zM279.4 24.5h7.2v46.8h-7.2V24.5z"/>
+  </g>
+`;
+
+const KO_WORDMARK_INNER_WHITE = KO_WORDMARK_INNER_BLACK.replace(/fill="#1D1D1B"/g, 'fill="#FFFFFF"');
+
+const LAB_PROVEN_INNER_BLACK = `
+  <g fill="#101820">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#101820" stroke-width="2.5"/>
+    <circle cx="50" cy="50" r="41" fill="none" stroke="#101820" stroke-width="0.8"/>
+    <path d="M50 18 L53 38 L47 38 Z"/>
+    <path d="M50 82 L53 62 L47 62 Z"/>
+    <path d="M18 50 L38 53 L38 47 Z"/>
+    <path d="M82 50 L62 53 L62 47 Z"/>
+    <circle cx="50" cy="50" r="14" fill="none" stroke="#101820" stroke-width="2"/>
+    <circle cx="50" cy="50" r="5" fill="#101820"/>
+  </g>
+`;
+
+const LAB_PROVEN_INNER_WHITE = LAB_PROVEN_INNER_BLACK.replace(/#101820/g, '#FFFFFF');
+
+const GMP_MARK_INNER = `
+  <g fill="#101820">
+    <rect x="6" y="6" width="88" height="88" rx="8" fill="none" stroke="#101820" stroke-width="3"/>
+    <text x="50" y="44" text-anchor="middle" font-family="'Raleway', sans-serif" font-size="28" font-weight="900" letter-spacing="1">GMP</text>
+    <text x="50" y="62" text-anchor="middle" font-family="'Noto Sans KR', sans-serif" font-size="9" font-weight="700">우수건강기능식품</text>
+    <text x="50" y="74" text-anchor="middle" font-family="'Noto Sans KR', sans-serif" font-size="9" font-weight="700">제조기준 적합인증</text>
+    <text x="50" y="84" text-anchor="middle" font-family="'Noto Sans KR', sans-serif" font-size="6.5" font-weight="500" fill="#666">식품의약품안전처</text>
+  </g>
+`;
+
+const MASTER_ASSETS_LIST = [
+  // 01 브랜드 워드마크
+  {
+    id: 'wordmark_en_black',
+    category: 'wordmark',
+    categoryLabel: '01 브랜드 워드마크',
+    name: 'VITALBEAUTIE 영문 워드마크 (Black)',
+    enName: 'Primary Wordmark (VB Black)',
+    desc: '브랜드 공식 대표 영문 워드마크. 화이트 및 밝은 배경에 사용합니다. 최소 가로폭 20mm 이상 준수.',
+    isDark: false,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="245 285 92 16" width="100%" height="100%">${EN_WORDMARK_INNER_BLACK}</svg>`,
+  },
+  {
+    id: 'wordmark_en_white',
+    category: 'wordmark',
+    categoryLabel: '01 브랜드 워드마크',
+    name: 'VITALBEAUTIE 영문 워드마크 (Reverse White)',
+    enName: 'Reverse Wordmark (Pure White)',
+    desc: '다크 및 팬톤 배경 전용 반전 화이트 워드마크. 패키지 전면 및 389C 태그 상단 적용.',
+    isDark: true,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="245 285 92 16" width="100%" height="100%">${EN_WORDMARK_INNER_WHITE}</svg>`,
+  },
+  {
+    id: 'wordmark_ko_black',
+    category: 'wordmark',
+    categoryLabel: '01 브랜드 워드마크',
+    name: '바이탈뷰티 국문 워드마크 (Black)',
+    enName: 'Korean Wordmark (VB Black)',
+    desc: '국내 커뮤니케이션 및 인증용 공식 국문 워드마크. 최소 가로폭 30mm 이상 정비례 사용.',
+    isDark: false,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 20 280 54" width="100%" height="100%">${KO_WORDMARK_INNER_BLACK}</svg>`,
+  },
+  {
+    id: 'wordmark_ko_white',
+    category: 'wordmark',
+    categoryLabel: '01 브랜드 워드마크',
+    name: '바이탈뷰티 국문 워드마크 (Reverse White)',
+    enName: 'Korean Wordmark (Reverse White)',
+    desc: '어두운 바탕 및 풀컬러 단상자용 국문 반전 워드마크. 정품 패키지 보증에 활용.',
+    isDark: true,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 20 280 54" width="100%" height="100%">${KO_WORDMARK_INNER_WHITE}</svg>`,
+  },
+
+  // 02 심볼 & 모노그램
+  {
+    id: 'symbol_lab_proven_black',
+    category: 'symbol',
+    categoryLabel: '02 심볼 & 모노그램',
+    name: 'LAB PROVEN 심볼 모노그램 (Black)',
+    enName: 'LAB PROVEN Seal (VB Black)',
+    desc: '아모레퍼시픽 80년 바이오 헬스 연구와 효능 검증을 상징하는 공식 마스터 씰 심볼.',
+    isDark: false,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">${LAB_PROVEN_INNER_BLACK}</svg>`,
+  },
+  {
+    id: 'symbol_lab_proven_white',
+    category: 'symbol',
+    categoryLabel: '02 심볼 & 모노그램',
+    name: 'LAB PROVEN 심볼 모노그램 (Reverse White)',
+    enName: 'LAB PROVEN Seal (Reverse White)',
+    desc: '프리미엄 라인 단상자 및 버진씰 전용 화이트 반전 심볼.',
+    isDark: true,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">${LAB_PROVEN_INNER_WHITE}</svg>`,
+  },
+
+  // 03 법정 인증 마크
+  {
+    id: 'cert_health_functional_food_15mm',
+    category: 'certification',
+    categoryLabel: '03 법정 인증 마크',
+    name: '건강기능식품 공식 인증 마크 (15mm 규격)',
+    enName: 'Official Health Functional Food Mark (15mm)',
+    desc: '식품의약품안전처 공식 고시 벡터 규격 (가로×세로 15mm 정비례). 패키지 필수 표시.',
+    isDark: false,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" width="100%" height="100%">${getHffMarkSvg(0, 0, 15)}</svg>`,
+  },
+  {
+    id: 'cert_gmp_15mm',
+    category: 'certification',
+    categoryLabel: '03 법정 인증 마크',
+    name: '우수건강기능식품제조기준 GMP 마크 (15mm 규격)',
+    enName: 'Good Manufacturing Practice (GMP) Mark',
+    desc: '우수 건강기능식품 제조 및 품질관리 기준 적합 공식 인증 규격 벡터.',
+    isDark: false,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">${GMP_MARK_INNER}</svg>`,
+  },
+
+  // 04 웰니스 기능 아이콘
+  {
+    id: 'icon_sleep_moon_stars',
+    category: 'icon',
+    categoryLabel: '04 웰니스 기능 아이콘',
+    name: '수면 케어 (Good Sleep · Moon & Stars)',
+    enName: 'Sleep Care Badge (Circle Arc)',
+    desc: '달과 별무리 모티프의 서카디안 리듬 숙면 케어 픽토그램 배지.',
+    isDark: false,
+    svg: renderVbStyledIconSvg(
+      { setCode: 'T', innerSvg: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 2v3M20.5 3.5h-3"/>' },
+      'circle-arc',
+      { koText: '수면', enText: 'good sleep', uid: 'al-sleep' }
+    ),
+  },
+  {
+    id: 'icon_slim_double_cut',
+    category: 'icon',
+    categoryLabel: '04 웰니스 기능 아이콘',
+    name: '체지방 더블컷 (Slim Fit & Double Cut)',
+    enName: 'Slim Double Cut Badge (Circle Keyword)',
+    desc: '탄수화물과 당류 흡수를 차단하고 대사를 촉진하는 더블컷 공식 배지.',
+    isDark: false,
+    svg: renderVbStyledIconSvg(
+      { setCode: 'T', innerSvg: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>' },
+      'circle-keyword',
+      { koText: '더블컷', enText: 'double cut', uid: 'al-cut' }
+    ),
+  },
+  {
+    id: 'icon_inner_beauty_collagen',
+    category: 'icon',
+    categoryLabel: '04 웰니스 기능 아이콘',
+    name: '이너뷰티 콜라겐 (Inner Beauty & Glow)',
+    enName: 'Collagen Radiance Badge',
+    desc: '피부 속부터 차오르는 탄력과 광채를 상징하는 프리미엄 스파클 배지.',
+    isDark: false,
+    svg: renderVbStyledIconSvg(
+      { setCode: 'T', innerSvg: '<path d="M12 3l1.912 4.888L18.8 9.8l-4.888 1.912L12 16.6l-1.912-4.888L5.2 9.8l4.888-1.912z"/>' },
+      'circle-line',
+      { koText: '콜라겐', enText: 'inner beauty', uid: 'al-col' }
+    ),
+  },
+  {
+    id: 'icon_probiotics_gut',
+    category: 'icon',
+    categoryLabel: '04 웰니스 기능 아이콘',
+    name: '장 건강 프로바이오틱스 (Probiotics Shield)',
+    enName: 'Probiotics Gut Health Badge',
+    desc: '장내 미생물 생태계와 면역 베리어를 지키는 쉴드 체크 배지.',
+    isDark: false,
+    svg: renderVbStyledIconSvg(
+      { setCode: 'T', innerSvg: '<path d="M12 3a12 12 0 0 0 8.5 3A12 12 0 0 1 12 21 12 12 0 0 1 3.5 6 12 12 0 0 0 12 3"/><path d="m9 12 2 2 4-4"/>' },
+      'circle-arc',
+      { koText: '유산균', enText: 'probiotics', uid: 'al-pro' }
+    ),
+  },
+  {
+    id: 'icon_antioxidant_vitamin',
+    category: 'icon',
+    categoryLabel: '04 웰니스 기능 아이콘',
+    name: '항산화 활력 비타민 (Antioxidant Vitamin)',
+    enName: 'Vital Vitamin Care Badge',
+    desc: '유해산소로부터 세포를 보호하는 항산화 에너지 배지.',
+    isDark: false,
+    svg: renderVbStyledIconSvg(
+      { setCode: 'T', innerSvg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
+      'circle-line',
+      { koText: '비타민', enText: 'vital energy', uid: 'al-vit' }
+    ),
+  },
+  {
+    id: 'icon_cleanse_detox',
+    category: 'icon',
+    categoryLabel: '04 웰니스 기능 아이콘',
+    name: '디톡스 클렌즈 (Hydration & Detox)',
+    enName: 'Detox Cleanse Water Badge',
+    desc: '순환과 배출, 신선한 수분 공급을 상징하는 클린 워터 배지.',
+    isDark: false,
+    svg: renderVbStyledIconSvg(
+      { setCode: 'T', innerSvg: '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>' },
+      'circle-keyword',
+      { koText: '디톡스', enText: 'detox care', uid: 'al-detox' }
+    ),
+  },
+];
+
+function downloadAssetFile(asset, format) {
+  if (format === 'ai') {
+    const blob = buildIllustratorAiBlob(asset.svg, `VITALBEAUTIE_${asset.id}`);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `VITALBEAUTIE_${asset.id}.ai`;
+    a.click();
+    showToast(`${asset.name} Adobe Illustrator (.ai) 파일이 다운로드되었습니다.`);
+    return;
+  }
+
+  if (format === 'svg') {
+    const blob = new Blob([asset.svg], { type: 'image/svg+xml;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `VITALBEAUTIE_${asset.id}.svg`;
+    a.click();
+    showToast(`${asset.name} (.svg) 벡터 파일이 다운로드되었습니다.`);
+    return;
+  }
+
+  // PNG & JPG via 1800×1800 300DPI Offscreen Canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = 1800;
+  canvas.height = 1800;
+  const ctx = canvas.getContext('2d');
+
+  if (format === 'jpg') {
+    ctx.fillStyle = asset.isDark ? '#101820' : '#FFFFFF';
+    ctx.fillRect(0, 0, 1800, 1800);
+  } else {
+    ctx.clearRect(0, 0, 1800, 1800);
+  }
+
+  const svgBlob = new Blob([asset.svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  img.onload = () => {
+    const pad = 160;
+    ctx.drawImage(img, pad, pad, 1800 - pad * 2, 1800 - pad * 2);
+    URL.revokeObjectURL(url);
+    const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
+    canvas.toBlob(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `VITALBEAUTIE_${asset.id}.${format}`;
+      a.click();
+      showToast(`${asset.name} (.${format.toUpperCase()}) 300DPI 파일이 다운로드되었습니다.`);
+    }, mime, 0.96);
+  };
+  img.src = url;
+}
+
+export function renderAssetLibraryPage(container) {
+  let activeCat = 'all';
+
+  const renderContent = () => {
+    const filtered = activeCat === 'all'
+      ? MASTER_ASSETS_LIST
+      : MASTER_ASSETS_LIST.filter(a => a.category === activeCat);
+
+    const cardsHtml = filtered.map(asset => `
+      <div class="al-card" data-asset-id="${asset.id}">
+        <div class="al-preview-wrap ${asset.isDark ? 'bg-dark' : ''}">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+            ${asset.svg}
+          </div>
+        </div>
+        <div class="al-body">
+          <strong class="al-title">${asset.name}</strong>
+          <span class="al-sub">${asset.enName}</span>
+          <p class="al-desc">${asset.desc}</p>
+          <div class="al-dl-row">
+            <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="ai">⬇ .AI</button>
+            <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="png">⬇ .PNG</button>
+            <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="jpg">⬇ .JPG</button>
+            <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="svg">⬇ .SVG</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div style="margin-bottom:28px;">
+        <div style="font-size:13px; color:#5A606E; margin-bottom:8px; font-weight:400;">04 ASSET LIBRARY</div>
+        <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
+          바이탈뷰티 공식 영문·국문 워드마크, LAB PROVEN 심볼, 15mm 건강기능식품 법정 인증마크, 웰니스 기능 아이콘을 Adobe Illustrator(.ai), 고해상도 PNG(300 DPI 투명 배경), JPG(300 DPI 화이트 배경), SVG 벡터 파일로 즉시 다운로드할 수 있는 통합 에셋 보관소입니다.
+        </div>
+      </div>
+
+      <!-- 카테고리 탭 바 -->
+      <div class="al-cat-tabs" role="tablist">
+        <button type="button" class="al-cat-tab ${activeCat === 'all' ? 'active' : ''}" data-cat="all">전체 에셋 (${MASTER_ASSETS_LIST.length})</button>
+        <button type="button" class="al-cat-tab ${activeCat === 'wordmark' ? 'active' : ''}" data-cat="wordmark">01 브랜드 워드마크 (4)</button>
+        <button type="button" class="al-cat-tab ${activeCat === 'symbol' ? 'active' : ''}" data-cat="symbol">02 심볼 &amp; 모노그램 (2)</button>
+        <button type="button" class="al-cat-tab ${activeCat === 'certification' ? 'active' : ''}" data-cat="certification">03 법정 인증 마크 (2)</button>
+        <button type="button" class="al-cat-tab ${activeCat === 'icon' ? 'active' : ''}" data-cat="icon">04 웰니스 기능 아이콘 (6)</button>
+      </div>
+
+      <!-- 에셋 카드 그리드 -->
+      <div class="al-grid">
+        ${cardsHtml}
+      </div>
+    `;
+
+    // 카테고리 탭 이벤트 바인딩
+    container.querySelectorAll('.al-cat-tab').forEach(tab => {
+      tab.onclick = () => {
+        activeCat = tab.getAttribute('data-cat');
+        renderContent();
+      };
+    });
+
+    // 개별 다운로드 버튼 이벤트 바인딩
+    container.querySelectorAll('.al-dl-btn').forEach(btn => {
+      btn.onclick = () => {
+        const assetId = btn.getAttribute('data-id');
+        const format = btn.getAttribute('data-format');
+        const asset = MASTER_ASSETS_LIST.find(a => a.id === assetId);
+        if (asset) {
+          downloadAssetFile(asset, format);
+        }
+      };
+    });
+  };
+
+  renderContent();
 }

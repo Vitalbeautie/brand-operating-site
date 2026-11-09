@@ -2652,3 +2652,467 @@ input[type="range"].vb-range::-moz-range-thumb,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   02 FAMILY LOOK — 17 Round Chips & ΔE2000 Comparison Card
+   ═══════════════════════════════════════════════════════════════════════════ */
+.fl-chip-grid-17 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px 10px;
+  margin-top: 14px;
+}
+
+.fl-round-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.fl-round-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.fl-round-chip:hover .fl-round-swatch {
+  transform: scale(1.08);
+}
+
+.fl-round-chip.active .fl-round-swatch {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #101820;
+}
+
+.fl-round-label {
+  font-size: 11.5px;
+  color: #4A505C;
+  font-weight: 500;
+  text-align: center;
+}
+
+.fl-round-chip.active .fl-round-label {
+  font-weight: 700;
+  color: #101820;
+}
+
+.fl-de-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid #D5D8DE;
+  margin-top: 12px;
+}
+
+.fl-de-btn {
+  padding: 10px 0;
+  background: #FFFFFF;
+  border: none;
+  border-right: 1px solid #D5D8DE;
+  font-family: var(--font-en);
+  font-size: 14px;
+  font-weight: 700;
+  color: #4A505C;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.fl-de-btn:last-child {
+  border-right: none;
+}
+
+.fl-de-btn:hover {
+  background: #F4F6F9;
+}
+
+.fl-de-btn.active {
+  background: #101820;
+  color: #FFFFFF;
+}
+
+.fl-de-desc {
+  font-size: 12.5px;
+  color: #5A606E;
+  line-height: 1.65;
+  margin-top: 10px;
+}
+
+.fl-comp-card {
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.15s ease;
+}
+
+.fl-comp-card:hover {
+  border-color: #101820;
+}
+
+.fl-comp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fl-comp-chip-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #F8F9FB;
+  border: 1px solid #E5E7EB;
+}
+
+.fl-comp-swatch-lg {
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.fl-comp-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fl-comp-role {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.fl-comp-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #101820;
+}
+
+.fl-comp-sub {
+  font-size: 11px;
+  color: #7A808C;
+  font-family: var(--font-en);
+}
+
+.fl-comp-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.fl-de-pill {
+  padding: 4px 10px;
+  font-family: var(--font-en);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 12px;
+  background: #101820;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.fl-comp-footer {
+  font-size: 12px;
+  color: #4A505C;
+  line-height: 1.6;
+  padding: 10px 12px;
+  background: #FAFAFB;
+  border-left: 3px solid #101820;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   01 ICON GENERATOR — Motif Clustering & Live Complexity Slider
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ig-motif-card {
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  padding: 20px;
+  margin-bottom: 22px;
+}
+
+.ig-motif-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ig-motif-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ig-motif-badge-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: #101820;
+  padding: 2px 7px;
+  letter-spacing: 0.5px;
+}
+
+.ig-motif-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #101820;
+}
+
+.ig-motif-lvl-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  background: #CEDC00;
+  color: #101820;
+  letter-spacing: 0.3px;
+}
+
+.ig-slider-box {
+  background: #F8F9FB;
+  border: 1px solid #E5E7EB;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.ig-slider-desc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.ig-slider-desc {
+  font-weight: 600;
+  color: #101820;
+}
+
+.ig-slider-hint {
+  color: #7A808C;
+}
+
+.ig-complexity-range {
+  width: 100%;
+  accent-color: #101820;
+  cursor: pointer;
+}
+
+.ig-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #7A808C;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.ig-slider-ticks span.active {
+  color: #101820;
+  font-weight: 700;
+}
+
+.ig-motif-variants-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.ig-motif-var-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  padding: 8px 4px;
+}
+
+.ig-motif-var-svg {
+  width: 100%;
+  max-width: 68px;
+  aspect-ratio: 1/1;
+}
+
+.ig-motif-var-label {
+  font-size: 10.5px;
+  color: #5A606E;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ig-motif-action-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   04 ASSET LIBRARY — Download Center
+   ═══════════════════════════════════════════════════════════════════════════ */
+.al-cat-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #D5D8DE;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.al-cat-tab {
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #5A606E;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.al-cat-tab:hover {
+  color: #101820;
+}
+
+.al-cat-tab.active {
+  color: #101820;
+  font-weight: 700;
+  border-bottom-color: #101820;
+}
+
+.al-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.al-card {
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.al-card:hover {
+  border-color: #101820;
+  transform: translateY(-2px);
+}
+
+.al-preview-wrap {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  background: #F8F9FB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.al-preview-wrap.bg-dark {
+  background: #101820;
+}
+
+.al-preview-wrap.bg-green {
+  background: #00843D;
+}
+
+.al-preview-svg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.al-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.al-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #101820;
+  margin-bottom: 4px;
+}
+
+.al-sub {
+  font-size: 11px;
+  color: #7A808C;
+  font-family: var(--font-en);
+  margin-bottom: 10px;
+}
+
+.al-desc {
+  font-size: 12px;
+  color: #4A505C;
+  line-height: 1.6;
+  margin-bottom: 14px;
+  flex: 1;
+}
+
+.al-dl-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: auto;
+}
+
+.al-dl-btn {
+  padding: 7px 0;
+  border: 1px solid #D5D8DE;
+  background: #FFFFFF;
+  font-family: var(--font-en);
+  font-size: 11px;
+  font-weight: 700;
+  color: #101820;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.al-dl-btn:hover {
+  background: #101820;
+  color: #FFFFFF;
+  border-color: #101820;
+}
+
+@media (max-width: 1000px) {
+  .al-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ig-motif-variants-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .al-grid {
+    grid-template-columns: 1fr;
+  }
+  .fl-chip-grid-17 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
