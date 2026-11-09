@@ -465,7 +465,7 @@ export const PANTONE_SOLID_COATED = [
   { code: 'PANTONE 2573 C', hex: '#B57EDC', family: 'purple' },
   { code: 'PANTONE 2577 C', hex: '#A074C4', family: 'purple' },
   { code: 'PANTONE 258 C', hex: '#8C4799', family: 'purple' },
-  { code: 'PANTONE 2582 C', hex: '#9B59B6', family: 'purple' },
+  { code: 'PANTONE 2582 C', hex: '#AC4FC6', family: 'purple' },
   { code: 'PANTONE 2583 C', hex: '#9855B8', family: 'purple' },
   { code: 'PANTONE 2587 C', hex: '#8246AF', family: 'purple' },
   { code: 'PANTONE 259 C', hex: '#6D2077', family: 'purple' },
@@ -499,8 +499,9 @@ export const PANTONE_SOLID_COATED = [
   { code: 'PANTONE 2717 C', hex: '#9DB7E0', family: 'blue' },
   { code: 'PANTONE 2718 C', hex: '#5C88DA', family: 'blue' },
   { code: 'PANTONE 272 C', hex: '#7474C1', family: 'purple' },
-  { code: 'PANTONE 2725 C', hex: '#5F51B6', family: 'purple' },
+  { code: 'PANTONE 2725 C', hex: '#685BC7', family: 'purple' },
   { code: 'PANTONE 2726 C', hex: '#4B56D2', family: 'blue' },
+  { code: 'PANTONE 7442 C', hex: '#963CBD', family: 'purple' },
   { code: 'PANTONE 513 C', hex: '#93328E', family: 'purple' },
   { code: 'PANTONE 514 C', hex: '#B565A7', family: 'purple' },
   { code: 'PANTONE 515 C', hex: '#D39EC6', family: 'purple' },
@@ -523,7 +524,11 @@ export const PANTONE_SOLID_COATED = [
   { code: 'PANTONE 2102 C', hex: '#685BC7', family: 'purple' },
   { code: 'PANTONE 2112 C', hex: '#351F65', family: 'navy' },
 
-  // ── Blues & Navies (2727 C – 309 C, 532 C – 545 C, 635 C – 662 C, 7450 C – 7463 C, 2120 C – 2189 C) ──
+  // ── Blues & Navies (2727 C – 309 C, 532 C – 545 C, 635 C – 662 C, 7450 C – 7463 C, 2120 C – 2189 C, 7671 C, 5265 C) ──
+  { code: 'PANTONE 7671 C', hex: '#514689', family: 'navy' },
+  { code: 'PANTONE 5265 C', hex: '#483A60', family: 'navy' },
+  { code: 'PANTONE 294 C', hex: '#002F6C', family: 'navy' },
+  { code: 'PANTONE 2112 C', hex: '#351F65', family: 'navy' },
   { code: 'PANTONE Reflex Blue C', hex: '#001489', family: 'navy' },
   { code: 'PANTONE Process Blue C', hex: '#0085CA', family: 'blue' },
   { code: 'PANTONE Blue 072 C', hex: '#10069F', family: 'navy' },

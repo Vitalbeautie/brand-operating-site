@@ -6,7 +6,7 @@ import { MG_LINE, SIZE_CLASS, TYPO, HFF_MARK, RULE_CATALOG, PRESETS } from '../d
 import { REPRESENTATIVE_COLOR_CHIPS } from '../data/pantoneCoated.js';
 import {
   suggestLogo, generateDnaIcon, generateCustomDnaIcon, buildIllustratorAiBlob, getPictogramLibrary,
-  checkDna, suggestChips, checkChip, checkSpecScale, checkRegulation, autoLayout,
+  checkDna, suggestChips, suggestFamilyLook, checkChip, checkSpecScale, checkRegulation, autoLayout,
   parseKoreanPackageFile, translateKoPackageText, renderLocalizedPackageSvg,
   resolvePantoneInput, autoSpecPackageFront, checkPackageFront, renderPackageFrontSvg,
 } from '../governance/engines.js';
@@ -158,17 +158,22 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
     <!-- [TAB 2] ICON GENERATOR -->
     <div id="bv-pane-icon" style="display:${activeSubTab === 'icon' ? 'block' : 'none'};">
       <div class="ig-layout">
-        <!-- 좌측: 키워드 입력 -->
+        <!-- 좌측: 키워드 입력 & 원형 배지 문안 직접 입력 -->
         <div class="ig-left-col">
-          <label class="ig-col-title" for="ig-kw-input">키워드</label>
+          <label class="ig-col-title" for="ig-kw-input">성분·기능 키워드</label>
           <input id="ig-kw-input" class="ig-kw-input" value="수면, 디톡스" placeholder="예: 수면, 디톡스, 혈당, 콜라겐...">
           <p class="ig-help-text">
-            쉼표로 여러 개를 넣습니다. 키워드마다 공용 픽토그램 12개를 심플한 형태부터 복잡한 형태까지 제안합니다.
+            쉼표로 여러 개를 넣습니다. 키워드마다 공용 픽토그램을 심플부터 컴플렉스까지 제안합니다.
           </p>
-          <div class="ig-notice-box">
-            <span class="ig-notice-icon">⚗</span>
-            전 세계에서 쓰는 공용 아이콘 세트 Lucide(ISC)와 Tabler(MIT) 8천여 개에서 찾아 바이탈뷰티 아이콘 규칙으로 다시 그립니다. 사전에 없는 한국어는 영어 뜻을 찾아 검색하고, 고른 형태는 다음 검색에 먼저 나옵니다. 실제 제품에 쓰기 전에 마스터 검토를 거치세요.
-          </div>
+
+          <label class="ig-col-title" for="ig-arc-input" style="margin-top:18px;">원형배지 상단 영문 문안</label>
+          <input id="ig-arc-input" class="ig-kw-input" value="GOOD SLEEP" placeholder="예: GOOD SLEEP, METABOLIC CUT, VITAL GLOW">
+          
+          <label class="ig-col-title" for="ig-ko-input" style="margin-top:14px;">원형배지 하단 국문 문안</label>
+          <input id="ig-ko-input" class="ig-kw-input" value="수면" placeholder="예: 수면, 체지방감소, 탄력보습">
+          <p class="ig-help-text" style="margin-top:6px;">
+            원형 배지에 들어갈 영문/국문 문안을 직접 입력하여 실시간으로 확인합니다.
+          </p>
         </div>
 
         <!-- 중앙: 생성 배지 리스트 -->
@@ -435,9 +440,11 @@ function setupIconGenerator(el) {
 
     if (singleSvgBtn) {
       singleSvgBtn.onclick = () => {
+        const customArc = $('ig-arc-input')?.value.trim();
+        const customKo = $('ig-ko-input')?.value.trim();
         const exportSvg = buildSingleIconExportSvg(cand, variant.id, {
-          koText: block.keyword,
-          enText: block.enCopy,
+          koText: customKo || block.keyword,
+          enText: customArc || block.enCopy,
         });
         const safeKw = block.keyword.replace(/\s+/g, '_');
         const blob = new Blob([exportSvg], { type: 'image/svg+xml;charset=utf-8' });
@@ -459,11 +466,14 @@ function setupIconGenerator(el) {
 
     if (activeKwIdx >= keywords.length) activeKwIdx = 0;
 
+    const customArc = $('ig-arc-input')?.value.trim();
+    const customKo = $('ig-ko-input')?.value.trim();
+
     currentBlocks = keywords.map(kw => {
       const cluster = searchMotifClusters(indexData, kw);
       return {
         keyword: cluster.keyword,
-        enCopy: cluster.enCopy,
+        enCopy: customArc || cluster.enCopy,
         motifs: cluster.motifs,
       };
     });
@@ -477,8 +487,8 @@ function setupIconGenerator(el) {
 
         const variantsHtml = VB_ICON_VARIANTS.map((v, vIdx) => {
           const svg = renderVbStyledIconSvg(activeIcon, v.id, {
-            koText: block.keyword,
-            enText: block.enCopy,
+            koText: customKo || block.keyword,
+            enText: customArc || block.enCopy,
             uid: `b${bIdx}-m${mIdx}-v${vIdx}`,
           });
           return `
@@ -597,6 +607,20 @@ function setupIconGenerator(el) {
     renderAllKeywordBlocks();
   });
 
+  const arcInp = $('ig-arc-input');
+  if (arcInp) {
+    arcInp.addEventListener('input', () => {
+      renderAllKeywordBlocks();
+    });
+  }
+
+  const koInp = $('ig-ko-input');
+  if (koInp) {
+    koInp.addEventListener('input', () => {
+      renderAllKeywordBlocks();
+    });
+  }
+
   if (dlAllBtn) {
     dlAllBtn.onclick = () => {
       if (!currentBlocks.length) return;
@@ -621,11 +645,11 @@ export function renderVisualDnaPage(el) {
 
 /* ─── 3. Family Look (성분·기능 키워드 & 17개 대표 컬러칩 선택 기반 글로벌 통용 팬톤칩 제안 및 기존 제품과 1:1 비교) ─── */
 export function renderFamilyLookPage(el) {
-  let selectedToneId = 'pink';
+  let selectedToneId = 'auto'; // 기본 키워드 기반 전체 패밀리 제안
   let selectedMinDe = 10;
   let pageOffset = 0;
 
-  const chipsHtml = REPRESENTATIVE_COLOR_CHIPS.map(chip => `
+  const renderChips = () => REPRESENTATIVE_COLOR_CHIPS.map(chip => `
     <button type="button" class="fl-round-chip ${chip.id === selectedToneId ? 'active' : ''}" data-tone-id="${chip.id}" title="${chip.label}">
       <span class="fl-round-swatch" style="background:${chip.swatch}; ${chip.id === 'beige' ? 'border-color:#C5BFB0;' : ''}"></span>
       <span class="fl-round-label">${chip.label}</span>
@@ -641,11 +665,11 @@ export function renderFamilyLookPage(el) {
       <!-- 좌측: 성분 또는 기능 & 대표 컬러(17개) & 최소 색차 (ΔE2000) -->
       <div class="card gov-panel">
         <label class="gov-label" for="fl-func" style="font-size:14px;font-weight:700;color:#101820;margin-bottom:8px;">성분 또는 기능</label>
-        <input id="fl-func" class="gov-input" value="콜라겐" placeholder="예: 수면, 콜라겐, 유산균, 홍삼">
+        <input id="fl-func" class="gov-input" value="수면" placeholder="예: 수면, 콜라겐, 유산균, 홍삼">
 
         <label class="gov-label" style="font-size:14px;font-weight:700;color:#101820;margin-top:24px;margin-bottom:4px;">대표 컬러 (선택)</label>
         <div class="fl-chip-grid-17" id="fl-chips-17">
-          ${chipsHtml}
+          ${renderChips()}
         </div>
 
         <label class="gov-label" style="font-size:14px;font-weight:700;color:#101820;margin-top:24px;margin-bottom:4px;">기존 컬러와 최소 색차 (ΔE2000)</label>
@@ -660,86 +684,115 @@ export function renderFamilyLookPage(el) {
         </p>
       </div>
 
-      <!-- 우측: 제안 팬톤칩과 기존 제품 실시간 1:1 비교 -->
+      <!-- 우측: 레퍼런스 이미지(media_1794186795723_91b94d0e.jpg) 100% 동일 레이아웃 -->
       <div class="gov-result">
-        <div class="card" style="padding:24px">
-          <div class="gov-cand-top" style="align-items:flex-start; margin-bottom:18px;">
-            <div style="flex:1; padding-right:16px;">
-              <div id="fl-cat-title" style="font-size:15px; font-weight:700; color:#101820; margin-bottom:4px;"></div>
-              <div id="fl-global-color-badge" style="font-size:12.5px; font-weight:600; color:#101820; margin-bottom:8px;"></div>
-              <div id="fl-global-reason" style="font-size:13px; color:#4A505C; line-height:1.65; background:#F8F9FB; border-left:3px solid #101820; padding:12px 14px;"></div>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline" id="fl-re" style="flex-shrink:0;">다른 조합 제안</button>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:16px;" id="fl-sug"></div>
-        </div>
+        <div id="fl-results-container"></div>
       </div>
     </div>`;
 
   const $ = id => el.querySelector('#' + id);
 
   const renderSuggestions = () => {
-    const res = suggestChips({
+    const res = suggestFamilyLook({
       funcText: $('fl-func').value,
       selectedToneId,
       minDeltaE: selectedMinDe,
       offset: pageOffset,
-    }, 6);
+    });
 
     const ga = res.globalAnalysis;
-    $('fl-cat-title').textContent = ga.categoryTitle;
-    $('fl-global-color-badge').textContent = selectedToneId === 'auto'
-      ? `글로벌 통용 컬러: ${ga.globalColorName}`
-      : `글로벌 통용 컬러: ${ga.globalColorName} · 선택 필터: ${res.selectedChipObj.label}`;
-    $('fl-global-reason').textContent = ga.globalReason;
+    const tagList = ga.preferredTones.map(t => FAMILY_KO_MAP[t] || t).join(' · ');
 
-    if (!res.picked.length) {
-      $('fl-sug').innerHTML = `
-        <div style="padding:40px 20px;text-align:center;color:#7A808C;background:#F8F9FB;border:1px dashed #D5D8DE;">
-          최소 색차 ΔE ${selectedMinDe} 기준을 만족하는 신규 팬톤 후보가 없습니다. 최소 색차 기준을 낮추거나 다른 대표 컬러를 선택하세요.
-        </div>`;
-      return;
-    }
+    const familySectionsHtml = res.families.map(fam => {
+      const pillsHtml = fam.existingProducts.map(p => `
+        <div class="fl-exist-pill">
+          <span class="fl-exist-sq" style="background:${p.hex}"></span>
+          <span class="fl-exist-name">${p.name}</span>
+          <span class="fl-exist-code">${p.pantone}</span>
+        </div>
+      `).join('');
 
-    $('fl-sug').innerHTML = res.picked.map(p => {
-      const deLabel = p.minD >= 12 ? '매대 구분 매우 확실' : p.minD >= 10 ? '매대 구분 명확' : '식별 가능 수준';
+      const cardsHtml = fam.proposedCards.map(c => `
+        <div class="fl-rec-card">
+          <div class="fl-rec-swatch-box" style="background:${c.hex}">
+            <span class="fl-rec-shade-tag">${c.shade}</span>
+          </div>
+          <div class="fl-rec-body">
+            <div class="fl-rec-pms">${c.pantoneCode}</div>
+            <div class="fl-rec-hex">${c.hex}</div>
+            <div class="fl-rec-mini-table">
+              <div class="fl-rec-table-head">
+                <span>제안</span>
+                <span>기존</span>
+              </div>
+              <div class="fl-rec-table-swatches">
+                <span class="fl-rec-sq" style="background:${c.hex}"></span>
+                <span class="fl-rec-sq" style="background:${c.nearestHex}"></span>
+              </div>
+              <div class="fl-rec-table-info">
+                <div class="fl-rec-col-left">
+                  <div class="fl-rec-code-sm">${c.pantoneCode}</div>
+                </div>
+                <div class="fl-rec-col-right">
+                  <div class="fl-rec-code-sm">${c.nearestPantone}</div>
+                  <div class="fl-rec-name-sm">${c.nearestName}</div>
+                  <div class="fl-rec-de-sm">ΔE ${c.minD.toFixed(1)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      const noticeHtml = fam.notice ? `<div class="fl-low-chip-alert">${fam.notice}</div>` : '';
+
       return `
-        <div class="fl-comp-card">
-          <div class="fl-comp-row">
-            <!-- 제안 컬러 -->
-            <div class="fl-comp-chip-box">
-              <div class="fl-comp-swatch-lg" style="background:${p.hex}"></div>
-              <div class="fl-comp-meta">
-                <span class="fl-comp-role" style="color:#00843D;">신규 추천 PANTONE</span>
-                <strong class="fl-comp-title">${p.pantoneCode}</strong>
-                <span class="fl-comp-sub">${p.hex}</span>
-              </div>
+        <div class="fl-family-section">
+          <div class="fl-fam-head">
+            <div class="fl-fam-title-group">
+              <span class="fl-fam-title">${fam.familyKo} 계열</span>
+              <span class="fl-fam-badge">키워드·기능</span>
             </div>
-
-            <!-- 색차 델타E 배지 -->
-            <div class="fl-comp-divider">
-              <span class="fl-de-pill">ΔE ${p.minD.toFixed(1)}</span>
-              <small style="font-size:10.5px;color:#7A808C;margin-top:4px;white-space:nowrap;">${deLabel}</small>
-            </div>
-
-            <!-- 가장 가까운 기존 제품 -->
-            <div class="fl-comp-chip-box">
-              <div class="fl-comp-swatch-lg" style="background:${p.nearestHex}"></div>
-              <div class="fl-comp-meta">
-                <span class="fl-comp-role" style="color:#101820;">가장 가까운 기존 제품</span>
-                <strong class="fl-comp-title">${p.nearestName}</strong>
-                <span class="fl-comp-sub">${p.nearestPantone} (${p.nearestHex})</span>
-              </div>
-            </div>
+            <span class="fl-fam-stats">이 계열 기존 제품 ${fam.existingProducts.length}개 · 겹쳐서 제외한 칩 ${fam.excludedCount}개</span>
           </div>
 
-          <!-- 설명 코멘트 -->
-          <div class="fl-comp-footer">
-            기존 제품 <b>「${p.nearestName}」</b> (${p.nearestPantone}) 대비 색차 <b>ΔE2000 = ${p.minD.toFixed(1)}</b>을 확보하여, 올리브영 등 매대에 나란히 진열되어도 소비자에게 혼동을 주지 않고 신제품만의 고유한 식별력을 가집니다.
+          <div class="fl-exist-title">이 계열의 기존 제품 컬러</div>
+          <div class="fl-exist-pills">${pillsHtml}</div>
+
+          <div class="fl-cards-grid">
+            ${cardsHtml}
           </div>
+          ${noticeHtml}
         </div>`;
     }).join('');
+
+    $('fl-results-container').innerHTML = `
+      <div class="fl-kw-header-box">
+        <div class="fl-kw-header-title">${res.keyword || '수면'}</div>
+        <div class="fl-kw-header-desc">${ga.globalReason}</div>
+        <div class="fl-kw-header-tags">${tagList}</div>
+      </div>
+      ${familySectionsHtml}
+    `;
+  };
+
+  const bindChipEvents = () => {
+    el.querySelectorAll('#fl-chips-17 .fl-round-chip').forEach(btn => {
+      btn.onclick = () => {
+        const clickedId = btn.getAttribute('data-tone-id');
+        // 사용자가 이미 선택된 대표 컬러를 다시 누르면 취소(auto 해제)
+        if (selectedToneId === clickedId) {
+          selectedToneId = 'auto';
+        } else {
+          selectedToneId = clickedId;
+        }
+        pageOffset = 0;
+        el.querySelectorAll('#fl-chips-17 .fl-round-chip').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-tone-id') === selectedToneId);
+        });
+        renderSuggestions();
+      };
+    });
   };
 
   $('fl-func').oninput = () => {
@@ -747,16 +800,7 @@ export function renderFamilyLookPage(el) {
     renderSuggestions();
   };
 
-  el.querySelectorAll('#fl-chips-17 .fl-round-chip').forEach(btn => {
-    btn.onclick = () => {
-      selectedToneId = btn.getAttribute('data-tone-id');
-      pageOffset = 0;
-      el.querySelectorAll('#fl-chips-17 .fl-round-chip').forEach(b => {
-        b.classList.toggle('active', b.getAttribute('data-tone-id') === selectedToneId);
-      });
-      renderSuggestions();
-    };
-  });
+  bindChipEvents();
 
   el.querySelectorAll('#fl-de-bar .fl-de-btn').forEach(btn => {
     btn.onclick = () => {
@@ -769,17 +813,12 @@ export function renderFamilyLookPage(el) {
     };
   });
 
-  $('fl-re').onclick = () => {
-    pageOffset += 1;
-    renderSuggestions();
-  };
-
   renderSuggestions();
 }
 
 /* ─── 4. Localization (국문 기준 파일 업로드 → 폭·높이 및 문안 위치 자동 인식 → 미국(US)·일본(JP) 자동 번역 시뮬레이션) ─── */
 export function renderLocalizationPage(el) {
-  // 기본 내장 샘플: 메타그린 젤리 더블컷 / 애사비 / 부스터샷 등에서도 즉시 체험 가능하며, 실제 SVG 파일 업로드 시 즉시 파싱
+  // 기본 내장 샘플: 메타그린 젤리 더블컷 기본
   const buildFromPreset = p => ({
     fileName: `${p.label}_국문원고.svg`,
     wMm: p.w,
@@ -804,7 +843,7 @@ export function renderLocalizationPage(el) {
   el.innerHTML = `${head(
     'Module 04 · Auto-Parsed Global Package Localization (KR → US / JP)',
     'Localization · 국문 원고 자동 인식 & 미국·일본 시뮬레이션',
-    '국문 기준 디자인 파일(.svg)을 업로드하면 단상자 폭·높이(mm)와 각 문안(제품명·원재료명·용량)의 좌표를 자동으로 인식하고, 미국(FDA 영문)·일본(소비자청 일문) 표기 기준으로 자동 번역하여 동일 레이아웃 시뮬레이션 화면에 표시합니다.'
+    '국문 기준 디자인 파일(.svg)을 업로드하면 단상자 폭·높이(mm)와 각 문안(제품명·원재료명·용량)의 좌표를 자동으로 인식하고, 미국(FDA 영문)·일본(소비자청 일문) 법정 표기 기준으로 자동 번역하여 동일 레이아웃 시뮬레이션 화면에 표시합니다.'
   )}
     <div class="card pf-preset-bar" style="justify-content:space-between">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -812,10 +851,7 @@ export function renderLocalizationPage(el) {
           국문 기준 파일(.svg) 업로드
           <input type="file" id="lc-upload" accept=".svg,.txt,.json" style="display:none">
         </label>
-        <span class="gov-sub" id="lc-file-status">파일을 업로드하거나 우측의 메타그린 가이드 원고 샘플을 선택하세요.</span>
-      </div>
-      <div class="gov-pills" id="lc-samples">
-        ${PRESETS.slice(0, 5).map((p, i) => `<button type="button" class="pf-pill ${i === 2 ? 'active' : ''}" data-id="${p.id}">${p.label} 원고</button>`).join('')}
+        <span class="gov-sub" id="lc-file-status">국문 패키지 디자인 파일(.svg)을 업로드하면 규격과 문안을 자동 인식하여 글로벌 규격으로 시뮬레이션합니다.</span>
       </div>
     </div>
 
@@ -878,29 +914,22 @@ export function renderLocalizationPage(el) {
 
   const renderSimulations = () => {
     const targets = [
-      { code: 'KR', lang: 'ko', title: 'KR · 국문 원본 (식약처 기준)', badge: '원본 좌표 인식', source: '식품의약품안전처 표시기준' },
-      { code: 'US', lang: 'en', title: 'US · 미국 영문 (FDA 21 CFR)', badge: 'EN 자동번역 · oz 병기', source: 'FDA Dietary Supplement / Food Label' },
-      { code: 'JP', lang: 'ja', title: 'JP · 일본 일문 (소비자청 기준)', badge: 'JA 자동번역 · 機能性/食品表示', source: '消費者庁 食品表示基準' },
+      { code: 'KR', lang: 'ko', title: 'KR · 국문 원본 (식약처 기준)', source: '식품의약품안전처 표시기준' },
+      { code: 'US', lang: 'en', title: 'US · 미국 영문 (FDA 기준)', source: 'FDA Dietary Supplement / Food Label' },
+      { code: 'JP', lang: 'ja', title: 'JP · 일본 일문 (소비자청 기준)', source: '消費者庁 食品表示基準' },
     ];
 
     $('lc-sim-out').innerHTML = targets.map(t => {
       const svg = renderLocalizedPackageSvg(parsed, t.code);
-      const translatedRows = parsed.nodes.map(n => {
-        const tr = t.lang === 'ko' ? n.text : translateKoPackageText(n.text, t.lang);
-        return `<div class="lc-tr-row"><b>[${n.role.toUpperCase()} · Y ${n.yMm}mm]</b> <span>${tr}</span></div>`;
-      }).join('');
-
       return `
         <div class="card pf-preview-card">
-          <div class="gov-cand-top">
+          <div class="gov-cand-top" style="margin-bottom:10px;">
             <div>
-              <b>${t.title}</b>
-              <div class="gov-sub">${t.source}</div>
+              <b style="font-size:14px;color:#101820;">${t.title}</b>
+              <div class="gov-sub" style="font-size:11.5px;color:#7A808C;">${t.source}</div>
             </div>
-            <span class="tag tag-green">${t.badge}</span>
           </div>
           <div class="pf-canvas-wrap" style="min-height:390px">${svg}</div>
-          <div class="lc-tr-box">${translatedRows}</div>
         </div>`;
     }).join('');
   };
@@ -927,7 +956,6 @@ export function renderLocalizationPage(el) {
     const res = parseKoreanPackageFile(raw, f.name);
     if (res && res.nodes.length) {
       parsed = res;
-      el.querySelectorAll('#lc-samples button').forEach(b => b.classList.remove('active'));
       renderEditors();
       renderSimulations();
       showToast(`「${f.name}」 폭 ${res.wMm}mm × 높이 ${res.hMm}mm 및 문안 ${res.nodes.length}개 인식 완료`);
@@ -935,17 +963,6 @@ export function renderLocalizationPage(el) {
       showToast('SVG에서 단상자 규격 또는 텍스트 노드를 찾지 못했습니다.');
     }
   };
-
-  el.querySelectorAll('#lc-samples button').forEach(btn => {
-    btn.onclick = () => {
-      el.querySelectorAll('#lc-samples button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const p = PRESETS.find(x => x.id === btn.dataset.id);
-      parsed = buildFromPreset(p);
-      renderEditors();
-      renderSimulations();
-    };
-  });
 
   ['lc-w', 'lc-h'].forEach(id => {
     $(id).oninput = () => {

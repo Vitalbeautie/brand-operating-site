@@ -523,6 +523,184 @@ export function resolveGlobalFunctionColor(funcText = '') {
   };
 }
 
+export const FAMILY_KO_MAP = {
+  navy: '네이비',
+  purple: '퍼플',
+  lavender: '라벤더',
+  blue: '블루',
+  teal: '틸',
+  mint: '민트',
+  green: '그린',
+  lime: '라임',
+  yellow: '옐로',
+  gold: '골드',
+  orange: '오렌지',
+  coral: '코랄',
+  red: '레드',
+  wine: '와인',
+  pink: '핑크',
+  brown: '브라운',
+  beige: '베이지',
+  gray: '그레이',
+};
+
+/**
+ * 성분·기능별 글로벌 패밀리룩 & 제안 팬톤칩과 기존 제품군 1:1 비교 분석 엔진
+ * - 추천 계열별 그룹화 (네이비 계열, 퍼플 계열 등)
+ * - 각 계열별 기존 제품 컬러 태그 행 ([에너지샷 바디앤브레인 PANTONE 294 C] 등)
+ * - 각 계열별 딥 / 미디엄 / 라이트 음영 배지 및 제안 vs 기존 2열 실시간 색차(ΔE) 비교표
+ */
+export function suggestFamilyLook(options = {}) {
+  const minDeltaE = options.minDeltaE != null ? options.minDeltaE : 10;
+  const funcText = options.funcText || '수면';
+  const selectedToneId = options.selectedToneId || 'auto';
+  const offset = options.offset || 0;
+
+  const globalAnalysis = resolveGlobalFunctionColor(funcText);
+
+  const CHIP_FAMILY_MAP = {
+    purple: ['purple'],
+    lavender: ['purple'],
+    blue: ['blue'],
+    navy: ['navy'],
+    teal: ['mint', 'blue'],
+    mint: ['mint'],
+    green: ['green', 'lime'],
+    yellow: ['yellow'],
+    gold: ['yellow', 'brown'],
+    orange: ['orange'],
+    coral: ['pink', 'orange'],
+    red: ['red'],
+    wine: ['red'],
+    pink: ['pink'],
+    brown: ['brown'],
+    beige: ['beige'],
+    gray: ['navy', 'beige'],
+  };
+
+  const targetFamilies = selectedToneId !== 'auto'
+    ? (CHIP_FAMILY_MAP[selectedToneId] || [selectedToneId])
+    : globalAnalysis.preferredTones;
+
+  // 전체 제품군
+  const usedList = PACKAGE_LINES.allProducts.map(p => ({
+    ...p,
+    normCode: p.pantone.toUpperCase().replace(/^PANTONE\s*/i, '').replace(/\s+/g, ''),
+    lab: hexToLab(p.hex),
+  }));
+  const usedCodes = new Set(usedList.map(u => u.normCode));
+
+  // 제품 -> 계열 매핑 사전
+  const PRODUCT_FAMILY_MAP = {
+    '에너지샷 바디앤브레인': ['navy'],
+    '굿슬립 가바 365': ['navy', 'purple'],
+    '오메가케어': ['navy', 'blue'],
+    '트루아이': ['navy', 'purple'],
+    '명작수 활': ['navy'],
+    '슈퍼 바이오틱스': ['purple'],
+    '리버프라임': ['purple'],
+    '슈퍼에센셜': ['pink'],
+    '슈퍼콜라겐': ['pink'],
+    '슈퍼콜라겐 케라핏': ['pink'],
+    '슈퍼콜라겐 PDRN': ['pink'],
+    '슈퍼레티놀 C': ['yellow', 'lime'],
+    '슈퍼레티놀 젤리': ['yellow', 'lime'],
+    '슈퍼시카 B5': ['mint', 'green'],
+    '메타그린 슬림업': ['green'],
+    '메타그린 부스터샷': ['lime', 'green'],
+    '메타그린 골드': ['yellow', 'gold'],
+    '메타그린 핏': ['green', 'lime'],
+    '메타그린 젤리 애사비': ['yellow', 'lime'],
+    '메타그린 칼로리컷': ['green'],
+    '명작수': ['brown'],
+    '명작수 EC': ['beige'],
+    '자음보액': ['wine', 'red'],
+    '액티브 멀티팩': ['orange'],
+  };
+
+  const families = targetFamilies.map(fam => {
+    const famKo = FAMILY_KO_MAP[fam] || fam;
+
+    // 이 계열의 기존 제품
+    const existingProducts = usedList.filter(p => {
+      const mapped = PRODUCT_FAMILY_MAP[p.name];
+      if (mapped) return mapped.includes(fam);
+      // fallback: pantone code or lab
+      return false;
+    });
+
+    // 이 계열의 모든 PANTONE Solid Coated 칩
+    const allFamChips = PANTONE_COATED_WITH_LAB.filter(pms => pms.family === fam);
+
+    // 기존 제품과 겹치거나 색차가 minDeltaE 미만인 칩 제외 카운트
+    let excludedCount = 0;
+    const candidates = [];
+
+    for (const pms of allFamChips) {
+      const normPms = pms.code.toUpperCase().replace(/^PANTONE\s*/i, '').replace(/\s+/g, '');
+      let nearest = usedList[0];
+      let minD = Infinity;
+      for (const u of usedList) {
+        const d = deltaE2000(u.lab, pms.lab);
+        if (d < minD) {
+          minD = d;
+          nearest = u;
+        }
+      }
+
+      if (usedCodes.has(normPms) || minD < minDeltaE) {
+        excludedCount++;
+      } else {
+        const shade = pms.lab.l < 40 ? '딥' : pms.lab.l <= 65 ? '미디엄' : '라이트';
+        candidates.push({
+          pantoneCode: pms.code,
+          hex: pms.hex,
+          shade,
+          lab: pms.lab,
+          minD,
+          nearestName: nearest.name,
+          nearestPantone: nearest.pantone,
+          nearestHex: nearest.hex,
+        });
+      }
+    }
+
+    // 카드 정렬 및 필터링
+    candidates.sort((a, b) => b.minD - a.minD);
+
+    // 특별 우선순위 보정 (네이비: 7671 C, 5265 C; 퍼플: 265 C, 2582 C, Purple C, 2725 C, 7442 C, 258 C 등)
+    const priorityCodes = ['PANTONE 7671 C', 'PANTONE 5265 C', 'PANTONE 265 C', 'PANTONE 2582 C', 'PANTONE Purple C', 'PANTONE 2725 C', 'PANTONE 7442 C', 'PANTONE 258 C'];
+    candidates.sort((a, b) => {
+      const aIdx = priorityCodes.indexOf(a.pantoneCode);
+      const bIdx = priorityCodes.indexOf(b.pantoneCode);
+      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+      if (aIdx !== -1) return -1;
+      if (bIdx !== -1) return 1;
+      return b.minD - a.minD;
+    });
+
+    const proposedCards = candidates.slice(0, 8);
+    const notice = (proposedCards.length <= 3 && proposedCards.length > 0)
+      ? `기존 제품이 이 계열을 많이 써서 겹치지 않는 칩이 ${proposedCards.length}개만 남았습니다.`
+      : null;
+
+    return {
+      familyId: fam,
+      familyKo: famKo,
+      existingProducts,
+      excludedCount: Math.max(excludedCount, allFamChips.length - proposedCards.length),
+      proposedCards,
+      notice,
+    };
+  });
+
+  return {
+    keyword: funcText,
+    globalAnalysis,
+    families,
+  };
+}
+
 export function suggestChips(options = {}, count = 8) {
   const opts = Array.isArray(options) ? { extraHex: options } : options;
   const minDeltaE = opts.minDeltaE != null ? opts.minDeltaE : (PACKAGE_LINES.familyRules.minDeltaE || 10);
@@ -1032,11 +1210,42 @@ export function getHffMarkSvg(x, y, size = 15) {
 }
 
 /**
+ * 미국(FDA) 공식 Dietary Supplement 15mm 인증 실 마크 벡터 SVG
+ */
+export function getUsDietarySupplementMarkSvg(x, y, size = 15) {
+  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 45 45" opacity="0.95">
+    <circle cx="22.5" cy="22.5" r="21" fill="none" stroke="#FFFFFF" stroke-width="1.2"/>
+    <circle cx="22.5" cy="22.5" r="18.5" fill="none" stroke="#FFFFFF" stroke-width="0.6" stroke-dasharray="1.2 0.8"/>
+    <path id="us-seal-arc" d="M 6.5,22.5 A 16,16 0 1,1 38.5,22.5" fill="none"/>
+    <text fill="#CEDC00" font-family="'Raleway',sans-serif" font-size="3.6" font-weight="700" letter-spacing="0.4">
+      <textPath href="#us-seal-arc" startOffset="50%" text-anchor="middle">DIETARY SUPPLEMENT</textPath>
+    </text>
+    <path d="M22.5 14.5 L24.5 19.5 L30 20 L26 23.5 L27.2 29 L22.5 26 L17.8 29 L19 23.5 L15 20 L20.5 19.5 Z" fill="#FFFFFF"/>
+    <text x="22.5" y="37" text-anchor="middle" fill="#FFFFFF" font-family="'Raleway',sans-serif" font-size="3.2" font-weight="600" letter-spacing="0.5">VERIFIED</text>
+  </svg>`;
+}
+
+/**
+ * 일본(소비자청) 공식 機能性表示食品 15mm 인증 실 마크 벡터 SVG
+ */
+export function getJpFunctionalMarkSvg(x, y, size = 15) {
+  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 45 45" opacity="0.95">
+    <circle cx="22.5" cy="22.5" r="21" fill="none" stroke="#FFFFFF" stroke-width="1.2"/>
+    <circle cx="22.5" cy="22.5" r="18.5" fill="none" stroke="#FFFFFF" stroke-width="0.6"/>
+    <text x="22.5" y="15.5" text-anchor="middle" fill="#CEDC00" font-family="'Noto Sans JP',sans-serif" font-size="4.2" font-weight="700" letter-spacing="0.3">機能性</text>
+    <text x="22.5" y="24" text-anchor="middle" fill="#FFFFFF" font-family="'Noto Sans JP',sans-serif" font-size="4.2" font-weight="700" letter-spacing="0.3">表示食品</text>
+    <line x1="9" y1="27.5" x2="36" y2="27.5" stroke="#FFFFFF" stroke-width="0.6"/>
+    <text x="22.5" y="35" text-anchor="middle" fill="#FFFFFF" font-family="'Noto Sans JP',sans-serif" font-size="2.9" font-weight="500">消費者庁届出</text>
+  </svg>`;
+}
+
+/**
  * 인식된 국문 패키지 레이아웃을 기반으로 국가별(KR / US / JP) 시뮬레이션 SVG 생성
- * - 원본에서 인식한 각 문안의 Y좌표(mm)·역할·폰트 계층을 유지하면서
- * - US(FDA Dietary Supplement / Nutrition Facts 규정: Net Wt + oz 병기, Supplement Facts 뱃지, FDA 면책문구)
- * - JP(소비자청 機能性表示食品 / 食品表示基準: 届出表示·内容量·食生活バランス 문구)
- * 를 시뮬레이션 캔버스에 함께 표시한다.
+ * - 제품명: 폭을 넘어갈 때 최소 2mm 마진 strictly 보장 (safeW = W - 4mm)
+ * - US (FDA): 제품명 바로 아래 DIETARY SUPPLEMENT 법정 명칭, 내용량 Net Wt. 표기, 15mm 인증 실 마크
+ * - JP (소비자청): 제품명 바로 아래 機能性表示食品 표기, 하단 食生活バランス 법정 문구, 内容量 표기, 15mm 인증 실 마크
+ * - 내용량 하단 3mm 기준선 고정 + 간섭 발생 시 15mm 인증 마크를 내용량 위로 자동 상향 배치
+ * - 직사각형 박스(FDA 21 CFR 등) 삭제
  */
 export function renderLocalizedPackageSvg(parsed, country = 'KR') {
   const W = parsed.wMm, H = parsed.hMm;
@@ -1055,40 +1264,86 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
   const logoTx = tx0 - 229.93 * PT_MM * logoScale;
   const logoTy = tagY0 - 283.61 * PT_MM * logoScale;
 
-  // 번역 및 좌표 매핑
+  // 법정 규정 번역 및 문안 포맷팅
+  const titleNode = parsed.nodes.find(n => n.role === 'title');
+  const capNode = parsed.nodes.find(n => n.role === 'capacity');
+
+  // 제품명 안전 영역: 좌우 최소 2mm 마진 보장 (safeW = W - 4mm)
+  const safeW = W - 4;
+
   const translatedNodes = parsed.nodes.map(n => {
-    const trText = lang === 'ko' ? n.text : translateKoPackageText(n.text, lang);
-    // 영문/일문 길이에 맞춰 자동 폰트 스케일링
-    const lenRatio = trText.length / Math.max(n.text.length, 1);
-    const scaleFactor = lang === 'ko' ? 1 : lenRatio > 1.6 ? 0.68 : lenRatio > 1.25 ? 0.78 : 0.88;
-    const pt = +(n.pt * scaleFactor).toFixed(1);
-    return { ...n, trText, renderPt: pt };
+    let trText = lang === 'ko' ? n.text : translateKoPackageText(n.text, lang);
+    if (n.role === 'capacity') {
+      if (country === 'US') {
+        trText = trText.replace(/^건강기능식품\s*/, '').replace(/^(?:품명|品名|내용량|内容量)?\s*/, '');
+        if (!trText.toLowerCase().startsWith('net wt.')) {
+          // oz와 g 병기 추출
+          const gMatch = trText.match(/(\d+(?:\.\d+)?)\s*g/i);
+          const gVal = gMatch ? parseFloat(gMatch[1]) : 200;
+          const ozVal = (gVal * 0.035274).toFixed(2);
+          const sticksMatch = trText.match(/\[([^\]]+)\]/);
+          const sticksPart = sticksMatch ? ` [${sticksMatch[1].replace(/포/g, ' Sticks').replace(/정/g, ' Tablets')}]` : '';
+          trText = `Net Wt. ${ozVal} oz (${gVal} g)${sticksPart}`;
+        }
+      } else if (country === 'JP') {
+        trText = trText.replace(/^건강기능식품\s*/, '');
+        if (!trText.startsWith('内容量')) {
+          const clean = trText.replace(/포/g, '包').replace(/정/g, '粒');
+          trText = `内容量 ${clean}`;
+        }
+      }
+    }
+
+    let renderPt = n.pt;
+    const px0 = renderPt * PT_MM;
+    const charWidthFactor = lang === 'en' ? 0.52 : lang === 'ja' ? 0.9 : 0.85;
+    const estWidth = trText.length * px0 * charWidthFactor;
+
+    if (n.role === 'title' && estWidth > safeW) {
+      const scale = safeW / estWidth;
+      renderPt = +(renderPt * Math.max(0.65, scale)).toFixed(1);
+    } else if (lang !== 'ko') {
+      const lenRatio = trText.length / Math.max(n.text.length, 1);
+      const scaleFactor = lenRatio > 1.6 ? 0.72 : lenRatio > 1.25 ? 0.82 : 0.9;
+      renderPt = +(renderPt * scaleFactor).toFixed(1);
+    }
+
+    return { ...n, trText, renderPt };
   });
 
-  // 국가별 법정 필수 추가 배지/문구 (전면 시뮬레이션 하단/상단 반영)
-  const countryFooter = country === 'US'
-    ? (isHff ? '*DIETARY SUPPLEMENT · FDA 21 CFR 101.36' : '*NUTRITION FACTS PANEL SEE BACK · FDA COMPLIANT')
-    : country === 'JP'
-      ? (isHff ? '機能性表示食品 · 届出番号 J-VB01 (消費者庁基準)' : '食品表示基準適合 · 栄養成分表示裏面記載')
-      : (isHff ? '식품의약품안전처 건강기능식품 표시기준 적합' : '식품등의 표시기준(제2026-37호) 적합');
-
+  // 내용량 3mm 하단 마진 엄격 고정 및 마크 간섭 계산
   const markSize = 15;
-  const markX = W - 3 - markSize;
-  const markY = H - 3 - markSize;
+  const baseMarkX = W - 3 - markSize;
+  const baseMarkY = H - 3 - markSize;
 
-  const markBlock = country === 'KR' && isHff
-    ? getHffMarkSvg(markX, markY, markSize)
-    : country === 'US' ? `
-    <g transform="translate(${W - 23} ${H - 14.5})">
-      <rect x="0" y="0" width="20" height="7" fill="rgba(0,0,0,0.28)" stroke="#FFFFFF" stroke-width="0.3"/>
-      <text x="10" y="3.1" text-anchor="middle" fill="#CEDC00" font-size="1.75" font-weight="700">FDA 21 CFR</text>
-      <text x="10" y="5.6" text-anchor="middle" fill="#FFFFFF" font-size="1.65">${isHff ? 'SUPPLEMENT' : 'FOOD LABEL'}</text>
-    </g>` : country === 'JP' ? `
-    <g transform="translate(${W - 24} ${H - 14.5})">
-      <rect x="0" y="0" width="21" height="7" fill="rgba(0,0,0,0.28)" stroke="#FFFFFF" stroke-width="0.3"/>
-      <text x="10.5" y="3.1" text-anchor="middle" fill="#CEDC00" font-size="1.7" font-weight="700">消費者庁基準</text>
-      <text x="10.5" y="5.6" text-anchor="middle" fill="#FFFFFF" font-size="1.65">${isHff ? '機能性表示食品' : '一般加工食品'}</text>
-    </g>` : '';
+  // 내용량 텍스트 폭 계산
+  const capProcessed = translatedNodes.find(n => n.role === 'capacity');
+  const capPx = (capProcessed ? capProcessed.renderPt : 10) * PT_MM;
+  const capText = capProcessed ? capProcessed.trText : '';
+  const capWidth = capText.length * capPx * (lang === 'en' ? 0.52 : 0.85);
+
+  // 내용량이 중앙 정렬일 때 오른쪽 끝 좌표
+  const capRightX = (W / 2) + (capWidth / 2);
+  const isInterfering = capRightX > baseMarkX - 1.5;
+
+  // 간섭 발생 시 건강기능식품/인증 마크를 내용량 위로 자동 상향 배치 (하단 3mm 기준선 불변)
+  let finalMarkX = baseMarkX;
+  let finalMarkY = baseMarkY;
+  if (isInterfering) {
+    finalMarkY = Math.max(H - 3 - capPx * 2.2 - markSize - 2, H * 0.62);
+  }
+
+  // 국가별 15mm 공식 마크
+  let markSvg = '';
+  if (isHff) {
+    if (country === 'KR') {
+      markSvg = getHffMarkSvg(finalMarkX, finalMarkY, markSize);
+    } else if (country === 'US') {
+      markSvg = getUsDietarySupplementMarkSvg(finalMarkX, finalMarkY, markSize);
+    } else if (country === 'JP') {
+      markSvg = getJpFunctionalMarkSvg(finalMarkX, finalMarkY, markSize);
+    }
+  }
 
   const wrapSvgLines = (str, maxChars) => {
     if (str.length <= maxChars) return [str];
@@ -1108,32 +1363,50 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
     return lines.slice(0, 3);
   };
 
-  const nodesSvg = translatedNodes.map(n => {
+  const renderedNodesSvg = translatedNodes.map(n => {
     const px = n.renderPt * PT_MM;
     const isCap = n.role === 'capacity';
-    
-    // 내용량: 중앙정렬 1순위 유지 + 15mm 마크 간섭 시 위치를 살짝 위로 이동
+    const isTitle = n.role === 'title';
+
     let effY = n.yMm;
-    if (isCap && isHff && country === 'KR') {
-      const approxW = n.trText.length * px * 0.58;
-      if ((W / 2) + (approxW / 2) > markX - 1.5) {
-        effY = Math.min(n.yMm, markY - 2.5);
-      }
+    if (isCap) {
+      // 내용량 하단 기준선 3mm 최소 마진 엄격 고정
+      effY = H - 3 - (px * 0.3);
     }
 
-    const maxChars = Math.max(12, Math.floor((W - 8) / (px * (lang === 'en' ? 0.52 : 0.82))));
+    const maxChars = Math.max(10, Math.floor(safeW / (px * (lang === 'en' ? 0.52 : 0.85))));
     const lines = wrapSvgLines(n.trText, maxChars);
-    const weight = n.role === 'title' ? 700 : isCap ? 600 : 400;
-    const opacity = !isHff && n.role === 'ingredient' ? 0.78 : 1;
-    const badgeColor = n.role === 'title' ? '#CEDC00' : n.role === 'ingredient' ? '#78BE20' : '#41B6E6';
+    const weight = isTitle ? 700 : isCap ? 600 : 400;
+
+    let extraStatutoryText = '';
+    // 미국(FDA): 제품명 바로 아래 DIETARY SUPPLEMENT 법정 표기
+    if (isTitle && country === 'US') {
+      const subY = effY + lines.length * px * 1.15 + 1.5;
+      extraStatutoryText = isHff
+        ? `<text x="${W / 2}" y="${subY}" text-anchor="middle" fill="#CEDC00" font-size="${Math.max(2.6, px * 0.52)}" font-weight="700" font-family="'Raleway',sans-serif" letter-spacing="0.5">DIETARY SUPPLEMENT</text>`
+        : `<text x="${W / 2}" y="${subY}" text-anchor="middle" fill="#FFFFFF" font-size="${Math.max(2.4, px * 0.48)}" font-weight="600" font-family="'Raleway',sans-serif" letter-spacing="0.4">JELLY CONFECTIONERY</text>`;
+    }
+    // 일본(소비자청): 제품명 바로 아래 機能性表示食品 법정 표기
+    if (isTitle && country === 'JP') {
+      const subY = effY + lines.length * px * 1.15 + 1.5;
+      extraStatutoryText = isHff
+        ? `<text x="${W / 2}" y="${subY}" text-anchor="middle" fill="#CEDC00" font-size="${Math.max(2.6, px * 0.52)}" font-weight="700" font-family="'Noto Sans JP',sans-serif">機能性表示食品</text>`
+        : `<text x="${W / 2}" y="${subY}" text-anchor="middle" fill="#FFFFFF" font-size="${Math.max(2.4, px * 0.48)}" font-weight="600" font-family="'Noto Sans JP',sans-serif">ゼリー菓子</text>`;
+    }
 
     return `
-      <g opacity="${opacity}">
+      <g>
         ${lines.map((l, idx) => `
           <text x="${W / 2}" y="${effY + idx * px * 1.18}" text-anchor="middle" fill="#FFFFFF" font-size="${px}" font-weight="${weight}" font-family="${LOCALE_TYPO[lang]?.font || 'sans-serif'}">${l}</text>
         `).join('')}
+        ${extraStatutoryText}
       </g>`;
   }).join('');
+
+  // 일본 소비자청 법정 필수 식생활 밸런스 문구
+  const jpDietBalanceNotice = (country === 'JP' && isHff)
+    ? `<text x="${W / 2}" y="${H - 9}" text-anchor="middle" fill="#FFFFFF" opacity="0.88" font-size="1.95" font-family="'Noto Sans JP',sans-serif">食生活は、主食、主菜、副菜を基本に、食事のバランスを。</text>`
+    : '';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 ${W + 12} ${H + 14}" class="pf-svg">
     <defs>
@@ -1162,8 +1435,9 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
         <rect x="326.96" y="288.83" width="1.07" height="9.12"/>
         <path d="m332.19,297.04c-.11,0-.21-.09-.21-.21v-2.74c0-.12.09-.21.21-.21h3.49v-.89h-3.49c-.11,0-.21-.09-.21-.21v-2.83c0-.12.09-.21.21-.21h4v-.91h-5.28v9.12h5.48v-.91h-4.2Z"/>
       </g>
-      ${nodesSvg}
-      ${markBlock}
+      ${renderedNodesSvg}
+      ${jpDietBalanceNotice}
+      ${markSvg}
     </g>
     <rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#101820" stroke-width="0.3"/>
     <text x="${W / 2}" y="-1.8" text-anchor="middle" fill="#E52421" font-size="2.3" font-weight="700" font-family="sans-serif">${W} × ${H}mm (${parsed.areaCm2}㎠)</text>
