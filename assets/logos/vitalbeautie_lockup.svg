@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 54" width="340" height="54" fill="currentColor">
+  <!-- VITALBEAUTIE Core Lockup: Symbol + Wordmark -->
+  <g transform="translate(4, 3)">
+    <!-- Symbol -->
+    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 10 L16 38 L22 24" stroke-width="3" />
+      <line x1="20" y1="21" x2="28" y2="21" stroke-width="2" stroke="#9C874A" />
+      <line x1="20" y1="27" x2="28" y2="27" stroke-width="2" stroke="#9C874A" />
+      <path d="M26 10 H35 C38.5 10 41 12.5 41 16 C41 19 38.5 21 35 21 C39 21 42 24 42 28 C42 32 38.5 34 35 34 H26 V10 Z" stroke-width="2.6" />
+    </g>
+    <!-- Divider -->
+    <line x1="56" y1="8" x2="56" y2="40" stroke="rgba(0,0,0,0.12)" stroke-width="1" />
+    <!-- Wordmark -->
+    <g transform="translate(72, 31)">
+      <text x="0" y="0" font-family="'Outfit', 'Pretendard', sans-serif" font-weight="800" font-size="22" letter-spacing="2.2" text-transform="uppercase">VITAL</text>
+      <text x="86" y="0" font-family="'Outfit', 'Pretendard', sans-serif" font-weight="300" font-size="22" letter-spacing="4" text-transform="uppercase">BEAUTIE</text>
+    </g>
+  </g>
+</svg>

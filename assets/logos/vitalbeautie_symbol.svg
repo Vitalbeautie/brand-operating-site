@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="currentColor">
+  <!-- VITALBEAUTIE Core Symbol: V=B (Vital = Beauty) & Bio-Dynamic Energy Monogram -->
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Balance Frame -->
+    <rect x="2" y="2" width="60" height="60" stroke-width="1.5" opacity="0.15" />
+    
+    <!-- V Element (Inner Vitality) -->
+    <path d="M14 18 L24 46 L30 32" stroke-width="3.5" />
+    
+    <!-- Balance Connector (= Equilibrium: Health equals Beauty) -->
+    <line x1="28" y1="28" x2="36" y2="28" stroke-width="2.5" stroke="#9C874A" />
+    <line x1="28" y1="36" x2="36" y2="36" stroke-width="2.5" stroke="#9C874A" />
+    
+    <!-- B Element (Outer Beauty) -->
+    <path d="M34 18 H44 C48 18 51 21 51 25.5 C51 29 48 32 44 32 C49 32 52 35.5 52 40 C52 44.5 48.5 46 44 46 H34 V18 Z" stroke-width="3" />
+  </g>
+</svg>
