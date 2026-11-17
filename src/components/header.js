@@ -43,7 +43,7 @@ export function renderHeader(container) {
   container.innerHTML = `
     <div class="mobile-header-inner">
       <div class="mobile-logo" id="mobile-logo-btn" onclick="location.hash='#/'" style="cursor: pointer; display: flex; align-items: baseline; gap: 8px;">
-        <img src="/assets/logos/vitalbeautie_logo_hr.png" alt="VITALBEAUTIE" style="height: 15px; width: auto; display: block;" />
+        <img src="./assets/logos/vitalbeautie_logo_hr.png" alt="VITALBEAUTIE" style="height: 15px; width: auto; display: block;" />
         <span class="mobile-header-subtitle">BRAND GUIDELINE</span>
       </div>
       <div class="mobile-actions">

@@ -13,15 +13,15 @@ export const IDENTITY = {
     clearspace: 1.0,         /* 공식 가이드: 1X 여백 확보 필수 */
     minPrintMm: 20,          /* 공식 가이드: 영문 가로폭 최소 20mm */
     minDigitalPx: 120,
-    svgPath: '/assets/logos/vitalbeautie_wordmark.svg',
-    uploadedPng: '/assets/logos/vitalbeautie_uploaded.png'
+    svgPath: './assets/logos/vitalbeautie_wordmark.svg',
+    uploadedPng: './assets/logos/vitalbeautie_uploaded.png'
   },
   logoKo: {
     text: '바이탈뷰티',
     clearspace: 1.0,         /* 공식 가이드: 1X 여백 확보 필수 */
     minPrintMm: 30,          /* 공식 가이드: 국문 가로폭 최소 30mm */
     minDigitalPx: 140,
-    svgPath: '/assets/logos/vitalbeautie_wordmark_ko.svg'
+    svgPath: './assets/logos/vitalbeautie_wordmark_ko.svg'
   },
   symbol: {
     name: 'LAB PROVEN',
@@ -29,8 +29,8 @@ export const IDENTITY = {
     clearspace: 1.0,         /* 1X 여백 */
     minPrintMm: 15,          /* 공식 가이드: 심볼 최소 직경 15mm */
     minDigitalPx: 90,
-    svgPath: '/assets/logos/vitalbeautie_lab_proven.svg',
-    svgWhitePath: '/assets/logos/vitalbeautie_lab_proven_white.svg'
+    svgPath: './assets/logos/vitalbeautie_lab_proven.svg',
+    svgWhitePath: './assets/logos/vitalbeautie_lab_proven_white.svg'
   },
   versions: [
     { id: 'black', label: 'VITALBEAUTIE BLACK', hex: '#101820', pantone: 'Black 6c' },

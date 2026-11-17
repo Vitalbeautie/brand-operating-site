@@ -21,7 +21,7 @@ export async function loadIconIndex() {
   if (!iconIndexPromise) {
     const tryPaths = [
       './assets/icons/icon-index.json',
-      '/assets/icons/icon-index.json',
+      './assets/icons/icon-index.json',
     ];
     iconIndexPromise = (async () => {
       for (const p of tryPaths) {

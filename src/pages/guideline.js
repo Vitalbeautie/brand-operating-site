@@ -14,15 +14,15 @@ import { t } from '../utils/i18n.js';
 export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
   const incItems = [
-    { label: t('다른 서체를 적용하지 마시오.', 'Do not apply unauthorized typefaces.'), img: '/assets/guidelines/wm_inc_1.png' },
-    { label: t('테두리를 넣지 마시오.', 'Do not add outlines or strokes.'), img: '/assets/guidelines/wm_inc_2.png' },
-    { label: t('색상을 변경하지 마시오.', 'Do not alter the designated colors.'), img: '/assets/guidelines/wm_inc_3.png' },
-    { label: t('비례를 왜곡하지 마시오.', 'Do not distort the proportions.'), img: '/assets/guidelines/wm_inc_4.png' },
-    { label: t('임의의 문자와 함께 사용하지 마시오.', 'Do not pair with arbitrary text.'), img: '/assets/guidelines/wm_inc_5.png' },
-    { label: t('간격을 임의로 조정하지 마시오.', 'Do not modify letter spacing.'), img: '/assets/guidelines/wm_inc_6.png' },
-    { label: t('라인으로 처리하지 마시오.', 'Do not render as an outline.'), img: '/assets/guidelines/wm_inc_7.png' },
-    { label: t('기울여 사용하지 마시오.', 'Do not skew, tilt, or italicize.'), img: '/assets/guidelines/wm_inc_8.png' },
-    { label: t('효과를 적용하지 마시오.', 'Do not apply drop shadows or effects.'), img: '/assets/guidelines/wm_inc_9.png' },
+    { label: t('다른 서체를 적용하지 마시오.', 'Do not apply unauthorized typefaces.'), img: './assets/guidelines/wm_inc_1.png' },
+    { label: t('테두리를 넣지 마시오.', 'Do not add outlines or strokes.'), img: './assets/guidelines/wm_inc_2.png' },
+    { label: t('색상을 변경하지 마시오.', 'Do not alter the designated colors.'), img: './assets/guidelines/wm_inc_3.png' },
+    { label: t('비례를 왜곡하지 마시오.', 'Do not distort the proportions.'), img: './assets/guidelines/wm_inc_4.png' },
+    { label: t('임의의 문자와 함께 사용하지 마시오.', 'Do not pair with arbitrary text.'), img: './assets/guidelines/wm_inc_5.png' },
+    { label: t('간격을 임의로 조정하지 마시오.', 'Do not modify letter spacing.'), img: './assets/guidelines/wm_inc_6.png' },
+    { label: t('라인으로 처리하지 마시오.', 'Do not render as an outline.'), img: './assets/guidelines/wm_inc_7.png' },
+    { label: t('기울여 사용하지 마시오.', 'Do not skew, tilt, or italicize.'), img: './assets/guidelines/wm_inc_8.png' },
+    { label: t('효과를 적용하지 마시오.', 'Do not apply drop shadows or effects.'), img: './assets/guidelines/wm_inc_9.png' },
   ];
 
   const grayscaleTop = ['#E2E3E5', '#C8C9CC', '#AFB1B4', '#949699', '#7B7D80'];
@@ -70,17 +70,17 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
             <!-- Top Row: English & Korean side by side (Only vertical center divider) -->
             <div style="display:grid; grid-template-columns:1fr 1fr;">
               <div style="padding:56px 32px 44px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #ECEEF2;">
-                <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE English" style="max-width:290px; width:82%; height:auto; display:block;" />
+                <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE English" style="max-width:290px; width:82%; height:auto; display:block;" />
                 <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:#8C929E; margin-top:22px;">ENGLISH</span>
               </div>
               <div style="padding:56px 32px 44px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                <img src="/assets/logos/vitalbeautie_wordmark_ko_black.png" alt="바이탈뷰티 Korean" style="max-width:190px; width:62%; height:auto; display:block;" />
+                <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="바이탈뷰티 Korean" style="max-width:190px; width:62%; height:auto; display:block;" />
                 <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:#8C929E; margin-top:22px;">KOREAN</span>
               </div>
             </div>
             <!-- Bottom Row: White on VITALBEAUTIE BLACK -->
             <div style="background:#101820; padding:54px 32px 42px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-              <img src="/assets/logos/vitalbeautie_wordmark_en_white.png" alt="White on VITALBEAUTIE BLACK" style="max-width:260px; width:65%; height:auto; display:block;" />
+              <img src="./assets/logos/vitalbeautie_wordmark_en_white.png" alt="White on VITALBEAUTIE BLACK" style="max-width:260px; width:65%; height:auto; display:block;" />
               <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:rgba(255,255,255,0.48); margin-top:20px;">WHITE ON VITALBEAUTIE BLACK</span>
             </div>
           </div>
@@ -108,8 +108,8 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
         <div class="block-visual-column">
           <div style="display:flex; flex-direction:column; gap:32px; align-items:center;">
-            <img src="/assets/guidelines/pdf_p5_grid.png" alt="Wordmark Grid System" style="max-width:680px; width:100%; height:auto; display:block;" />
-            <img src="/assets/guidelines/pdf_p5_clearspace.png" alt="Wordmark Clear Space 1X & 20mm" style="max-width:680px; width:100%; height:auto; display:block;" />
+            <img src="./assets/guidelines/pdf_p5_grid.png" alt="Wordmark Grid System" style="max-width:680px; width:100%; height:auto; display:block;" />
+            <img src="./assets/guidelines/pdf_p5_clearspace.png" alt="Wordmark Clear Space 1X & 20mm" style="max-width:680px; width:100%; height:auto; display:block;" />
           </div>
         </div>
       </div>
@@ -136,11 +136,11 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-visual-column">
           <div style="display:grid; grid-template-columns:1fr 1fr;">
             <div style="padding:36px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #ECEEF2;">
-              <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="English 20mm" style="height:16px; width:auto; display:block;" />
+              <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="English 20mm" style="height:16px; width:auto; display:block;" />
               <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">English · 20mm</span>
             </div>
             <div style="padding:36px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-              <img src="/assets/logos/vitalbeautie_wordmark_ko_black.png" alt="Korean 30mm" style="height:18px; width:auto; display:block;" />
+              <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="Korean 30mm" style="height:18px; width:auto; display:block;" />
               <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">Korean · 30mm</span>
             </div>
           </div>
@@ -161,18 +161,18 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
         <div class="block-visual-column">
           <div style="display:flex; flex-direction:column; gap:28px;">
-            <img src="/assets/guidelines/pdf_p8_wm_bg_usage.png" alt="Background Usage Rules" style="width:100%; height:auto; display:block;" />
+            <img src="./assets/guidelines/pdf_p8_wm_bg_usage.png" alt="Background Usage Rules" style="width:100%; height:auto; display:block;" />
 
             <!-- Flush 5x2 Grayscale Matrix -->
             <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:0;">
               ${grayscaleTop.map(bg => `
                 <div style="background:${bg}; height:118px; display:flex; align-items:center; justify-content:center;">
-                  <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="Black Wordmark" style="height:10px; width:auto; display:block;" />
+                  <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="Black Wordmark" style="height:10px; width:auto; display:block;" />
                 </div>
               `).join('')}
               ${grayscaleBot.map(bg => `
                 <div style="background:${bg}; height:118px; display:flex; align-items:center; justify-content:center;">
-                  <img src="/assets/logos/vitalbeautie_wordmark_en_white.png" alt="White Wordmark" style="height:10px; width:auto; display:block;" />
+                  <img src="./assets/logos/vitalbeautie_wordmark_en_white.png" alt="White Wordmark" style="height:10px; width:auto; display:block;" />
                 </div>
               `).join('')}
             </div>
@@ -245,10 +245,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-visual-column">
           <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center;">
             <div style="padding:44px 24px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-              <img src="/assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN Black" style="width:176px; height:176px; display:block;" />
+              <img src="./assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN Black" style="width:176px; height:176px; display:block;" />
             </div>
             <div style="padding:44px 24px; display:flex; align-items:center; justify-content:center; background:#101820; min-height:264px;">
-              <img src="/assets/logos/vitalbeautie_monogram_lab_proven_white.png" alt="LAB PROVEN White" style="width:176px; height:176px; display:block;" />
+              <img src="./assets/logos/vitalbeautie_monogram_lab_proven_white.png" alt="LAB PROVEN White" style="width:176px; height:176px; display:block;" />
             </div>
           </div>
         </div>
@@ -268,8 +268,8 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
         <div class="block-visual-column">
           <div style="display:flex; align-items:center; justify-content:center; gap:36px; padding:36px 0;">
-            <img src="/assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE" style="height:17px; width:auto; display:block;" />
-            <img src="/assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN" style="width:82px; height:82px; display:block;" />
+            <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE" style="height:17px; width:auto; display:block;" />
+            <img src="./assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN" style="width:82px; height:82px; display:block;" />
           </div>
         </div>
       </div>
@@ -287,7 +287,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         </div>
 
         <div class="block-visual-column">
-          <img src="/assets/guidelines/pdf_p17_sym_exception.png" alt="Symbol Placement Guide" style="width:100%; height:auto; display:block;" />
+          <img src="./assets/guidelines/pdf_p17_sym_exception.png" alt="Symbol Placement Guide" style="width:100%; height:auto; display:block;" />
         </div>
       </div>
 
@@ -304,7 +304,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         </div>
 
         <div class="block-visual-column">
-          <img src="/assets/guidelines/pdf_p13_sym_exclusion.png" alt="Symbol Exclusion Zone" style="width:100%; height:auto; display:block;" />
+          <img src="./assets/guidelines/pdf_p13_sym_exclusion.png" alt="Symbol Exclusion Zone" style="width:100%; height:auto; display:block;" />
         </div>
       </div>
 
@@ -322,7 +322,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
         <div class="block-visual-column">
           <div style="display:flex; align-items:center; gap:22px; padding:18px 0 18px 40px;">
-            <img src="/assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="Printed 15mm" style="width:58px; height:58px; display:block;" />
+            <img src="./assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="Printed 15mm" style="width:58px; height:58px; display:block;" />
             <div style="width:1px; height:22px; background:#ECEEF2;"></div>
             <span style="font-family:var(--font-en); font-size:12px; color:#101820;">Printed: 15mm</span>
           </div>
@@ -342,7 +342,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         </div>
 
         <div class="block-visual-column">
-          <img src="/assets/guidelines/pdf_p14_sym_incorrect.png" alt="Symbol Incorrect Usage" style="width:100%; height:auto; display:block;" />
+          <img src="./assets/guidelines/pdf_p14_sym_incorrect.png" alt="Symbol Incorrect Usage" style="width:100%; height:auto; display:block;" />
         </div>
       </div>
 
@@ -360,8 +360,8 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
         <div class="block-visual-column">
           <div style="display:flex; flex-direction:column; gap:36px;">
-            <img src="/assets/guidelines/pdf_p15_sym_color.png" alt="Symbol Color" style="width:100%; height:auto; display:block;" />
-            <img src="/assets/guidelines/pdf_p16_sym_bg_usage.png" alt="Symbol Background Usage" style="width:100%; height:auto; display:block;" />
+            <img src="./assets/guidelines/pdf_p15_sym_color.png" alt="Symbol Color" style="width:100%; height:auto; display:block;" />
+            <img src="./assets/guidelines/pdf_p16_sym_bg_usage.png" alt="Symbol Background Usage" style="width:100%; height:auto; display:block;" />
           </div>
         </div>
       </div>

@@ -232,9 +232,9 @@ export async function preloadFonts() {
     };
 
     const [bold, light, medium] = await Promise.all([
-      loadFont('/assets/fonts/AritaDotumKR-Bold.ttf'),
-      loadFont('/assets/fonts/AritaDotumKR-Light.ttf'),
-      loadFont('/assets/fonts/AritaDotumKR-Medium.ttf'),
+      loadFont('./assets/fonts/AritaDotumKR-Bold.ttf'),
+      loadFont('./assets/fonts/AritaDotumKR-Light.ttf'),
+      loadFont('./assets/fonts/AritaDotumKR-Medium.ttf'),
     ]);
 
     fontCache.bold = bold;

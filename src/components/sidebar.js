@@ -245,7 +245,7 @@ export function renderSidebar(container) {
     <!-- Sidebar Header (Ultra-Crisp Vector Wordmark) -->
     <div class="sidebar-header" style="text-align: left; display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 28px;">
       <div class="brand-logo" id="sidebar-logo-btn" style="cursor: pointer; width: 100%; display: flex; justify-content: flex-start;" onclick="location.hash='#/'">
-        <img id="brand-logo-img" src="/assets/logos/vitalbeautie_wordmark.svg" alt="VITALBEAUTIE" style="max-width: 172px; width: 100%; height: auto; display: block;" />
+        <img id="brand-logo-img" src="./assets/logos/vitalbeautie_wordmark.svg" alt="VITALBEAUTIE" style="max-width: 172px; width: 100%; height: auto; display: block;" />
       </div>
     </div>
 
