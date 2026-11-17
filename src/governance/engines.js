@@ -2144,11 +2144,9 @@ export function suggestFamilyLook(options = {}) {
       'PANTONE 3262 C', 'PANTONE 3258 C', 'PANTONE 311 C', 'PANTONE 3115 C', 'PANTONE 3265 C', 'PANTONE 338 C',
     ];
 
-    // 기존 제품과 겹치거나 색차가 minDeltaE 미만인 칩 제외 카운트
-    let excludedCount = 0;
-    const candidates = [];
-
-    for (const pms of allFamChips) {
+    // 이 계열의 모든 PANTONE Solid Coated 칩을 L값 순으로 정렬하여 딥 / 미디엄 / 라이트 3단계 분할
+    // 계열마다 딥, 미디엄, 라이트가 각각 5개 이상씩 풍부하고 균형있게 제안되도록 설계
+    const sortedFamChips = [...allFamChips].map(pms => {
       const normPms = pms.code.toUpperCase().replace(/^PANTONE\s*/i, '').replace(/\s+/g, '');
       let nearest = usedList[0];
       let minD = Infinity;
@@ -2159,53 +2157,81 @@ export function suggestFamilyLook(options = {}) {
           nearest = u;
         }
       }
+      const L = Array.isArray(pms.lab) ? pms.lab[0] : (pms.lab.l ?? 50);
+      return {
+        pantoneCode: pms.code,
+        normCode: normPms,
+        hex: pms.hex,
+        L,
+        lab: pms.lab,
+        C: pms.C || Math.hypot(pms.lab[1], pms.lab[2]),
+        minD,
+        nearestName: nearest.name,
+        nearestPantone: nearest.pantone,
+        nearestHex: nearest.hex,
+      };
+    }).sort((a, b) => a.L - b.L);
 
-      const isPriority = priorityCodes.includes(pms.code);
-      const effectiveMinDeltaE = isPriority ? Math.min(minDeltaE, 6.0) : minDeltaE;
+    const nTotal = sortedFamChips.length;
+    const nTertile = Math.max(1, Math.floor(nTotal / 3));
 
-      if (usedCodes.has(normPms) || minD < effectiveMinDeltaE) {
-        excludedCount++;
-      } else {
-        const L = Array.isArray(pms.lab) ? pms.lab[0] : (pms.lab.l ?? 50);
-        const shade = L < 45 ? '딥' : L <= 72 ? '미디엄' : '라이트';
-        candidates.push({
-          pantoneCode: pms.code,
-          hex: pms.hex,
-          shade,
-          lab: pms.lab,
-          C: pms.C || Math.hypot(pms.lab[1], pms.lab[2]),
-          minD,
-          nearestName: nearest.name,
-          nearestPantone: nearest.pantone,
-          nearestHex: nearest.hex,
-        });
-      }
-    }
+    const poolDeep = sortedFamChips.slice(0, nTertile).map(c => ({ ...c, shade: '딥' }));
+    const poolMed = sortedFamChips.slice(nTertile, nTotal - nTertile).map(c => ({ ...c, shade: '미디엄' }));
+    const poolLight = sortedFamChips.slice(nTotal - nTertile).map(c => ({ ...c, shade: '라이트' }));
 
-    // 고채도(Chroma) 및 건강기능식품·일반식품 글로벌 브랜드 적합도 우선 정렬 (탁한 살구색·페일톤 배제)
-    candidates.sort((a, b) => {
-      const aIdx = priorityCodes.indexOf(a.pantoneCode);
-      const bIdx = priorityCodes.indexOf(b.pantoneCode);
-      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-      if (aIdx !== -1) return -1;
-      if (bIdx !== -1) return 1;
-      const aScore = (a.C || 0) * 1.6 + Math.min(a.minD, 24);
-      const bScore = (b.C || 0) * 1.6 + Math.min(b.minD, 24);
+    const rankFn = (a, b) => {
+      const aUsed = usedCodes.has(a.normCode) ? 1 : 0;
+      const bUsed = usedCodes.has(b.normCode) ? 1 : 0;
+      if (aUsed !== bUsed) return aUsed - bUsed; // 이미 사용된 코드는 뒤로
+
+      const aPri = priorityCodes.includes(a.pantoneCode);
+      const bPri = priorityCodes.includes(b.pantoneCode);
+      if (aPri !== bPri) return aPri ? -1 : 1;
+
+      // 차별성(minD)과 채도(C) 종합 점수
+      const aScore = Math.min(a.minD, 28) * 1.5 + (a.C || 0) * 0.8;
+      const bScore = Math.min(b.minD, 28) * 1.5 + (b.C || 0) * 0.8;
       return bScore - aScore;
-    });
+    };
 
-    const proposedCards = candidates.slice(0, 8);
-    const notice = (proposedCards.length <= 3 && proposedCards.length > 0)
-      ? `기존 제품이 이 계열을 많이 써서 겹치지 않는 칩이 ${proposedCards.length}개만 남았습니다.`
-      : null;
+    const targetPerShade = 5;
+    const pickShadeCards = (pool) => {
+      const sorted = pool.sort(rankFn);
+      // 기존 제품과 겹치지 않는 칩 우선 선택, 최소 targetPerShade(5개) 이상 보장
+      const nonOverlap = sorted.filter(c => !usedCodes.has(c.normCode) && c.minD >= 4.0);
+      if (nonOverlap.length >= targetPerShade) {
+        return nonOverlap.slice(0, Math.min(6, nonOverlap.length));
+      }
+      // 부족 시 전체 풀에서 차별성 높은 순으로 채워 5개 보장
+      const result = [...nonOverlap];
+      for (const c of sorted) {
+        if (!result.some(r => r.pantoneCode === c.pantoneCode)) {
+          result.push(c);
+        }
+        if (result.length >= targetPerShade) break;
+      }
+      return result;
+    };
+
+    const proposedDeep = pickShadeCards(poolDeep);
+    const proposedMed = pickShadeCards(poolMed);
+    const proposedLight = pickShadeCards(poolLight);
+
+    const proposedCards = [...proposedDeep, ...proposedMed, ...proposedLight];
+    const excludedCount = Math.max(0, allFamChips.length - proposedCards.length);
 
     return {
       familyId: fam,
       familyKo: famKo,
       existingProducts,
-      excludedCount: Math.max(excludedCount, allFamChips.length - proposedCards.length),
+      excludedCount,
       proposedCards,
-      notice,
+      byShade: {
+        deep: proposedDeep,
+        medium: proposedMed,
+        light: proposedLight,
+      },
+      notice: null,
     };
   });
 
@@ -2522,14 +2548,70 @@ const KO_EN_DICT = [
   ['판토텐산칼슘', 'Calcium Pantothenate'],
   ['비타민A', 'Vitamin A'],
   ['비타민E', 'Vitamin E'],
+  ['비타민D', 'Vitamin D'],
+  ['비타민K', 'Vitamin K'],
+  ['비타민B12', 'Vitamin B12'],
+  ['비타민B6', 'Vitamin B6'],
+  ['비타민B2', 'Vitamin B2'],
+  ['비타민B1', 'Vitamin B1'],
+  ['비타민B', 'Vitamin B'],
+  ['비타민 B', 'Vitamin B'],
+  ['비타민', 'Vitamin'],
   ['비오틴', 'Biotin'],
+  ['나이아신', 'Niacin'],
+  ['니아신', 'Niacin'],
+  ['엽산', 'Folic Acid'],
   ['셀레늄', 'Selenium'],
+  ['셀렌', 'Selenium'],
   ['세라마이드', 'Ceramide'],
   ['엘-시스틴', 'L-Cystine'],
   ['맥주효모', 'Brewer\'s Yeast'],
   ['아연', 'Zinc'],
+  ['마그네슘', 'Magnesium'],
+  ['칼슘', 'Calcium'],
+  ['철분', 'Iron'],
+  ['구리', 'Copper'],
+  ['망간', 'Manganese'],
+  ['몰리브덴', 'Molybdenum'],
+  ['요오드', 'Iodine'],
   ['APIC대두배아열수추출물등복합물', 'APIC Soybean Embryo Hot-Water Extract Complex'],
   ['가르시니아캄보지아추출물', 'Garcinia Cambogia Extract'],
+  ['가르시니아 캄보지아', 'Garcinia Cambogia'],
+  ['가르시니아캄보지아', 'Garcinia Cambogia'],
+  ['가르시니아', 'Garcinia Cambogia'],
+  ['녹차추출물', 'Green Tea Extract (Catechin)'],
+  ['녹차 추출물', 'Green Tea Extract'],
+  ['카테킨', 'Catechin'],
+  ['콜라겐펩타이드', 'Collagen Peptide'],
+  ['피쉬콜라겐', 'Fish Collagen'],
+  ['콜라겐', 'Collagen'],
+  ['글루타치온', 'Glutathione'],
+  ['코엔자임Q10', 'Coenzyme Q10'],
+  ['코엔자임 Q10', 'Coenzyme Q10'],
+  ['루테인', 'Lutein'],
+  ['지아잔틴', 'Zeaxanthin'],
+  ['아스타잔틴', 'Astaxanthin'],
+  ['밀크씨슬추출물', 'Milk Thistle Extract'],
+  ['밀크씨슬', 'Milk Thistle'],
+  ['밀크시슬', 'Milk Thistle'],
+  ['실리마린', 'Silymarin'],
+  ['유산균', 'Probiotics'],
+  ['프로바이오틱스', 'Probiotics'],
+  ['프리바이오틱스', 'Prebiotics'],
+  ['포스트바이오틱스', 'Postbiotics'],
+  ['홍삼농축액', 'Red Ginseng Extract'],
+  ['홍삼', 'Red Ginseng'],
+  ['진세노사이드', 'Ginsenoside'],
+  ['테아닌', 'L-Theanine'],
+  ['가바', 'GABA'],
+  ['오메가3', 'Omega-3'],
+  ['차전자피', 'Psyllium Husk'],
+  ['식이섬유', 'Dietary Fiber'],
+  ['시카', 'Cica'],
+  ['레티놀', 'Retinol'],
+  ['타우린', 'Taurine'],
+  ['아르기닌', 'L-Arginine'],
+  ['카르니틴', 'L-Carnitine'],
   ['난소화성말토덱스트린', 'Indigestible Maltodextrin'],
   ['사과초모식초(애플사이다비니거)', 'Apple Cider Vinegar (with Mother)'],
   ['사과초모식초', 'Apple Cider Vinegar'],
@@ -2540,7 +2622,6 @@ const KO_EN_DICT = [
   ['바나바잎추출물', 'Banaba Leaf Extract'],
   ['올리브잎추출물', 'Olive Leaf Extract'],
   ['메타프로효소포뮬라', 'Meta-Pro Enzyme Formula'],
-  ['녹차추출물', 'Green Tea Extract (Catechin)'],
   ['구연산칼륨', 'Potassium Citrate'],
   ['용성비타민P', 'Soluble Vitamin P'],
   ['α-아밀라아제', 'α-Amylase'],
@@ -2636,14 +2717,70 @@ const KO_JA_DICT = [
   ['판토텐산칼슘', 'パントテン酸カルシウム'],
   ['비타민A', 'ビタミンA'],
   ['비타민E', 'ビタミンE'],
+  ['비타민D', 'ビタミンD'],
+  ['비타민K', 'ビタミンK'],
+  ['비타민B12', 'ビタミンB12'],
+  ['비타민B6', 'ビタミンB6'],
+  ['비타민B2', 'ビタミンB2'],
+  ['비타민B1', 'ビタミンB1'],
+  ['비타민B', 'ビタミンB'],
+  ['비타민 B', 'ビタミンB'],
+  ['비타민', 'ビタミン'],
   ['비오틴', 'ビオチン'],
+  ['나이아신', 'ナイアシン'],
+  ['니아신', 'ナイアシン'],
+  ['엽산', '葉酸'],
   ['셀레늄', 'セレン'],
+  ['셀렌', 'セレン'],
   ['세라마이드', 'セラミド'],
   ['엘-시스틴', 'L-シスチン'],
   ['맥주효모', 'ビール酵母'],
   ['아연', '亜鉛'],
+  ['마그네슘', 'マグネシウム'],
+  ['칼슘', 'カルシウム'],
+  ['철분', '鉄'],
+  ['구리', '銅'],
+  ['망간', 'マンガン'],
+  ['몰리브덴', 'モリブデン'],
+  ['요오드', 'ヨウ素'],
   ['APIC대두배아열수추출물등복합물', 'APIC大豆胚芽熱水抽出物複合体'],
   ['가르시니아캄보지아추출물', 'ガルシニアカンボジア抽出物'],
+  ['가르시니아 캄보지아', 'ガルシニアカンボジア'],
+  ['가르시니아캄보지아', 'ガルシニアカンボジア'],
+  ['가르시니아', 'ガルシニア'],
+  ['녹차추출물', '緑茶抽出物（カテキン）'],
+  ['녹차 추출물', '緑茶抽出物'],
+  ['카테킨', 'カテキン'],
+  ['콜라겐펩타이드', 'コラーゲンペプチド'],
+  ['피쉬콜라겐', 'フィッシュコラーゲン'],
+  ['콜라겐', 'コラーゲン'],
+  ['글루타치온', 'グルタチオン'],
+  ['코엔자임Q10', 'コエンザイムQ10'],
+  ['코엔자임 Q10', 'コエンザイムQ10'],
+  ['루테인', 'ルテイン'],
+  ['지아잔틴', 'ゼアキサンチン'],
+  ['아스타잔틴', 'アスタキサンチン'],
+  ['밀크씨슬추출물', 'マリアアザミ抽出物'],
+  ['밀크씨슬', 'マリアアザミ'],
+  ['밀크시슬', 'マリアアザミ'],
+  ['실리마린', 'シリマリン'],
+  ['유산균', '乳酸菌'],
+  ['프로바이오틱스', 'プロバイオティクス'],
+  ['프리바이오틱스', 'プレバイオティクス'],
+  ['포스트바이오틱스', 'ポストバイオティクス'],
+  ['홍삼농축액', '濃縮紅参エキス'],
+  ['홍삼', '紅参'],
+  ['진세노사이드', 'ジンセノサイド'],
+  ['테아닌', 'L-テアニン'],
+  ['가바', 'GABA'],
+  ['오메가3', 'オメガ3'],
+  ['차전자피', 'オオバコ種皮（サイリウム）'],
+  ['식이섬유', '食物繊維'],
+  ['시카', 'ツボクサ（シカ）'],
+  ['레티놀', 'レチノール'],
+  ['타우린', 'タウリン'],
+  ['아르기닌', 'L-アルギニン'],
+  ['카르니틴', 'L-カルニチン'],
   ['난소화성말토덱스트린', '難消化性デキストリン'],
   ['사과초모식초(애플사이다비니거)', 'りんご酢（アップルサイダービネガー）'],
   ['사과초모식초', 'りんご酢'],
@@ -2654,7 +2791,6 @@ const KO_JA_DICT = [
   ['바나바잎추출물', 'バナバ葉抽出物'],
   ['올리브잎추출물', 'オリーブ葉抽出物'],
   ['메타프로효소포뮬라', 'メタプロ酵素フォーミュラ'],
-  ['녹차추출물', '緑茶抽出物（カテキン）'],
   ['구연산칼륨', 'クエン酸カリウム'],
   ['용성비타민P', '水溶性ビタミンP'],
   ['α-아밀라아제', 'α-アミラーゼ'],
@@ -2679,6 +2815,31 @@ const KO_JA_DICT = [
   ['정', '粒'],
 ];
 
+const CHOSUNG_RO = ['g','kk','n','d','tt','r','m','b','pp','s','ss','','j','jj','ch','k','t','p','h'];
+const JUNGSUNG_RO = ['a','ae','ya','yae','eo','e','yeo','ye','o','wa','wae','oe','yo','u','wo','we','wi','yu','eu','ui','i'];
+const JONGSUNG_RO = ['', 'k', 'k', 'ks', 'n', 'nj', 'nh', 't', 'l', 'lg', 'lm', 'lb', 'ls', 'lt', 'lp', 'lh', 'm', 'p', 'ps', 't', 't', 'ng', 't', 't', 'k', 't', 'p', 'h'];
+
+function romanizeRemainingHangul(str) {
+  return str.replace(/[가-힣]/g, ch => {
+    const code = ch.charCodeAt(0) - 0xAC00;
+    const cho = Math.floor(code / 588);
+    const jung = Math.floor((code % 588) / 28);
+    const jong = code % 28;
+    return (CHOSUNG_RO[cho] || '') + (JUNGSUNG_RO[jung] || '') + (JONGSUNG_RO[jong] || '');
+  });
+}
+
+function katakanaRemainingHangul(str) {
+  const kanaMap = {
+    '가': 'ガ', '나': 'ナ', '다': 'ダ', '라': 'ラ', '마': 'マ', '바': 'バ', '사': 'サ', '아': 'ア', '자': 'ジャ', '차': 'チャ', '카': 'カ', '타': 'タ', '파': 'パ', '하': 'ハ',
+    '고': 'ゴ', '노': 'ノ', '도': 'ド', '로': 'ロ', '모': 'モ', '보': 'ボ', '소': 'ソ', '오': 'オ', '조': 'ジョ', '초': 'チョ', '코': 'コ', '토': 'ト', '포': 'ポ', '호': 'ホ',
+    '구': 'グ', '누': 'ヌ', '두': 'ドゥ', '루': 'ル', '무': 'ム', '부': 'ブ', '수': 'ス', '우': 'ウ', '주': 'ジュ', '추': 'チュ', '쿠': 'ク', '투': 'トゥ', '푸': 'プ', '후': 'フ',
+    '기': 'ギ', '니': 'ニ', '디': 'ディ', '리': 'リ', '미': 'ミ', '비': 'ビ', '시': 'シ', '이': 'イ', '지': 'ジ', '치': 'チ', '키': 'キ', '티': 'ティ', '피': 'ピ', '히': 'ヒ',
+    '개': 'ゲ', '내': 'ネ', '대': 'デ', '래': 'レ', '매': 'メ', '배': 'ベ', '새': 'セ', '애': 'エ', '재': 'ジェ', '채': 'チェ', '캐': 'ケ', '태': 'テ', '패': 'ペ', '해': 'ヘ',
+  };
+  return str.replace(/[가-힣]/g, ch => kanaMap[ch] || romanizeRemainingHangul(ch));
+}
+
 export function translateKoPackageText(text = '', targetLang = 'en') {
   if (!text) return '';
   let out = text;
@@ -2692,6 +2853,15 @@ export function translateKoPackageText(text = '', targetLang = 'en') {
       const oz = (parseFloat(g) * 0.035274).toFixed(2);
       return `${m} (${oz} oz)`;
     });
+    // 사전에 없는 미등록 한글 단어가 남아있을 경우 음차 fallback 변환하여 100% 영문화 보장
+    if (/[가-힣]/.test(out)) {
+      out = romanizeRemainingHangul(out);
+    }
+  } else if (targetLang === 'ja') {
+    // 사전에 없는 미등록 한글 단어가 남아있을 경우 카타카나 fallback 변환하여 100% 일문화 보장
+    if (/[가-힣]/.test(out)) {
+      out = katakanaRemainingHangul(out);
+    }
   }
   return out;
 }
@@ -2949,12 +3119,12 @@ function renderLocalizedInnerBeautySvg(parsed, country = 'KR') {
   const safeW = Math.max(20, W - leftX * 2);
   const pointHex = parsed.pantoneHex || '#F6B9D4';
 
-  const tagScale = isWide ? 1.33 : isSmall ? 0.82 : 1.0;
-  const topLine = isWide ? 2.0 : isSmall ? 1.2 : 1.5;
-  const tagWTop = +(43.59 * tagScale).toFixed(2);
-  const tagWBot = +(39.55 * tagScale).toFixed(2);
-  const tagY0 = +(1.17 * tagScale).toFixed(2);
-  const tagH = +(6.47 * tagScale).toFixed(2);
+  // 바이탈뷰티 로고 크기: 건강기능식품·일반식품 구분 없이 일반식품 표준 크기(43.59mm 태그)로 100% 통일
+  const topLine = 1.5;
+  const tagWTop = 43.59;
+  const tagWBot = 39.55;
+  const tagY0 = 1.17;
+  const tagH = 6.47;
   const tagY1 = +(tagY0 + tagH).toFixed(2);
   const tx0 = +((W - tagWTop) / 2).toFixed(2);
   const tx1 = +(tx0 + tagWTop).toFixed(2);
@@ -3068,7 +3238,8 @@ function renderLocalizedInnerBeautySvg(parsed, country = 'KR') {
     rawCapLines = [`${jpClass} ${jpText}`];
   }
 
-  const ingPt = isHff ? Math.max(7.5, +(titlePt * 0.5).toFixed(1)) : 14.0;
+  // 건강기능식품 영문(US)은 제품명의 1/2이 아니라 10pt로 고정
+  const ingPt = (isHff && country === 'US') ? 10.0 : (isHff ? Math.max(7.5, +(titlePt * 0.5).toFixed(1)) : 14.0);
   const ingPx = ingPt * PT_MM;
 
   let ingSvg = '';
@@ -3282,8 +3453,9 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
   const isHff = (parsed.type || 'hff') === 'hff';
   const bgHex = parsed.pantoneHex || '#00843D';
 
-  const topLine = sc.topLine;
-  const tagWTop = sc.tag.wTop, tagWBot = sc.tag.wBottom, tagH = sc.tag.h;
+  // 바이탈뷰티 로고 크기: 건강기능식품·일반식품 구분 없이 일반식품 표준 크기(43.59mm 태그)로 100% 통일
+  const topLine = 1.5;
+  const tagWTop = 43.59, tagWBot = 39.55, tagH = 6.47;
   const tagY0 = topLine * 0.78, tagY1 = tagY0 + tagH;
   const tx0 = (W - tagWTop) / 2, tx1 = tx0 + tagWTop;
   const bx0 = (W - tagWBot) / 2, bx1 = bx0 + tagWBot;
@@ -3427,9 +3599,9 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
   }).join('\n      ');
 
   // 원재료명(건강기능식품) vs 원료명 및 함량(일반식품) — Brand Visibility 규정과 동일하게 적용
-  // - 건강기능식품(isHff): 제품명(또는 Dietary Supplement) 바로 아래에 제품명의 1/2 크기 · Light(300) · 100% 배치
+  // - 건강기능식품(isHff): 국문·일문은 제품명의 1/2 크기, 영문(US)은 10pt 고정
   // - 일반식품(!isHff): 하단 내용량 바로 위에 14pt · Medium(500) · 70% 투명도로 배치
-  const ingPt = isHff ? Math.max(8, +(titlePt * 0.5).toFixed(1)) : 14;
+  const ingPt = (isHff && country === 'US') ? 10.0 : (isHff ? Math.max(8, +(titlePt * 0.5).toFixed(1)) : 14);
   const ingPx = ingPt * PT_MM;
   const ingStep = ingPx * 1.2;
   const ingLines = wrapSvgTextToWidth(ingText, ingPx, safeW, 1);
@@ -3451,12 +3623,12 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
     return `<text x="${W / 2}" y="${y}" text-anchor="middle" fill="#FFFFFF" opacity="${ingOpacity}" font-size="${ingPx}" font-weight="${ingWeight}" font-family="${fontFam}">${line}</text>`;
   }).join('\n      ');
 
-  // 건강기능식품 15mm 마크: 건강기능식품(isHff)일 때만 내용량 바로 위에 배치 (KR 전용)
+  // 건강기능식품 15mm 마크: Layout Proposal과 동일하게 내용량 문구 바로 위 오른쪽 배치 (KR 전용)
   let markSvg = '';
   if (country === 'KR' && isHff) {
     const markSize = 15;
-    const markX = (W - markSize) / 2;
-    const markY = (capStartY - capPx * 0.85) - 1.5 - markSize;
+    const markX = +(W - 2.0 - markSize).toFixed(2);
+    const markY = +((capStartY - capPx * 0.85) - 2.0 - markSize).toFixed(2);
     markSvg = getHffMarkSvg(markX, markY, markSize, 0.55);
   }
 
@@ -4145,10 +4317,11 @@ export function renderPackageFrontSvg(s, showGuides = true) {
     ingStartY = capTop - 3.5 - blockH;
   }
 
-  const padL = showGuides ? 26 : 1.5;
-  const padR = showGuides ? 24 : 1.5;
-  const padT = showGuides ? 5 : 1.5;
-  const padB = showGuides ? 5 : 1.5;
+  // 빨간 치수선 ON/OFF 시에도 단상자 렌더링 크기 및 뷰포트 비율이 100% 동일하게 유지되도록 패딩 고정
+  const padL = 26;
+  const padR = 24;
+  const padT = 5;
+  const padB = 5;
   const dimLine = (x, y1, y2, label) => `
     <g stroke="#E52421" stroke-width="0.22" fill="none">
       <path d="M${x},${y1} h1.2 v${Math.max(y2 - y1, 0.4)} h-1.2"/>
@@ -4553,10 +4726,11 @@ export function renderInnerBeautyFrontSvg(s, showGuides = true) {
     return `<text x="${leftX}" y="${fy.toFixed(2)}" text-anchor="start" fill="#878787" font-size="${fnPx.toFixed(2)}" font-weight="500" font-family="'VB-ShinGothic','RIX-신고딕se-pro','Noto Sans KR',sans-serif">${line}</text>`;
   }).join('\n      ');
 
-  const padL = showGuides ? 28 : 1.5;
-  const padR = showGuides ? 24 : 1.5;
-  const padT = showGuides ? 7 : 1.5;
-  const padB = showGuides ? 5 : 1.5;
+  // 빨간 치수선 ON/OFF 시에도 단상자 렌더링 크기 및 뷰포트 비율이 100% 동일하게 유지되도록 패딩 고정
+  const padL = 28;
+  const padR = 24;
+  const padT = 7;
+  const padB = 5;
 
   const dimLine = (x, y1, y2, label) => `
     <g stroke="#E52421" stroke-width="0.22" fill="none">

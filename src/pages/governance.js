@@ -995,7 +995,6 @@ function setupIconGenerator(el) {
                 <span class="ig-motif-badge-num">모티프 ${mIdx + 1}</span>
                 <strong class="ig-motif-title">${motif.title}</strong>
               </div>
-              <span class="ig-motif-lvl-badge">Lv.${curLevel} ${levelObj.label}</span>
             </div>
 
             <div class="ig-slider-box">
@@ -1235,7 +1234,7 @@ export function renderFamilyLookPage(el) {
         </div>
       `).join('');
 
-      const cardsHtml = fam.proposedCards.map(c => `
+      const renderCard = c => `
         <div class="fl-rec-card" data-copy-hex="${c.hex}" data-copy-label="${c.pantoneCode}" style="cursor:pointer;" title="클릭하여 HEX (${c.hex}) 복사">
           <div class="fl-rec-swatch-box" style="background:${c.hex}">
             <span class="fl-rec-shade-tag">${c.shade}</span>
@@ -1268,7 +1267,11 @@ export function renderFamilyLookPage(el) {
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+
+      const deepCards = (fam.byShade?.deep || []).map(renderCard).join('');
+      const medCards = (fam.byShade?.medium || []).map(renderCard).join('');
+      const lightCards = (fam.byShade?.light || []).map(renderCard).join('');
 
       const noticeHtml = fam.notice ? `<div class="fl-low-chip-alert">${fam.notice}</div>` : '';
 
@@ -1285,8 +1288,24 @@ export function renderFamilyLookPage(el) {
           <div class="fl-exist-title">이 계열의 기존 제품 컬러</div>
           <div class="fl-exist-pills">${pillsHtml}</div>
 
-          <div class="fl-cards-grid">
-            ${cardsHtml}
+          <div style="margin-top:16px;">
+            <div style="font-size:12px;font-weight:700;color:#101820;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#101820;"></span>
+              딥 (Deep) · ${fam.byShade?.deep?.length || 0}개 제안
+            </div>
+            <div class="fl-cards-grid" style="margin-bottom:18px;">${deepCards}</div>
+
+            <div style="font-size:12px;font-weight:700;color:#101820;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4E5968;"></span>
+              미디엄 (Medium) · ${fam.byShade?.medium?.length || 0}개 제안
+            </div>
+            <div class="fl-cards-grid" style="margin-bottom:18px;">${medCards}</div>
+
+            <div style="font-size:12px;font-weight:700;color:#101820;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8B95A1;"></span>
+              라이트 (Light) · ${fam.byShade?.light?.length || 0}개 제안
+            </div>
+            <div class="fl-cards-grid">${lightCards}</div>
           </div>
           ${noticeHtml}
         </div>`;
@@ -1658,7 +1677,7 @@ export function renderLocalizationPage(el) {
               </div>
             </div>
             <div>
-              <div style="font-size:11.5px;color:#344054;margin-bottom:3px;">영어 · Raleway</div>
+              <div style="font-size:11.5px;color:#344054;margin-bottom:3px;">영어</div>
               <div style="display:grid;grid-template-columns:1fr 60px;gap:8px;align-items:center;">
                 <input id="loc-en-pt-range" class="vb-range" type="range" min="10" max="80" step="0.5" value="${locState.enTitlePt}">
                 <input id="loc-en-pt" type="number" min="8" max="80" step="0.5" class="gov-input" value="${locState.enTitlePt}" style="padding:4px 6px;text-align:center;font-weight:700;">
@@ -1725,7 +1744,7 @@ export function renderLocalizationPage(el) {
             <div id="loc-cap-block-US" class="loc-cap-block" style="margin-bottom:14px;">
               <label class="gov-label" style="font-size:11.5px;color:#344054;margin-bottom:4px;">미국 · 내용량</label>
               <textarea id="loc-us-cap-text" class="gov-input" rows="2" style="padding:7px 10px;font-size:12px;line-height:1.4;margin-bottom:8px;resize:vertical;">${locState.usCapText}</textarea>
-              <div style="font-size:11px;color:#344054;margin-bottom:2px;">영어 · Raleway</div>
+              <div style="font-size:11px;color:#344054;margin-bottom:2px;">영어</div>
               <div style="display:grid;grid-template-columns:1fr 60px;gap:8px;align-items:center;">
                 <input id="loc-us-cap-pt-range" class="vb-range" type="range" min="6" max="20" step="0.5" value="${locState.usCapPt}">
                 <input id="loc-us-cap-pt" type="number" min="6" max="24" step="0.5" class="gov-input" value="${locState.usCapPt}" style="padding:4px 6px;text-align:center;font-weight:700;">
@@ -1765,9 +1784,9 @@ export function renderLocalizationPage(el) {
 
   const renderSimulations = () => {
     const targets = [
-      { code: 'KR', lang: 'ko', title: '한국 · MFDS', sub: '식품의약품안전처 표시기준' },
-      { code: 'US', lang: 'en', title: '미국 · FDA', sub: 'FDA Dietary Supplement / Food Label' },
-      { code: 'JP', lang: 'ja', title: '일본 · CAA', sub: '消費者庁 食品表示基準' },
+      { code: 'KR', lang: 'ko', title: '국문' },
+      { code: 'US', lang: 'en', title: '영문' },
+      { code: 'JP', lang: 'ja', title: '일문' },
     ];
 
     $('loc-sim-out').innerHTML = targets.map(t => {
@@ -1775,8 +1794,7 @@ export function renderLocalizationPage(el) {
       return `
         <div style="display:flex; flex-direction:column; gap:8px;">
           <div>
-            <b style="font-size:13.5px; font-weight:700; color:#101820; display:block; margin-bottom:2px;">${t.title}</b>
-            <div style="font-size:11px; color:#7A808C;">${t.sub}</div>
+            <b style="font-size:14px; font-weight:700; color:#101820; display:block;">${t.title}</b>
           </div>
           <div style="display:flex; justify-content:center; align-items:center; width:100%; min-height:480px;">
             ${svg}

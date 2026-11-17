@@ -382,6 +382,8 @@ input[type="number"], .gov-input, .pf-input, .fl-rec-hex, .fl-rec-pms, .fl-rec-c
   padding: 36px 24px 32px 24px;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
 }
 
 .sidebar::-webkit-scrollbar {
@@ -437,6 +439,8 @@ input[type="number"], .gov-input, .pf-input, .fl-rec-hex, .fl-rec-pms, .fl-rec-c
   gap: 2px;
   width: 100%;
   overflow-y: auto;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
 }
 
 .sidebar-section-label {
@@ -593,6 +597,9 @@ html {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
 }
 
 .search-and-lang-row {
@@ -3640,9 +3647,8 @@ input[type="range"].vb-range::-moz-range-thumb,
 }
 
 .ig-motif-var-item.selected {
-  border-color: #101820;
-  background: #F4F6F9;
-  box-shadow: 0 0 0 2px #101820;
+  border-color: #E5E7EB;
+  background: #FFFFFF;
 }
 
 .ig-motif-var-svg {

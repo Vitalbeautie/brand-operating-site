@@ -272,12 +272,6 @@ export function renderSidebar(container) {
         <!-- Language Toggle Button (EN / KR) -->
         <button id="lang-toggle-btn" class="btn-lang btn-lang-square" title="${t('영문으로 전환 (Switch to English)', '국문으로 전환 (Switch to Korean)')}">${langBtnLabel}</button>
       </div>
-
-      <div class="sidebar-meta-row">
-        <span class="version-code">${latestVersion ? latestVersion.version : 'v3.0'}</span>
-        <span class="version-date">${latestVersion ? latestVersion.date : '2026.10'}</span>
-        <span class="brand-badge-pill">OFFICIAL</span>
-      </div>
     </div>
   `;
 
