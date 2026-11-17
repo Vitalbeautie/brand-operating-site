@@ -4,6 +4,206 @@
    Sharp, Editorial, Pure White & Golden Accents, Architecture-Grade Aesthetics
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ─── 0. Typography & Numeric Glyph Font (사용자 PC의 실제 Rix신고딕SE_Pro 및 210 옴니고딕 폰트 적용) ─── */
+@font-face {
+  font-family: 'VB-ShinGothic';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Light.otf') format('opentype'),
+       url('/assets/fonts/AritaDotumKR-Light.ttf') format('truetype');
+  font-weight: 100 399;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VB-ShinGothic';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Medium.otf') format('opentype'),
+       url('/assets/fonts/AritaDotumKR-Medium.ttf') format('truetype');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VB-ShinGothic';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Bold.otf') format('opentype'),
+       url('/assets/fonts/AritaDotumKR-Bold.ttf') format('truetype');
+  font-weight: 601 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RIX-신고딕se-pro';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Light.otf') format('opentype');
+  font-weight: 100 399;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RIX-신고딕se-pro';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Medium.otf') format('opentype');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RIX-신고딕se-pro';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Bold.otf') format('opentype');
+  font-weight: 601 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VB-OmniGothic';
+  src: url('/assets/fonts/210OmniGothic-010.ttf') format('truetype');
+  font-weight: 100 249;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VB-OmniGothic';
+  src: url('/assets/fonts/210OmniGothic-020.ttf') format('truetype');
+  font-weight: 250 399;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VB-OmniGothic';
+  src: url('/assets/fonts/210OmniGothic-030.ttf') format('truetype');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VB-OmniGothic';
+  src: url('/assets/fonts/210OmniGothic-040.ttf') format('truetype');
+  font-weight: 601 799;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'VB-OmniGothic';
+  src: url('/assets/fonts/210OmniGothic-050.ttf') format('truetype');
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RixShinGo-Numbers';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Medium.otf') format('opentype'),
+       url('/assets/fonts/AritaDotumKR-Medium.ttf') format('truetype');
+  font-weight: 400 600;
+  font-style: normal;
+  unicode-range: U+0030-0039, U+002E, U+002C, U+0025, U+002B, U+002D, U+00D7;
+}
+
+@font-face {
+  font-family: 'RixShinGo-Numbers';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Bold.otf') format('opentype'),
+       url('/assets/fonts/AritaDotumKR-Bold.ttf') format('truetype');
+  font-weight: 700 900;
+  font-style: normal;
+  unicode-range: U+0030-0039, U+002E, U+002C, U+0025, U+002B, U+002D, U+00D7;
+}
+
+@font-face {
+  font-family: 'RixShinGo-Numbers';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Light.otf') format('opentype'),
+       url('/assets/fonts/AritaDotumKR-Light.ttf') format('truetype');
+  font-weight: 100 300;
+  font-style: normal;
+  unicode-range: U+0030-0039, U+002E, U+002C, U+0025, U+002B, U+002D, U+00D7;
+}
+
+/* ─── Noto Sans CJK / JP 폰트 정의 (일문 및 한자 가타카나 전용) ─── */
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/assets/fonts/NotoSansCJKsc-Light.otf') format('opentype');
+  font-weight: 100 399;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/assets/fonts/NotoSansCJKsc-Regular.otf') format('opentype'),
+       url('/assets/fonts/NotoSansCJKsc-Medium.otf') format('opentype');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/assets/fonts/NotoSansCJKsc-Bold.otf') format('opentype'),
+       url('/assets/fonts/NotoSansCJKsc-Black.otf') format('opentype');
+  font-weight: 601 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans CJK SC';
+  src: url('/assets/fonts/NotoSansCJKsc-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans CJK SC';
+  src: url('/assets/fonts/NotoSansCJKsc-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── Raleway 영문 폰트 정의 (Lining Figures 중앙 정렬 숫자 기본 적용) ─── */
+@font-face {
+  font-family: 'Raleway';
+  src: url('/assets/fonts/Raleway-Light.ttf') format('truetype');
+  font-weight: 100 399;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Raleway';
+  src: url('/assets/fonts/Raleway-Regular.ttf') format('truetype'),
+       url('/assets/fonts/Raleway-Medium.ttf') format('truetype');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Raleway';
+  src: url('/assets/fonts/Raleway-Bold.ttf') format('truetype'),
+       url('/assets/fonts/Raleway-ExtraBold.ttf') format('truetype'),
+       url('/assets/fonts/Raleway-Black.ttf') format('truetype');
+  font-weight: 601 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Raleway 폰트 숫자는 항상 Lining Figures (정규 높이 중앙 정렬) 강제 */
+* {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.pf-svg, .pf-svg text, svg text, [font-family*="Raleway"], [font-family*="Noto Sans"] {
+  font-feature-settings: "lnum" 1, "tnum" 1 !important;
+  font-variant-numeric: lining-nums tabular-nums !important;
+}
+
 /* ─── Design Tokens (AP Beauty Light Theme) ─── */
 :root {
   --ap-bg: #f8f9fc;
@@ -38,8 +238,9 @@
   --error: var(--ap-error);
 
   /* Typography (Official VITALBEAUTIE Guidelines: Raleway & RIX-신고딕) */
-  --font-en: 'Raleway', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-ko: 'RIX-신고딕se-pro', 'RIX-신고딕', 'RixGo', 'Noto Sans KR', 'Pretendard', sans-serif;
+  --font-en: 'RixShinGo-Numbers', 'Raleway', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ko: 'RixShinGo-Numbers', 'RIX-신고딕se-pro', 'RIX-신고딕', 'RixGo', 'Noto Sans KR', 'Pretendard', sans-serif;
+  --font-num: 'RixShinGo-Numbers', 'RIX-신고딕se-pro', 'RIX-신고딕', 'RixGo', 'Noto Sans KR', sans-serif;
   --font-heading: var(--font-en);
   --font-body: var(--font-ko);
 
@@ -101,8 +302,58 @@ img, svg {
 }
 
 input, textarea, select {
-  font-family: inherit;
+  font-family: var(--font-num), var(--font-ko) !important;
   font-size: inherit;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+input[type="number"], .gov-input, .pf-input, .fl-rec-hex, .fl-rec-pms, .fl-rec-code-sm, .fl-exist-code, .vb-range, .vb-pt-num {
+  font-family: var(--font-num), var(--font-ko) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Custom Sleek Range Slider (레퍼런스 이미지 실물 100% 반영: 블랙 트랙 & 화이트 라운드 썸) ─── */
+.vb-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: #101820;
+  border-radius: 2px;
+  outline: none;
+  margin: 8px 0;
+  cursor: pointer;
+}
+.vb-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1.5px solid #D0D5DD;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: transform 0.1s ease, border-color 0.1s ease;
+}
+.vb-range::-webkit-slider-thumb:hover {
+  border-color: #101820;
+  transform: scale(1.1);
+}
+.vb-range::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1.5px solid #D0D5DD;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+.vb-range::-moz-range-track {
+  height: 3px;
+  background: #101820;
+  border-radius: 2px;
 }
 
 /* ─── Master Layout Container (1720px Centered) ─── */
@@ -202,6 +453,11 @@ input, textarea, select {
   padding-top: 0;
 }
 
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
 .nav-link,
 .sidebar-link {
   display: block;
@@ -213,19 +469,40 @@ input, textarea, select {
   letter-spacing: 1.5px;
   text-transform: uppercase;
   padding: 6.5px 0;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.22s ease, color 0.2s ease;
   transform-origin: left center;
   text-align: left;
 }
 
+.nav-group:hover > .nav-link,
 .nav-link:hover,
 .sidebar-link:hover,
 .nav-link.active,
 .sidebar-link.active {
   color: #000000 !important;
   font-weight: 700 !important;
-  transform: scale(1.04);
+  font-size: 14px;
+  transform: scale(1.05);
   background: transparent !important;
+}
+
+.nav-sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 12px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, padding 0.22s ease;
+}
+
+.nav-group:hover > .nav-sub-list,
+.nav-group.active > .nav-sub-list {
+  max-height: 280px;
+  opacity: 1;
+  padding-top: 4px;
+  padding-bottom: 12px;
 }
 
 .nav-sub-link {
@@ -236,14 +513,67 @@ input, textarea, select {
   color: #7A808C;
   font-weight: 400;
   text-decoration: none;
-  line-height: 1.4;
-  transition: color 0.15s ease, font-weight 0.15s ease;
+  line-height: 1.45;
+  transform-origin: left center;
+  transition: transform 0.18s ease, font-size 0.18s ease, color 0.15s ease, font-weight 0.15s ease;
 }
 
 .nav-sub-link:hover,
 .nav-sub-link.active {
   color: #000000 !important;
   font-weight: 700 !important;
+  font-size: 10.8px;
+  transform: scale(1.04);
+}
+
+.sidebar-search-results {
+  position: absolute;
+  bottom: calc(100% - 14px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #101820;
+  box-shadow: 0 8px 24px rgba(16, 24, 32, 0.12);
+  flex-direction: column;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 200;
+}
+
+.sidebar-search-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 9px 12px;
+  border-bottom: 1px solid #ECEEF2;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sidebar-search-item:last-child {
+  border-bottom: none;
+}
+
+.sidebar-search-item:hover {
+  background: #F4F5F8;
+}
+
+.sidebar-search-item-title {
+  font-family: var(--font-en);
+  font-size: 11px;
+  font-weight: 700;
+  color: #101820;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-search-item-sub {
+  font-family: var(--font-ko);
+  font-size: 10px;
+  color: #666B75;
 }
 
 .guide-section,
@@ -285,10 +615,9 @@ html {
   padding: 0 28px 0 30px;
   background: #ffffff;
   border: 1px solid var(--ap-border);
-  font-family: var(--font-en);
+  font-family: var(--font-ko);
   font-size: 11px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  letter-spacing: 1px;
   color: var(--ap-white);
   outline: none;
   transition: border-color 0.2s ease;
@@ -1172,8 +1501,10 @@ html {
   padding: 9px 12px;
   border: 1px solid var(--ap-border);
   background: #ffffff;
-  font-family: var(--font-en);
-  font-size: 12px;
+  font-family: var(--font-ko) !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-size: 12.5px;
   color: var(--ap-white);
   box-sizing: border-box;
   transition: border-color var(--transition);
@@ -1591,18 +1922,129 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px 8px;
+  padding: 20px;
   background: #f5f6f9;
   border: 1px solid var(--border-light);
-  min-height: 460px;
+  min-height: 480px;
+  position: relative;
+  overflow: auto;
+  border-radius: 4px;
+}
+
+#lf-canvas.pf-canvas-wrap {
+  min-height: 740px;
+  height: calc(100vh - 210px);
+  max-height: 940px;
+  padding: 28px 16px;
+  background: #ffffff;
+  border: none;
+  box-shadow: none;
+}
+
+/* ─── Collapsible Control Panel Sections (화살표 접기/펼치기) ─── */
+.pf-acc-sec {
+  border-top: 1px solid var(--border-light);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.pf-acc-sec:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.pf-acc-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-family: var(--font-ko);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ap-white);
+  cursor: pointer;
+  text-align: left;
+}
+
+.pf-acc-head:hover {
+  opacity: 0.78;
+}
+
+.pf-acc-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #555e70;
+  transition: transform 0.18s ease;
+}
+
+.pf-acc-sec.collapsed .pf-acc-arrow {
+  transform: rotate(-90deg);
+}
+
+.pf-acc-body {
+  margin-top: 10px;
+}
+
+.pf-acc-sec.collapsed .pf-acc-body {
+  display: none;
 }
 
 .pf-svg {
   width: 100%;
-  max-width: 460px;
-  max-height: 540px;
+  max-width: 520px;
+  max-height: 600px;
   height: auto;
   display: block;
+}
+
+#lf-canvas .pf-svg {
+  width: 100%;
+  max-width: 680px;
+  height: 100%;
+  max-height: 840px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  transform-origin: center center;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lf-zoom-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f2f5;
+  padding: 3px;
+  border-radius: 4px;
+}
+
+.lf-zoom-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4a505c;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lf-zoom-btn:hover {
+  background: #ffffff;
+  color: #101820;
+}
+
+.lf-zoom-btn.active {
+  background: #101820;
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .pf-legend {
@@ -1770,8 +2212,8 @@ html {
 
 .lf-sim-grid {
   display: grid;
-  grid-template-columns: 390px minmax(420px, 1fr);
-  gap: 20px;
+  grid-template-columns: 380px minmax(500px, 1fr);
+  gap: 24px;
   align-items: start;
 }
 
@@ -2658,8 +3100,9 @@ input[type="range"].vb-range::-moz-range-thumb,
    ═══════════════════════════════════════════════════════════════════════════ */
 .fl-kw-header-box {
   background: #FFFFFF;
-  border: 1px solid #D5D8DE;
-  padding: 20px 24px;
+  border: none;
+  border-bottom: 1px solid #EAECEF;
+  padding: 4px 0 20px 0;
   margin-bottom: 24px;
 }
 
@@ -2759,7 +3202,8 @@ input[type="range"].vb-range::-moz-range-thumb,
 
 .fl-exist-code {
   color: #7A808C;
-  font-family: var(--font-en);
+  font-family: var(--font-ko);
+  font-variant-numeric: tabular-nums;
 }
 
 .fl-cards-grid {
@@ -2804,6 +3248,8 @@ input[type="range"].vb-range::-moz-range-thumb,
 }
 
 .fl-rec-pms {
+  font-family: var(--font-ko);
+  font-variant-numeric: tabular-nums;
   font-size: 12.5px;
   font-weight: 700;
   color: #101820;
@@ -2813,7 +3259,8 @@ input[type="range"].vb-range::-moz-range-thumb,
 .fl-rec-hex {
   font-size: 11px;
   color: #7A808C;
-  font-family: var(--font-en);
+  font-family: var(--font-ko);
+  font-variant-numeric: tabular-nums;
   margin-bottom: 8px;
 }
 
@@ -2951,7 +3398,8 @@ input[type="range"].vb-range::-moz-range-thumb,
   background: #FFFFFF;
   border: none;
   border-right: 1px solid #D5D8DE;
-  font-family: var(--font-en);
+  font-family: var(--font-ko);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
   font-weight: 700;
   color: #4A505C;
@@ -3074,9 +3522,10 @@ input[type="range"].vb-range::-moz-range-thumb,
    01 ICON GENERATOR — Motif Clustering & Live Complexity Slider
    ═══════════════════════════════════════════════════════════════════════════ */
 .ig-motif-card {
-  border: 1px solid #E5E7EB;
+  border: none;
+  border-bottom: 1px solid #EAECEF;
   background: #FFFFFF;
-  padding: 20px;
+  padding: 16px 0 24px 0;
   margin-bottom: 22px;
 }
 
@@ -3163,30 +3612,53 @@ input[type="range"].vb-range::-moz-range-thumb,
 
 .ig-motif-variants-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  grid-template-columns: repeat(6, minmax(130px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
 .ig-motif-var-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1px solid #E5E7EB;
+  border: 1.5px solid #E5E7EB;
   background: #FFFFFF;
-  padding: 8px 4px;
+  border-radius: 8px;
+  padding: 14px 10px;
+  cursor: pointer;
+  min-width: 120px;
+  transition: all 0.15s ease;
+}
+
+.ig-motif-var-item:hover {
+  border-color: #101820;
+  background: #FAFBFD;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 24, 32, 0.08);
+}
+
+.ig-motif-var-item.selected {
+  border-color: #101820;
+  background: #F4F6F9;
+  box-shadow: 0 0 0 2px #101820;
 }
 
 .ig-motif-var-svg {
   width: 100%;
-  max-width: 68px;
+  max-width: 124px;
   aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ig-motif-var-label {
-  font-size: 10.5px;
-  color: #5A606E;
-  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333842;
+  margin-top: 8px;
   text-align: center;
   white-space: nowrap;
 }

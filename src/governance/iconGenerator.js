@@ -7,6 +7,8 @@
    - 단일 30×30mm .ai 및 전체 아트보드 .ai / .svg 벡터 출력
    ═══════════════════════════════════════════════════════════════════════════ */
 import { buildIllustratorAiBlob } from './engines.js';
+import { EXTRA_WELLNESS_MOTIF_PRESETS } from '../data/wellnessMotifsExtra.js';
+import { BG, LIB_SVGS, CORNER_BADGES, MASTER_CRESTS, withCornerBadge, withCrestAndBadge } from '../data/iconCraftComposers.js';
 
 const VB_BLACK = '#101820';
 const LEARNED_STORAGE_KEY = 'vb_icon_generator_learned_v1';
@@ -15,18 +17,30 @@ let iconIndexCache = null;
 let iconIndexPromise = null;
 
 export async function loadIconIndex() {
-  if (iconIndexCache) return iconIndexCache;
+  if (iconIndexCache && iconIndexCache.icons && iconIndexCache.icons.length > 0) return iconIndexCache;
   if (!iconIndexPromise) {
-    iconIndexPromise = fetch('./assets/icons/icon-index.json')
-      .then(r => r.json())
-      .then(data => {
-        iconIndexCache = data;
-        return data;
-      })
-      .catch(() => {
-        iconIndexCache = { sets: { L: 'Lucide (ISC)', T: 'Tabler Outline (MIT)', F: 'Tabler Filled (MIT)' }, icons: [] };
-        return iconIndexCache;
-      });
+    const tryPaths = [
+      './assets/icons/icon-index.json',
+      '/assets/icons/icon-index.json',
+    ];
+    iconIndexPromise = (async () => {
+      for (const p of tryPaths) {
+        try {
+          const r = await fetch(p);
+          if (r.ok) {
+            const data = await r.json();
+            if (data && Array.isArray(data.icons) && data.icons.length > 0) {
+              iconIndexCache = data;
+              return data;
+            }
+          }
+        } catch {
+          // try next path
+        }
+      }
+      iconIndexCache = { sets: { L: 'Lucide (ISC)', T: 'Tabler Outline (MIT)', F: 'Tabler Filled (MIT)' }, icons: [] };
+      return iconIndexCache;
+    })();
   }
   return iconIndexPromise;
 }
@@ -179,22 +193,22 @@ export function resolveKeywordSearchTerms(rawKeyword) {
   const lower = kw.toLowerCase();
   if (!kw) return { raw: '웰니스', enCopy: 'wellness', terms: ['sparkles', 'leaf', 'heart', 'sun', 'droplet'] };
 
-  // 1) 정확 또는 부분 일치 시맨틱 사전 검색
+  // 1) 정확 또는 부분 일치 시맨틱 사전 검색 (단일 글자 키 오매칭 방지)
   const matchedTerms = [];
   let enCopy = '';
 
   for (const entry of KO_SEMANTIC_DICT) {
-    if (entry.ko.some(k => lower === k || lower.includes(k) || k.includes(lower))) {
+    if (entry.ko.some(k => lower === k || (k.length >= 2 && lower.includes(k)) || (lower.length >= 2 && k.includes(lower)))) {
       if (!enCopy) enCopy = entry.en;
       matchedTerms.push(...entry.terms);
     }
   }
 
-  // 2) 단일 단어 사전 매칭
+  // 2) 단일 단어 사전 매칭 (1글자 단어는 정확 일치 시에만 매칭하여 '포도'->'포', '유전자'->'자' 오매칭 차단)
   for (const [koWord, enWord] of Object.entries(KO_WORD_MAP)) {
-    if (lower.includes(koWord)) {
+    if (lower === koWord || (koWord.length >= 2 && lower.includes(koWord))) {
       if (!enCopy) enCopy = enWord.replace(/-/g, ' ');
-      matchedTerms.push(enWord);
+      matchedTerms.unshift(enWord);
     }
   }
 
@@ -208,9 +222,9 @@ export function resolveKeywordSearchTerms(rawKeyword) {
   // 4) 만약 사전에서 못 찾은 새로운 한국어 단어라면 결정론적 해시로 다양한 웰니스/범용 아이콘 토큰 배정
   if (matchedTerms.length === 0) {
     const fallbackPools = [
-      ['sparkles', 'star', 'sun', 'moon', 'flower', 'leaf', 'droplet', 'heart', 'shield', 'award', 'gem', 'crown'],
-      ['circle-dot', 'compass', 'target', 'zap', 'flame', 'waves', 'wind', 'cloud', 'sprout', 'trees', 'apple', 'citrus'],
-      ['flask-conical', 'microscope', 'dna', 'atom', 'activity', 'heart-pulse', 'brain', 'eye', 'smile', 'feather', 'infinity', 'recycle'],
+      ['leaf', 'droplet', 'sparkles', 'heart', 'shield', 'sun', 'flower', 'star', 'award', 'gem', 'crown'],
+      ['sprout', 'apple', 'citrus', 'flame', 'zap', 'waves', 'wind', 'cloud', 'trees', 'compass', 'target'],
+      ['dna', 'atom', 'activity', 'heart-pulse', 'brain', 'eye', 'flask-conical', 'microscope', 'feather', 'infinity'],
     ];
     const hash = [...lower].reduce((a, c) => a + c.charCodeAt(0), 0);
     matchedTerms.push(...fallbackPools[hash % fallbackPools.length]);
@@ -234,8 +248,7 @@ const COMPLEXITY_LABELS = [
 
 /**
  * 키워드에 대해 8,281개 글로벌 아이콘 인덱스에서 후보를 검색하고
- * 심플(낮은 복잡도) → 복잡(높은 복잡도) 순으로 12개 후보를 추출한다.
- * offsetPage를 올리면 '↻ 다른 형태' 버튼으로 다른 후보 세트를 순환한다.
+ * 매칭 점수가 가장 높은 대표 아이콘을 우선 추출한다.
  */
 export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
   const { raw, enCopy, terms } = resolveKeywordSearchTerms(rawKeyword);
@@ -245,6 +258,7 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
   const scored = [];
   for (let i = 0; i < icons.length; i++) {
     const [name, setCode, tagStr, innerSvg, comp] = icons[i];
+    if (setCode === 'F') continue; // 바이탈뷰티 라인 배지 통일성을 위해 라인(Outline) 아이콘만 선별
     const id = `${setCode}:${name}`;
     const nameLower = name.toLowerCase();
     const tagsLower = tagStr.toLowerCase();
@@ -252,21 +266,21 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
     let score = 0;
     for (let tIdx = 0; tIdx < terms.length; tIdx++) {
       const term = terms[tIdx];
-      const priorityWeight = Math.max(1, 10 - tIdx);
-      if (nameLower === term) score += 50 * priorityWeight;
-      else if (nameLower.startsWith(term + '-') || nameLower.endsWith('-' + term)) score += 28 * priorityWeight;
+      const priorityWeight = Math.max(1, 12 - tIdx * 2);
+      if (nameLower === term) score += 80 * priorityWeight;
+      else if (nameLower.startsWith(term + '-') || nameLower.endsWith('-' + term)) score += 32 * priorityWeight;
       else if (nameLower.includes(term)) score += 14 * priorityWeight;
       else if (tagsLower.split('|').includes(term)) score += 10 * priorityWeight;
-      else if (tagsLower.includes(term)) score += 4 * priorityWeight;
+      else if (tagsLower.includes(term)) score += 3 * priorityWeight;
     }
 
-    if (score > 0) {
+    if (score > 0 && !nameLower.endsWith('-off')) {
       if (setCode === 'L' || setCode === 'T') score += 6;
       scored.push({
         id,
         name,
         setCode,
-        setName: setCode === 'L' ? 'Lucide' : setCode === 'T' ? 'Tabler Outline' : 'Tabler Filled',
+        setName: setCode === 'L' ? 'Lucide' : 'Tabler Outline',
         tags: tagStr ? tagStr.split('|').filter(Boolean).slice(0, 5) : [],
         innerSvg,
         complexity: comp || 10,
@@ -287,9 +301,8 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
   const picked = [];
   const usedNames = new Set();
   for (const item of rotated) {
-    const baseKey = `${item.setCode === 'F' ? 'F' : 'O'}:${item.name}`;
-    if (usedNames.has(baseKey) && rotated.length > 18) continue;
-    usedNames.add(baseKey);
+    if (usedNames.has(item.name) && rotated.length > 12) continue;
+    usedNames.add(item.name);
     picked.push(item);
     if (picked.length === 12) break;
   }
@@ -298,11 +311,6 @@ export function searchCandidateIcons(indexData, rawKeyword, offsetPage = 0) {
     if (picked.length >= 12) break;
     if (!picked.includes(item)) picked.push(item);
   }
-
-  picked.sort((a, b) => {
-    if (a.isLearned !== b.isLearned) return b.isLearned - a.isLearned;
-    return a.complexity - b.complexity;
-  });
 
   const candidates = picked.map((item, idx) => ({
     ...item,
@@ -343,9 +351,19 @@ function getIconFromIndexOrFallback(indexData, name, fallbackSvg = '') {
   };
 }
 
+/**
+ * 바이탈뷰티 아이콘 레이어 아키텍처 원칙 (전 모티프 & 동적 생성 공통 엔진):
+ * 1. 비간섭 영역 분리 (Spatial Zone Separation):
+ *    Lv.1(심플) → Lv.2(베이직) → Lv.3(스탠다드) → Lv.4(컴플렉스)로 갈 때
+ *    추가되는 보조 요소(별, 파동, 스파클, 리본, 오라 등)는 메인 모티프와 선이 교차하지 않는 독립 좌표 구역에 배치한다.
+ * 2. 전면 레이어 속공간 비움 (Front-Layer Knockout Occlusion):
+ *    공간이 좁아 배경 요소(점선 오라 링, 배경 구름, 후면 캡슐, 후면 쉴드 등)와 겹쳐야 하는 경우,
+ *    배경 레이어를 먼저 그리고 맨 앞에 오는 전면 레이어에 반드시 `fill="var(--vb-icon-bg, #FFFFFF)"`를 부여하여
+ *    전면 레이어의 속공간을 깨끗하게 비워 뒤쪽 선이 비치지 않도록 처리한다.
+ */
 const WELLNESS_MOTIF_PRESETS = [
   {
-    keys: ['수면', '숙면', '잠', '밤', '나이트', 'sleep', 'night', '가바', '멜라토닌'],
+    keys: ['수면', '숙면', '잠', '밤', '나이트', 'sleep', 'night', '가바', '멜라토닌', '락티움'],
     enCopy: 'good sleep',
     motifs: [
       {
@@ -353,10 +371,30 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '달 (Moon)',
         enTitle: 'Moon & Night Sky',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '초승달 미니멀 실루엣 라인', customSvg: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '초승달 + 반짝이는 별 포인트 추가', customSvg: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v3M20.5 4.5h-3"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '초승달 + 별 2개 + 몽환적인 밤구름 결합', customSvg: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 2v3M20.5 3.5h-3"/><path d="M4 19a3 3 0 0 1 3-3h1.5a3.5 3.5 0 0 1 6.8 0H16a3 3 0 0 1 0 6H7a3 3 0 0 1-3-3Z"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '초승달 + 별무리 + 밤구름 + 온화하게 잠든 미소 표정', customSvg: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 2v3M20.5 3.5h-3"/><path d="M4 19a3 3 0 0 1 3-3h1.5a3.5 3.5 0 0 1 6.8 0H16a3 3 0 0 1 0 6H7a3 3 0 0 1-3-3Z"/><path d="M7.8 11.5c.3.3.7.3 1 0M11 11.5c.3.3.7.3 1 0"/><path d="M9.2 14c.6.4 1.4.4 2 0"/><circle cx="21" cy="9" r="0.6" fill="currentColor"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '초승달 미니멀 실루엣 라인',
+            customSvg: '<path d="M12.5 3a6.2 6.2 0 0 0 8.5 8.5 8.5 8.5 0 1 1-8.5-8.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '초승달 + 상단 독립 구역 반짝이는 별 포인트 추가',
+            customSvg: '<path d="M12.5 3a6.2 6.2 0 0 0 8.5 8.5 8.5 8.5 0 1 1-8.5-8.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M19 2.5v3M20.5 4h-3"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '후면 초승달 + 전면 밤구름 (구름 내부 속공간 비움으로 뒤쪽 달 선 가림)',
+            customSvg: '<path d="M12 2.5a5.8 5.8 0 0 0 8 8 8 8 0 1 1-8-8Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M19.5 2v2.6M20.8 3.3h-2.6"/><path d="M17.5 20.5H8.2a4.2 4.2 0 0 1-.4-8.4 4.8 4.8 0 0 1 9.1-1.2 3.6 3.6 0 0 1 .6 9.6Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 초승달(평온한 눈) + 별무리 + 전면 밤구름 (전면 구름 속공간 비움)',
+            customSvg: '<path d="M12 2.5a5.8 5.8 0 0 0 8 8 8 8 0 1 1-8-8Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M9.2 9.2c.5.5 1.3.5 1.8 0"/><path d="M19.5 2v2.6M20.8 3.3h-2.6"/><circle cx="21" cy="7.2" r="0.65" fill="currentColor" stroke="none"/><circle cx="4.2" cy="6.5" r="0.65" fill="currentColor" stroke="none"/><path d="M17.5 20.5H8.2a4.2 4.2 0 0 1-.4-8.4 4.8 4.8 0 0 1 9.1-1.2 3.6 3.6 0 0 1 .6 9.6Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
         ],
       },
       {
@@ -364,10 +402,30 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '침대 (Bed)',
         enTitle: 'Comfort Bed',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '침대 기본 프레임 미니멀 실루엣', customSvg: '<path d="M2 18v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8M2 14h20M2 18h20"/>' },
-          { level: 2, label: '2단계 베이직', desc: '침대 프레임 + 푹신한 베개와 이불 라인 추가', customSvg: '<path d="M2 18v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8M2 14h20M2 18h20"/><rect x="4" y="6" width="6" height="4" rx="1.5"/><path d="M10 14v-4h10v4"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '침대 + 베개 & 이불 + 은은한 침실 스탠드 조명 추가', customSvg: '<path d="M2 18v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8M2 14h20M2 18h20"/><rect x="4" y="6" width="6" height="4" rx="1.5"/><path d="M10 14v-4h10v4"/><path d="M19 2v4M17 6h4"/><circle cx="19" cy="4" r="1.5" fill="none" stroke="currentColor"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '침대 + 베개 & 이불 + 조명 + 별빛과 Zzz 수면 파동', customSvg: '<path d="M2 18v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8M2 14h20M2 18h20"/><rect x="4" y="6" width="6" height="4" rx="1.5"/><path d="M10 14v-4h10v4"/><path d="M19 2v4M17 6h4"/><circle cx="19" cy="4" r="1.5" fill="none" stroke="currentColor"/><path d="M13 3h2l-2 3h2M15 1h1.5l-1.5 2h1.5"/><path d="M7 2v2M8 3H6"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '침대 기본 프레임 미니멀 실루엣',
+            customSvg: '<path d="M2.5 7.5v12.5M21.5 12.5v7.5M2.5 13.5h19M2.5 17.5h19"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '침대 프레임 + 전면 베개 & 이불 레이어 (속공간 비움으로 선 겹침 차단)',
+            customSvg: '<path d="M2.5 7.5v12.5M21.5 12.5v7.5"/><rect x="4.2" y="9.8" width="5.6" height="3.7" rx="1.4" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M10.8 13.5v-2.2c0-.9.7-1.6 1.6-1.6h6.5c.9 0 1.6.7 1.6 1.6v2.2" fill="var(--vb-icon-bg, #FFFFFF)"/><rect x="2.5" y="13.5" width="19" height="4" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '침대 + 전면 베개 & 이불 + 상단 독립 구역 초승달 나이트 모빌',
+            customSvg: '<path d="M2.5 7.5v12.5M21.5 12.5v7.5"/><rect x="4.2" y="9.8" width="5.6" height="3.7" rx="1.4" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M10.8 13.5v-2.2c0-.9.7-1.6 1.6-1.6h6.5c.9 0 1.6.7 1.6 1.6v2.2" fill="var(--vb-icon-bg, #FFFFFF)"/><rect x="2.5" y="13.5" width="19" height="4" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M16.5 2.5a3.2 3.2 0 0 0 4.2 4.2 4.2 4.2 0 1 1-4.2-4.2Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '침대 + 베개 & 이불 + 상단 좌·중·우 3분할 구역 (별빛 · Z기호 · 초승달 비간섭 배치)',
+            customSvg: '<path d="M2.5 7.5v12.5M21.5 12.5v7.5"/><rect x="4.2" y="9.8" width="5.6" height="3.7" rx="1.4" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M10.8 13.5v-2.2c0-.9.7-1.6 1.6-1.6h6.5c.9 0 1.6.7 1.6 1.6v2.2" fill="var(--vb-icon-bg, #FFFFFF)"/><rect x="2.5" y="13.5" width="19" height="4" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M6.8 3.2v2.4M8 4.4H5.6"/><path d="M11.2 3.2h2.6l-2.6 3.2h2.6"/><path d="M17.2 2.2a3 3 0 0 0 4 4 4 4 0 1 1-4-4Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
         ],
       },
       {
@@ -375,10 +433,30 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '별 (Stars & Night Aura)',
         enTitle: 'Night Stars & Glow',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '단일 4-포인트 스파클 별 라인', customSvg: '<path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '중심 별 + 상단 2차 반짝이 별 추가', customSvg: '<path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/><path d="M19 3v3M20.5 4.5h-3"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '중심 별 + 다중 보조 별 + 방사형 빛의 코어 링', customSvg: '<path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/><path d="M19 2v3M20.5 3.5h-3"/><path d="M4 18v3M5.5 19.5h-3"/><circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" stroke-dasharray="1 1.5"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '중심 별 + 다중 보조 별 + 초승달 헤일로 오라와 은하수 스타더스트', customSvg: '<path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/><path d="M19 2v3M20.5 3.5h-3"/><path d="M4 18v3M5.5 19.5h-3"/><circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" stroke-dasharray="1 1.5"/><path d="M18 16a4 4 0 0 1-4 4 4.5 4.5 0 0 0 4-4Z"/><circle cx="7" cy="6" r="0.75" fill="currentColor"/><circle cx="17" cy="19" r="0.75" fill="currentColor"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '단일 4-포인트 스파클 별 라인',
+            customSvg: '<path d="M12 2.2l2.4 7.4L21.8 12l-7.4 2.4L12 21.8l-2.4-7.4L2.2 12l7.4-2.4Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '중심 별 + 우상단 독립 구역 보조 별 추가',
+            customSvg: '<path d="M12 2.2l2.4 7.4L21.8 12l-7.4 2.4L12 21.8l-2.4-7.4L2.2 12l7.4-2.4Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M19 3v3M20.5 4.5h-3"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '후면 나이트 클라우드 + 전면 중심 별 & 코어 다이아몬드 (속공간 비움)',
+            customSvg: '<path d="M17.5 19.5H7.8a3.8 3.8 0 0 1-.4-7.6 4.4 4.4 0 0 1 8.4-1 3.2 3.2 0 0 1 1.7 8.6Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12 2.2l2.2 6.8L21 11.2l-6.8 2.2L12 20.2l-2.2-6.8L3 11.2 9.8 9Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="11.2" r="1.4" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '보태니컬 나이트 월계수 크레스트 + 중심 별 코어 + 초승달 슬립 엠블럼',
+            customSvg: withCrestAndBadge('<path d="M12 2.2l2.4 7.4L21.8 12l-7.4 2.4L12 21.8l-2.4-7.4L2.2 12l7.4-2.4Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="12" r="1.5" fill="var(--vb-icon-bg, #FFFFFF)"/>', 'laurel', 'shield'),
+          },
         ],
       },
       {
@@ -386,16 +464,36 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '자는 얼굴 (Sleep Face)',
         enTitle: 'Sleep Face & Relax',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '눈을 감은 두 눈과 평온한 미소 라인', customSvg: '<path d="M8 12c.5.5 1.5.5 2 0M14 12c.5.5 1.5.5 2 0"/><path d="M10 16c.8.6 2.2.6 3 0"/>' },
-          { level: 2, label: '2단계 베이직', desc: '잠든 눈/미소 + 얼굴 원형 윤곽 결합', customSvg: '<circle cx="12" cy="12" r="9"/><path d="M8 12c.5.5 1.5.5 2 0M14 12c.5.5 1.5.5 2 0"/><path d="M10 16c.8.6 2.2.6 3 0"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '얼굴 윤곽 + 잠든 눈/미소 + 피어오르는 Zzz 수면 기호', customSvg: '<circle cx="12" cy="12" r="9"/><path d="M8 12c.5.5 1.5.5 2 0M14 12c.5.5 1.5.5 2 0"/><path d="M10 16c.8.6 2.2.6 3 0"/><path d="M18 4h2.5l-2.5 3h2.5M20 2h1.5l-1.5 2h1.5"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '얼굴 윤곽 + Zzz + 포근한 구름 베개와 별빛 반짝임', customSvg: '<circle cx="12" cy="12" r="9"/><path d="M8 12c.5.5 1.5.5 2 0M14 12c.5.5 1.5.5 2 0"/><path d="M10 16c.8.6 2.2.6 3 0"/><path d="M18 4h2.5l-2.5 3h2.5M20 2h1.5l-1.5 2h1.5"/><path d="M3 17a3 3 0 0 1 3-2h2a3 3 0 0 1 5 0h2a3 3 0 0 1 0 4H5a3 3 0 0 1-2-2Z"/><path d="M5 5v2M6 6H4"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '눈을 감은 두 눈과 평온한 미소 라인',
+            customSvg: '<path d="M7.8 11.5c.6.7 1.8.7 2.4 0M13.8 11.5c.6.7 1.8.7 2.4 0"/><path d="M10.2 15.2c.9.7 2.7.7 3.6 0"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '잠든 눈/미소 + 얼굴 원형 윤곽 결합',
+            customSvg: '<circle cx="12" cy="12" r="8.2" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M8 11.5c.6.6 1.6.6 2.2 0M13.8 11.5c.6.6 1.6.6 2.2 0"/><path d="M10.4 15c.8.6 2.4.6 3.2 0"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '얼굴 윤곽 + 잠든 눈/미소 + 우상단 비간섭 Z기호',
+            customSvg: '<circle cx="11.2" cy="12.5" r="7.5" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M7.6 12c.5.5 1.5.5 2 0M12.8 12c.5.5 1.5.5 2 0"/><path d="M9.8 15.2c.7.5 2.1.5 2.8 0"/><path d="M18.2 3h2.8l-2.8 3.2h2.8"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 얼굴 윤곽 + 전면 구름 베개 (전면 구름 속공간 비움으로 턱선 가림) + Z기호 & 별',
+            customSvg: '<circle cx="12" cy="10.5" r="7.2" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M8.4 10c.5.5 1.5.5 2 0M13.6 10c.5.5 1.5.5 2 0"/><path d="M10.6 13c.7.5 2.1.5 2.8 0"/><path d="M18.5 2.2h2.5l-2.5 2.8h2.5"/><path d="M4.2 3.5v2.4M5.4 4.7H3"/><path d="M17.2 21H6.8a2.6 2.6 0 0 1-.3-5.2 3.4 3.4 0 0 1 6.5-1 3.2 3.2 0 0 1 4.5 1 2.6 2.6 0 0 1-.3 5.2Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
         ],
       },
     ],
   },
   {
-    keys: ['콜라겐', '피부', '탄력', '뷰티', 'collagen', 'inner beauty', '히알루론산', '엘라스틴'],
+    keys: ['콜라겐', '피부', '탄력', '뷰티', '광채', '주름', '미백', 'collagen', 'inner beauty', '히알루론산', '엘라스틴', '세라마이드'],
     enCopy: 'inner beauty',
     motifs: [
       {
@@ -403,10 +501,30 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '수분 물방울 (Hydra Drop)',
         enTitle: 'Skin Hydration Drop',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '단일 수분 물방울 클린 라인', customSvg: '<path d="M12 2.5 C12 2.5 5 11 5 16 a7 7 0 0 0 14 0 C19 11 12 2.5 12 2.5 Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '물방울 + 내부 수분 광채 하이라이트 곡선', customSvg: '<path d="M12 2.5 C12 2.5 5 11 5 16 a7 7 0 0 0 14 0 C19 11 12 2.5 12 2.5 Z"/><path d="M9 13.5 a4 4 0 0 0 3 3"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '물방울 + 하이라이트 + 피부 흡수 수분 파동 링', customSvg: '<path d="M12 2.5 C12 2.5 5 11 5 16 a7 7 0 0 0 14 0 C19 11 12 2.5 12 2.5 Z"/><path d="M9 13.5 a4 4 0 0 0 3 3"/><path d="M2 19c3-1.5 7-1.5 10 0s7 1.5 10 0M4 22c2.5-1 5.5-1 8 0s5.5 1 8 0"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '물방울 + 파동 + 반짝이는 다이아몬드 광채 스파클 3개', customSvg: '<path d="M12 2.5 C12 2.5 5 11 5 16 a7 7 0 0 0 14 0 C19 11 12 2.5 12 2.5 Z"/><path d="M9 13.5 a4 4 0 0 0 3 3"/><path d="M2 19c3-1.5 7-1.5 10 0s7 1.5 10 0M4 22c2.5-1 5.5-1 8 0s5.5 1 8 0"/><path d="M18 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1Z"/><path d="M5 8l.7 1.3 1.3.7-1.3.7-.7 1.3-.7-1.3-1.3-.7 1.3-.7Z"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '단일 수분 물방울 클린 라인',
+            customSvg: '<path d="M12 2.5C12 2.5 5.5 10.2 5.5 15a6.5 6.5 0 0 0 13 0C18.5 10.2 12 2.5 12 2.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '물방울 + 내부 수분 광채 하이라이트 곡선',
+            customSvg: '<path d="M12 2.5C12 2.5 5.5 10.2 5.5 15a6.5 6.5 0 0 0 13 0C18.5 10.2 12 2.5 12 2.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M8.8 14.2a3.5 3.5 0 0 0 3.2 3.2"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '후면 수분 파동 링 + 전면 물방울 (물방울 속공간 비움으로 파동선 관통 차단)',
+            customSvg: '<ellipse cx="12" cy="18.8" rx="8.5" ry="2.6" fill="none"/><path d="M12 2.2C12 2.2 6 9.4 6 13.8a6 6 0 0 0 12 0C18 9.4 12 2.2 12 2.2Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M9.2 13.2a3 3 0 0 0 2.8 2.8"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 수분 파동 링 + 전면 물방울(속공간 비움) + 좌우 상단 광채 스파클',
+            customSvg: '<ellipse cx="12" cy="18.8" rx="8.8" ry="2.7" fill="none"/><path d="M12 2.2C12 2.2 6 9.4 6 13.8a6 6 0 0 0 12 0C18 9.4 12 2.2 12 2.2Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M9.2 13.2a3 3 0 0 0 2.8 2.8"/><path d="M19 3.5v2.8M20.4 4.9h-2.8"/><circle cx="4.8" cy="6" r="0.75" fill="currentColor" stroke="none"/>',
+          },
         ],
       },
       {
@@ -414,10 +532,30 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '광채 스타 (Skin Radiance)',
         enTitle: 'Radiant Glow',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '단일 광채 스파클 별 실루엣', customSvg: '<path d="M12 3 L14 10 L21 12 L14 14 L12 21 L10 14 L3 12 L10 10 Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '스파클 + 내부 원형 래디언스 코어', customSvg: '<path d="M12 3 L14 10 L21 12 L14 14 L12 21 L10 14 L3 12 L10 10 Z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '스파클 + 코어 + 4방향 대각 광채 빔 광선', customSvg: '<path d="M12 3 L14 10 L21 12 L14 14 L12 21 L10 14 L3 12 L10 10 Z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor"/><path d="M6 6 L8 8 M18 6 L16 8 M6 18 L8 16 M18 18 L16 16"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '스파클 + 코어 + 광채 빔 + 진피 탄력 펄 파티클 오라', customSvg: '<path d="M12 3 L14 10 L21 12 L14 14 L12 21 L10 14 L3 12 L10 10 Z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor"/><path d="M6 6 L8 8 M18 6 L16 8 M6 18 L8 16 M18 18 L16 16"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-dasharray="1.2 2"/><circle cx="4" cy="5" r="0.8" fill="currentColor"/><circle cx="20" cy="19" r="0.8" fill="currentColor"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '단일 광채 스파클 별 실루엣',
+            customSvg: '<path d="M12 2.5L14.2 9.8L21.5 12L14.2 14.2L12 21.5L9.8 14.2L2.5 12L9.8 9.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '광채 스파클 + 내부 비간섭 코어 펄',
+            customSvg: '<path d="M12 2.5L14.2 9.8L21.5 12L14.2 14.2L12 21.5L9.8 14.2L2.5 12L9.8 9.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="12" r="1.5" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '광채 스파클 + 코어 펄 + 4방향 외곽 광선 (별과 겹치지 않는 대각선 외곽 배치)',
+            customSvg: '<path d="M12 2.5L14.2 9.8L21.5 12L14.2 14.2L12 21.5L9.8 14.2L2.5 12L9.8 9.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="12" r="1.5" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M5.2 5.2L7.2 7.2M18.8 5.2L16.8 7.2M5.2 18.8L7.2 16.8M18.8 18.8L16.8 16.8"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '바이오 육각 분자 프레임 + 광채 다이아몬드 코어 + 히알루론산 수분 드롭 배지',
+            customSvg: withCrestAndBadge('<path d="M12 2.2L14.3 9.7L21.8 12L14.3 14.3L12 21.8L9.7 14.3L2.2 12L9.7 9.7Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="12" r="1.5" fill="var(--vb-icon-bg, #FFFFFF)"/>', 'bio_hex', 'drop'),
+          },
         ],
       },
       {
@@ -425,16 +563,197 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '탄력 캡슐 (Elasticity Capsule)',
         enTitle: 'Collagen Bio Capsule',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '이중 바이오 캡슐 외곽 라인', customSvg: '<rect x="4" y="8" width="16" height="8" rx="4" transform="rotate(-30 12 12)"/>' },
-          { level: 2, label: '2단계 베이직', desc: '캡슐 + 중앙 2중 분할 밴드 라인', customSvg: '<rect x="4" y="8" width="16" height="8" rx="4" transform="rotate(-30 12 12)"/><line x1="12" y1="5.5" x2="12" y2="18.5" stroke="currentColor"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '캡슐 + 분할 밴드 + 펩타이드 비즈 파티클', customSvg: '<rect x="4" y="8" width="16" height="8" rx="4" transform="rotate(-30 12 12)"/><line x1="12" y1="5.5" x2="12" y2="18.5" stroke="currentColor"/><circle cx="8.5" cy="12" r="1" fill="currentColor"/><circle cx="15.5" cy="12" r="1" fill="currentColor"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '캡슐 + 비즈 + 진피 흡수 보호 링 및 생기 스파크', customSvg: '<rect x="4" y="8" width="16" height="8" rx="4" transform="rotate(-30 12 12)"/><line x1="12" y1="5.5" x2="12" y2="18.5" stroke="currentColor"/><circle cx="8.5" cy="12" r="1" fill="currentColor"/><circle cx="15.5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-dasharray="1.5 2"/><path d="M19 3l1 1.5 1.5 1-1.5 1-1 1.5-1-1.5-1.5-1 1.5-1Z"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '바이오 캡슐 미니멀 외곽선',
+            customSvg: '<g transform="rotate(-35 12 12)"><rect x="4.2" y="8.2" width="15.6" height="7.6" rx="3.8" fill="var(--vb-icon-bg, #FFFFFF)"/></g>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '캡슐 + 캡슐 축에 정렬된 직교 분할 라인 (외곽 돌출 없음)',
+            customSvg: LIB_SVGS.pill_L,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '듀얼 정제 & 타블렛 복합 제형 (Studio Dual Tablets)',
+            customSvg: LIB_SVGS.pills_T,
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '바이오 육각 분자 프레임 + 콜라겐 캡슐 코어 + 수분 에센스 드롭 배지',
+            customSvg: withCrestAndBadge(LIB_SVGS.pill_L, 'bio_hex', 'drop'),
+          },
+        ],
+      },
+      {
+        id: 'skin_spring',
+        title: '진피 콜라겐 탄력층 (Dermal Elasticity)',
+        enTitle: 'Dermal Collagen Spring',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '피부 표피 웨이브 & 진피 층 라인',
+            customSvg: '<path d="M3 8.5c3-1.8 6 1.8 9 0s6 1.8 9 0M3 16.5h18"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '피부층 + 진피 탄력을 받쳐주는 수직 리프팅 화살표',
+            customSvg: '<path d="M3 7.5c3-1.6 6 1.6 9 0s6 1.6 9 0M3 18.5h18"/><path d="M7.5 16v-5.5M5.8 12.2L7.5 10.5l1.7 1.7M16.5 16v-5.5M14.8 12.2l1.7-1.7 1.7 1.7"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '피부층 + 3중 콜라겐 리프팅 기둥 + 전면 콜라겐 코어(속공간 비움)',
+            customSvg: '<path d="M3 7c3-1.5 6 1.5 9 0s6 1.5 9 0M3 19h18"/><path d="M6.5 16.8v-6M12 16.8v-6.5M17.5 16.8v-6"/><circle cx="12" cy="13.2" r="2.6" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '피부 탄력층 + 리프팅 화살표 + 전면 히알루론산 수분 드롭 배지(속공간 비움)',
+            customSvg: withCornerBadge('<path d="M3 7.2c3-1.5 6 1.5 9 0s6 1.5 9 0M3 19.2h18"/><path d="M6.5 17v-5.8M5 12.7l1.5-1.5 1.5 1.5M17.5 17v-5.8M16 12.7l1.5-1.5 1.5 1.5"/><circle cx="12" cy="13.5" r="2.8" fill="var(--vb-icon-bg, #FFFFFF)"/>', 'drop'),
+          },
+        ],
+      },
+      {
+        id: 'lifting_face',
+        title: 'V라인 리프팅 · 주름 케어 (V-Lifting Care)',
+        enTitle: 'V-Line Lifting',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '매끄러운 V라인 페이스 윤곽 실루엣',
+            customSvg: '<path d="M6.2 6.5c0 6.2 2.6 11.2 5.8 13 3.2-1.8 5.8-6.8 5.8-13" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: 'V라인 윤곽 + 좌우 대칭 리프팅 업 화살표 (비간섭 외곽 배치)',
+            customSvg: '<path d="M6.5 6c0 5.8 2.4 10.5 5.5 12.2 3.1-1.7 5.5-6.4 5.5-12.2" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M3.2 15.5c.8-2.2 1.4-4.5 1.6-7M3 10.2l1.8-1.7 1.4 1.9M20.8 15.5c-.8-2.2-1.4-4.5-1.6-7M21 10.2l-1.8-1.7-1.4 1.9"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: 'V라인 윤곽 + 양측 리프팅 화살표 + 전면 콜라겐 수분 드롭 배지',
+            customSvg: withCornerBadge('<path d="M6.5 6c0 5.8 2.4 10.5 5.5 12.2 3.1-1.7 5.5-6.4 5.5-12.2" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M3.2 15.5c.8-2.2 1.4-4.5 1.6-7M3 10.2l1.8-1.7 1.4 1.9M20.8 15.5c-.8-2.2-1.4-4.5-1.6-7M21 10.2l-1.8-1.7-1.4 1.9"/>', 'drop'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '보태니컬 월계수 크레스트 + V라인 리프팅 윤곽 + 피부 장벽 쉴드 배지',
+            customSvg: withCrestAndBadge('<path d="M6.5 5.5c0 5.8 2.4 10.5 5.5 12.2 3.1-1.7 5.5-6.4 5.5-12.2Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M3.2 15.5c.8-2.2 1.4-4.5 1.6-7M3 10.2l1.8-1.7 1.4 1.9M20.8 15.5c-.8-2.2-1.4-4.5-1.6-7M21 10.2l-1.8-1.7-1.4 1.9"/>', 'laurel', 'shield'),
+          },
+        ],
+      },
+      {
+        id: 'collagen_helix',
+        title: '저분자 콜라겐 펩타이드 사슬 (Collagen Helix)',
+        enTitle: 'Collagen Tri-Peptide',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '콜라겐 3중 나선 펩타이드 기본 웨이브',
+            customSvg: LIB_SVGS.dna_T,
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '콜라겐 이중 나선 + 펩타이드 브릿지 결합 구조',
+            customSvg: LIB_SVGS.dna2_T,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '정밀 대각선 콜라겐 트리펩타이드 사슬 (Studio Peptide Helix)',
+            customSvg: LIB_SVGS.dna_L,
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '바이오 육각 분자 프레임 + 콜라겐 펩타이드 나선 + 수분 에센스 드롭 배지',
+            customSvg: withCrestAndBadge(LIB_SVGS.dna2_T, 'bio_hex', 'drop'),
+          },
         ],
       },
     ],
   },
   {
-    keys: ['다이어트', '슬리밍', '체지방', '더블컷', '체중', 'diet', 'slim', '카테킨', '가르시니아'],
+    keys: ['모발', '두피', '탈모', '비오틴', '케라틴', '손톱', '네일', '판토텐산', '맥주효모', '머리카락', '풍성', 'hair', 'biotin', 'keratin', 'scalp'],
+    enCopy: 'biotin hair care',
+    motifs: [
+      {
+        id: 'hair_follicle',
+        title: '모근 · 두피 탄력 케어 (Hair Follicle Root)',
+        enTitle: 'Biotin Hair Follicle',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '두피 표면과 건강하게 뻗어 나오는 모발 & 모근 구근 실루엣',
+            customSvg: '<path d="M4 13.5c4-1.2 12-1.2 16 0"/><path d="M12 3.5c-.8 3.5-1.2 6.8-1.2 10a2.8 2.8 0 1 0 5.6 0c0-3.2-.8-6.5-4.4-10Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '두피층 + 전면 모근 코어(속공간 비움으로 두피선 겹침 차단) + 모유두 핵',
+            customSvg: '<path d="M3.5 13.5c4.5-1.2 12.5-1.2 17 0"/><path d="M12 3c-1 3.8-2.6 8-2.6 12.2a2.6 2.6 0 0 0 5.2 0C14.6 11 13 6.8 12 3Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="15.4" r="0.9" fill="currentColor" stroke="none"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '두피층 + 전면 모근(속공간 비움) + 좌우 비간섭 영양 공급 화살표',
+            customSvg: '<path d="M3.5 13.5c4.5-1.2 12.5-1.2 17 0"/><path d="M12 3c-1 3.8-2.6 8-2.6 12.2a2.6 2.6 0 0 0 5.2 0C14.6 11 13 6.8 12 3Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="15.4" r="0.9" fill="currentColor" stroke="none"/><path d="M5.5 9.5l2.2-2.2M18.5 9.5l-2.2-2.2"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '보태니컬 월계수 크레스트 + 전면 두피 & 모근(속공간 비움) + 에센스 드롭 배지',
+            customSvg: withCrestAndBadge('<path d="M3.5 13.5c4.5-1.2 12.5-1.2 17 0"/><path d="M12 3c-1 3.8-2.6 8-2.6 12.2a2.6 2.6 0 0 0 5.2 0C14.6 11 13 6.8 12 3Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="15.4" r="0.9" fill="currentColor" stroke="none"/>', 'laurel', 'drop'),
+          },
+        ],
+      },
+      {
+        id: 'shine_locks',
+        title: '실크 머릿결 · 케라틴 볼륨 (Keratin Volume Wave)',
+        enTitle: 'Silky Keratin Locks',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '탄력 있게 흐르는 2중 실크 모발 웨이브',
+            customSvg: '<path d="M8 3.5c-3 4 3 8 0 12s1 4.5 1 4.5M14 3.5c-3 4 3 8 0 12s1 4.5 1 4.5"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '실크 모발 웨이브 + 전면 케라틴 코팅 쉴드 배지 (속공간 비움)',
+            customSvg: withCornerBadge('<path d="M8 3.5c-3 4 3 8 0 12s1 4.5 1 4.5M13.5 3.5c-3 4 3 8 0 12s1 4.5 1 4.5"/>', 'shield'),
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '실크 모발 웨이브 + 전면 비오틴 육각 분자 배지 (속공간 비움)',
+            customSvg: withCornerBadge('<path d="M8 3.5c-3 4 3 8 0 12s1 4.5 1 4.5M13.5 3.5c-3 4 3 8 0 12s1 4.5 1 4.5"/>', 'hexagon'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 바이오 육각 링 + 전면 실크 모발 웨이브 & 케라틴 쉴드 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge('<path d="M8 3.5c-3 4 3 8 0 12s1 4.5 1 4.5M13.5 3.5c-3 4 3 8 0 12s1 4.5 1 4.5"/>', 'bio_hex', 'shield'),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    keys: ['다이어트', '슬리밍', '체지방', '더블컷', '체중', '체중계', '줄자', '칼로리', '대사', '신진대사', '슬림', '핏', 'diet', 'slim', '카테킨', '가르시니아'],
     enCopy: 'slim double cut',
     motifs: [
       {
@@ -442,21 +761,61 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '웨이스트 더블컷 (Waistline Cut)',
         enTitle: 'Body Slimline Cut',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '슬림 웨이스트 모래시계 라인', customSvg: '<path d="M7 3 C10 8 10 16 7 21 M17 3 C14 8 14 16 17 21"/>' },
-          { level: 2, label: '2단계 베이직', desc: '웨이스트 라인 + 허리 측정 테이프 라인 추가', customSvg: '<path d="M7 3 C10 8 10 16 7 21 M17 3 C14 8 14 16 17 21"/><path d="M9 12h6M9.5 10v4M14.5 10v4"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '웨이스트 + 테이프 + 체지방 감소 하향 더블컷 화살표', customSvg: '<path d="M7 3 C10 8 10 16 7 21 M17 3 C14 8 14 16 17 21"/><path d="M9 12h6M9.5 10v4M14.5 10v4"/><path d="M12 7v10M9.5 14.5L12 17l2.5-2.5"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '웨이스트 + 테이프 + 더블컷 + 활력 대사 스파크 & 핏 가이드', customSvg: '<path d="M7 3 C10 8 10 16 7 21 M17 3 C14 8 14 16 17 21"/><path d="M9 12h6M9.5 10v4M14.5 10v4"/><path d="M12 7v10M9.5 14.5L12 17l2.5-2.5"/><path d="M19 4l1 1.5 1.5 1-1.5 1-1 1.5-1-1.5-1.5-1 1.5-1Z"/><path d="M5 18l.8 1.2 1.2.8-1.2.8-.8 1.2-.8-1.2-1.2-.8 1.2-.8Z"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '슬림 웨이스트 모래시계 라인',
+            customSvg: '<path d="M6.5 3.5C10 8.5 10 15.5 6.5 20.5M17.5 3.5C14 8.5 14 15.5 17.5 20.5"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '웨이스트 라인 + 전면 피팅 벨트 밴드 (속공간 비움으로 교차선 제거)',
+            customSvg: '<path d="M6.5 3.5C10 8.5 10 15.5 6.5 20.5M17.5 3.5C14 8.5 14 15.5 17.5 20.5"/><rect x="7.6" y="10.2" width="8.8" height="3.6" rx="1.2" fill="var(--vb-icon-bg, #FFFFFF)"/><line x1="12" y1="10.2" x2="12" y2="13.8"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '웨이스트 + 전면 벨트 + 좌우 외곽 슬리밍 인워드 화살표 (비간섭 배치)',
+            customSvg: '<path d="M6.5 3.5C10 8.5 10 15.5 6.5 20.5M17.5 3.5C14 8.5 14 15.5 17.5 20.5"/><rect x="7.6" y="10.2" width="8.8" height="3.6" rx="1.2" fill="var(--vb-icon-bg, #FFFFFF)"/><line x1="12" y1="10.2" x2="12" y2="13.8"/><path d="M2 12h3.2M3.8 10.4L5.4 12l-1.6 1.6M22 12h-3.2M20.2 10.4L18.6 12l1.6 1.6"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '웨이스트 + 전면 피팅 벨트 + 좌우 인워드 화살표 + 대사 플레임 배지 (속공간 비움)',
+            customSvg: withCornerBadge('<path d="M6.5 3.5C10 8.5 10 15.5 6.5 20.5M17.5 3.5C14 8.5 14 15.5 17.5 20.5"/><rect x="7.6" y="10.2" width="8.8" height="3.6" rx="1.2" fill="var(--vb-icon-bg, #FFFFFF)"/><line x1="12" y1="10.2" x2="12" y2="13.8"/><path d="M2 12h3.2M3.8 10.4L5.4 12l-1.6 1.6M22 12h-3.2M20.2 10.4L18.6 12l1.6 1.6"/>', 'flame'),
+          },
         ],
       },
       {
-        id: 'leaf',
-        title: '카테킨 녹차 잎 (Catechin Leaf)',
-        enTitle: 'Botanical Catechin Leaf',
+        id: 'weight_scale',
+        title: '체중 감량 스케일 (Weight Care Scale)',
+        enTitle: 'Smart Weight Scale',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '단일 녹차 잎 미니멀 외곽선', customSvg: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '녹차 잎 + 중앙 주맥 및 측맥 엽맥 디테일', customSvg: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '녹차 잎 + 엽맥 + 맑은 이슬 물방울 포인트', customSvg: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/><circle cx="15" cy="8" r="1.5" fill="none" stroke="currentColor"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '녹차 잎 + 엽맥 + 이슬 + 카테킨 대사 순환 바이오 링', customSvg: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/><circle cx="15" cy="8" r="1.5" fill="none" stroke="currentColor"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-dasharray="1.5 2"/><path d="M21 11l-1 2 2 0Z"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '체중계 라운드 스퀘어 바디 & 상단 디스플레이 창',
+            customSvg: '<rect x="4" y="4" width="16" height="16" rx="3.5" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M8.5 8.5h7"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '체중계 바디 + 반원형 게이지 다이얼 및 바늘',
+            customSvg: LIB_SVGS.scale,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '체중계 + 다이얼 바늘 + 하단 체중 감소 다운 화살표',
+            customSvg: '<rect x="4" y="4" width="16" height="16" rx="3.5" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M8 10a4 4 0 0 1 8 0Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12 10l-1.5-2.2"/><path d="M12 13v4.2M10.2 15.4L12 17.2l1.8-1.8"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 대사 순환 듀얼 아크 + 전면 체중계(속공간 비움) + 칼로리 버닝 배지',
+            customSvg: withCrestAndBadge(LIB_SVGS.scale, 'orbit_flow', 'flame'),
+          },
         ],
       },
       {
@@ -464,27 +823,129 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '대사 버닝 (Metabolic Flame)',
         enTitle: 'Calorie Metabolic Burn',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '칼로리 연소 불꽃 외곽 실루엣', customSvg: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '불꽃 + 내부 2중 코어 불꽃 라인', customSvg: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/><path d="M12 18a2 2 0 0 0 2-2c0-.8-.4-1.3-.7-1.8-.7-1.2-.1-2.2 1.2-3.2"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '불꽃 + 코어 + 신진대사 순환 화살표 루프', customSvg: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/><path d="M12 18a2 2 0 0 0 2-2c0-.8-.4-1.3-.7-1.8-.7-1.2-.1-2.2 1.2-3.2"/><path d="M3 12a9 9 0 0 1 18 0" stroke-dasharray="2 2"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '불꽃 + 코어 + 순환 루프 + 생체 에너지 볼트 번개 스파크', customSvg: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/><path d="M12 18a2 2 0 0 0 2-2c0-.8-.4-1.3-.7-1.8-.7-1.2-.1-2.2 1.2-3.2"/><path d="M3 12a9 9 0 0 1 18 0" stroke-dasharray="2 2"/><path d="M13 2l-3 4h3l-2 4"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '칼로리 연소 불꽃 외곽 실루엣',
+            customSvg: LIB_SVGS.flame,
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '불꽃 + 내부 코어 플레임 (겹침 없는 동심원 배치)',
+            customSvg: `${LIB_SVGS.flame}<path d="M12 18.8a2.6 2.6 0 0 0 2.6-2.6c0-1.2-.8-2.2-2.2-3.4-.6 1.2-3 2-3 3.4A2.6 2.6 0 0 0 12 18.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/>`,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '코어 플레임 + 전면 신진대사 순환 화살표 배지 (속공간 비움)',
+            customSvg: withCornerBadge(`${LIB_SVGS.flame}<path d="M12 18.8a2.6 2.6 0 0 0 2.6-2.6c0-1.2-.8-2.2-2.2-3.4-.6 1.2-3 2-3 3.4A2.6 2.6 0 0 0 12 18.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/>`, 'cycle'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 대사 순환 듀얼 아크 + 전면 코어 플레임 & 보태니컬 리프 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge(`${LIB_SVGS.flame}<path d="M12 18.8a2.6 2.6 0 0 0 2.6-2.6c0-1.2-.8-2.2-2.2-3.4-.6 1.2-3 2-3 3.4A2.6 2.6 0 0 0 12 18.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/>`, 'orbit_flow', 'leaf'),
+          },
+        ],
+      },
+      {
+        id: 'leaf',
+        title: '카테킨 녹차 잎 (Catechin Leaf)',
+        enTitle: 'Botanical Catechin Leaf',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '단일 녹차 잎 미니멀 외곽선',
+            customSvg: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '녹차 잎 + 중심 엽맥 라인',
+            customSvg: LIB_SVGS.leaf,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '녹차 잎 + 엽맥 + 전면 카테킨 에센스 드롭 배지 (속공간 비움)',
+            customSvg: withCornerBadge(LIB_SVGS.leaf, 'drop'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '보태니컬 월계수 크레스트 + 전면 녹차 잎(속공간 비움) + 카테킨 에센스 드롭 배지',
+            customSvg: withCrestAndBadge(LIB_SVGS.leaf, 'laurel', 'drop'),
+          },
         ],
       },
     ],
   },
   {
-    keys: ['유산균', '프로바이오틱스', '장건강', '바이옴', 'probiotics', 'gut'],
+    keys: ['유산균', '프로바이오틱스', '장건강', '장', '대장', '소장', '배변', '쾌변', '바이옴', 'probiotics', 'gut', 'intestine', '포스트바이오틱스'],
     enCopy: 'probiotics care',
     motifs: [
+      {
+        id: 'intestine_organ',
+        title: '인체 장 기관 (Intestine & Gut Tract)',
+        enTitle: 'Healthy Gut Tract',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '장(Intestine) 연동 굴곡 루프 기본 실루엣',
+            customSvg: '<path d="M7.5 5.5h9a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 0 0 5h9a2.5 2.5 0 0 1 0 5H12v2"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '장 굴곡 루프 + 전면 장 건강 보호 체크 배지 (전면 배지 속공간 비움)',
+            customSvg: '<path d="M7.5 5h9a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 0 0 5h9a2.5 2.5 0 0 1 0 5H12"/><circle cx="17" cy="17" r="4.2" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="m15.3 17 1.2 1.2 2.4-2.4"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '장 굴곡 루프 + 전면 장벽 방어 쉴드 배지 (속공간 비움)',
+            customSvg: withCornerBadge('<path d="M7.5 5h9a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 0 0 5h9a2.5 2.5 0 0 1 0 5H12"/>', 'shield'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 마이크로바이옴 쉴드 크레스트 + 전면 장 루프 & 방어 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge('<path d="M7.5 5h9a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 0 0 5h9a2.5 2.5 0 0 1 0 5H12"/>', 'shield_crest', 'cycle'),
+          },
+        ],
+      },
       {
         id: 'shield',
         title: '장 바이옴 쉴드 (Gut Bio Shield)',
         enTitle: 'Microbiome Shield',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '바이오 보호 쉴드 외곽선', customSvg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '쉴드 + 중앙 유익균 인증 체크마크', customSvg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '쉴드 + 체크마크 + 장내 유익균 군집 도트', customSvg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="8" r="1" fill="currentColor"/><circle cx="12" cy="18" r="1" fill="currentColor"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '쉴드 + 체크 + 군집 + 360도 장벽 방어막 펄스 링', customSvg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="8" r="1" fill="currentColor"/><circle cx="12" cy="18" r="1" fill="currentColor"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-dasharray="1.5 2"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '바이오 보호 쉴드 외곽선',
+            customSvg: LIB_SVGS.shield,
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '쉴드 + 중앙 유익균 인증 체크마크',
+            customSvg: `${LIB_SVGS.shield}<path d="m9 12 2.2 2.2 4.2-4.2"/>`,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '장벽 보호 쉴드 + 전면 장내 순환 화살표 배지 (속공간 비움)',
+            customSvg: withCornerBadge(`${LIB_SVGS.shield}<path d="m9 12 2.2 2.2 4.2-4.2"/>`, 'cycle'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 바이오 육각 구조 링 + 전면 장벽 보호 쉴드 & 순환 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge(`${LIB_SVGS.shield}<path d="m9 12 2.2 2.2 4.2-4.2"/>`, 'bio_hex', 'cycle'),
+          },
         ],
       },
       {
@@ -492,27 +953,67 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '유익균 활성 (Beneficial Microbes)',
         enTitle: 'Active Probiotics',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '유익 간균 단일 외곽 실루엣', customSvg: '<rect x="6" y="8" width="12" height="8" rx="4"/>' },
-          { level: 2, label: '2단계 베이직', desc: '간균 + 2차 활성 분열 분기선', customSvg: '<rect x="6" y="8" width="12" height="8" rx="4"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '유익균 + 장내 증식 바이오 활성 파동', customSvg: '<rect x="6" y="8" width="12" height="8" rx="4"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor"/><path d="M2 12h2M20 12h2M12 2v2M12 20v2"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '유익균 + 활성 파동 + 장 건강 쾌변 스마일 & 바이옴 스파클', customSvg: '<rect x="6" y="8" width="12" height="8" rx="4"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor"/><path d="M2 12h2M20 12h2M12 2v2M12 20v2"/><path d="M9 11c.5.5 1 .5 1.5 0M13.5 11c.5.5 1 .5 1.5 0"/><path d="M18 4l1 1.5 1.5 1-1.5 1-1 1.5-1-1.5-1.5-1 1.5-1Z"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '유익 간균 단일 캡슐 실루엣',
+            customSvg: '<rect x="5.5" y="8.5" width="13" height="7" rx="3.5" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '유익균 + 내부 코어 생균 도트 (비간섭 배치)',
+            customSvg: '<rect x="5.5" y="8.5" width="13" height="7" rx="3.5" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="9.2" cy="12" r="0.9" fill="currentColor" stroke="none"/><circle cx="14.8" cy="12" r="0.9" fill="currentColor" stroke="none"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '후면 증식 유익균 + 전면 주 유익균 (전면 캡슐 속공간 비움으로 겹침선 제거)',
+            customSvg: '<rect x="9.5" y="4.5" width="11" height="6" rx="3" fill="var(--vb-icon-bg, #FFFFFF)"/><rect x="3.5" y="10.5" width="13" height="7" rx="3.5" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="7.2" cy="14" r="0.9" fill="currentColor" stroke="none"/><circle cx="12.8" cy="14" r="0.9" fill="currentColor" stroke="none"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 장내 대사 순환 아크 + 전면 이중 유익균 캡슐 & 장벽 쉴드 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge('<rect x="9.5" y="4.5" width="11" height="6" rx="3" fill="var(--vb-icon-bg, #FFFFFF)"/><rect x="3.5" y="10.5" width="13" height="7" rx="3.5" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="7.2" cy="14" r="0.9" fill="currentColor" stroke="none"/><circle cx="12.8" cy="14" r="0.9" fill="currentColor" stroke="none"/>', 'orbit_flow', 'shield'),
+          },
         ],
       },
     ],
   },
   {
-    keys: ['비타민', '활력', '에너지', '피로', 'vitamin', 'energy', '레티놀', '항산화'],
+    keys: ['비타민', '활력', '에너지', '피로', '부스터', 'vitamin', 'energy', '레티놀', '항산화'],
     enCopy: 'vital vitamin',
     motifs: [
       {
         id: 'sun',
-        title: '시트러스 썬 (Citrus Sun)',
+        title: '바이탈 썬 (Vital Solar Vitamin)',
         enTitle: 'Solar Vitamin C',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '태양 코어 원 미니멀 윤곽', customSvg: '<circle cx="12" cy="12" r="5"/>' },
-          { level: 2, label: '2단계 베이직', desc: '태양 코어 + 8방향 비타민 에너지 광선', customSvg: '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '태양 + 광선 + 내부 시트러스 과육 휠 섹션', customSvg: '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><path d="M12 7v10M7 12h10"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '태양 + 광선 + 시트러스 휠 + 세포 활력 스파크 & 오라', customSvg: '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><path d="M12 7v10M7 12h10"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-dasharray="1 1.5"/><circle cx="19" cy="6" r="0.8" fill="currentColor"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '태양 코어 + 4방향 기본 광선',
+            customSvg: '<circle cx="12" cy="12" r="5" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12 2.2v2.2M12 19.6v2.2M2.2 12h2.2M19.6 12h2.2"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '태양 코어 + 8방향 비타민 에너지 광선 (코어와 비간섭 이격)',
+            customSvg: LIB_SVGS.sun,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '태양 + 8방향 광선 + 전면 시트러스 슬라이스 배지 (속공간 비움)',
+            customSvg: withCornerBadge(LIB_SVGS.sun, 'slice'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 활력 순환 듀얼 아크 + 전면 태양 광선 & 시트러스 슬라이스 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge(LIB_SVGS.sun, 'orbit_flow', 'slice'),
+          },
         ],
       },
       {
@@ -520,33 +1021,104 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '바이탈 에너지 볼트 (Vital Energy Bolt)',
         enTitle: 'Energy Power Pulse',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '에너지 번개 볼트 클린 라인', customSvg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
-          { level: 2, label: '2단계 베이직', desc: '번개 볼트 + 심장 박동 바이탈 펄스 라인', customSvg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/><path d="M1 18h4l2-3 2 6 2-3h4"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '번개 + 펄스 + 원형 파워 충전 게이지 링', customSvg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/><path d="M1 18h4l2-3 2 6 2-3h4"/><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-dasharray="2 2"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '번개 + 펄스 + 게이지 + 항산화 방어막 스파클 버스트', customSvg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/><path d="M1 18h4l2-3 2 6 2-3h4"/><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-dasharray="2 2"/><path d="M19 3l1 1.5 1.5 1-1.5 1-1 1.5-1-1.5-1.5-1 1.5-1Z"/><circle cx="4" cy="5" r="0.8" fill="currentColor"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '에너지 번개 볼트 클린 라인',
+            customSvg: LIB_SVGS.bolt,
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '후면 에너지 코어 링 + 전면 번개 볼트 (전면 볼트 속공간 비움으로 뒤쪽 원 가림)',
+            customSvg: `<circle cx="12" cy="12" r="7.2" fill="var(--vb-icon-bg, #FFFFFF)"/>${LIB_SVGS.bolt}`,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '번개 볼트 + 전면 바이탈 펄스 파형 배지 (속공간 비움)',
+            customSvg: withCornerBadge(LIB_SVGS.bolt, 'pulse'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 에너지 순환 듀얼 아크 + 전면 번개 볼트 & 바이탈 펄스 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge(LIB_SVGS.bolt, 'orbit_flow', 'pulse'),
+          },
         ],
       },
     ],
   },
   {
-    keys: ['간', '밀크씨슬', '실리마린', '디톡스', 'liver', 'detox'],
-    enCopy: 'liver detox',
+    keys: ['간', '간건강', '간세포', '밀크씨슬', '실리마린', '엉겅퀴', '숙취', '리버', '담낭', '해독', 'liver'],
+    enCopy: 'liver care',
     motifs: [
+      {
+        id: 'liver_organ',
+        title: '인체 간 기관 (Liver Organ Care)',
+        enTitle: 'Healthy Liver Organ',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '인체 간(Liver) 해부학적 좌우 2엽 실루엣',
+            customSvg: '<path d="M3.5 11.5C3.5 7 7 5 12.5 5c5 0 8 2 8 5.2 0 4.2-4.8 8.8-11.5 8.8-3.5 0-5.5-2.8-5.5-7.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12.5 5c-.5 4.2.5 8.5 2 11.2"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '간 2엽 실루엣 + 전면 간세포 회복 플러스 배지 (속공간 비움)',
+            customSvg: '<path d="M3.5 11.5C3.5 7 7 5 12.5 5c5 0 8 2 8 5.2 0 4.2-4.8 8.8-11.5 8.8-3.5 0-5.5-2.8-5.5-7.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12.5 5c-.5 4.2.5 8.5 2 11.2"/><circle cx="17" cy="16.5" r="4" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M17 14.7v3.6M18.8 16.5h-3.6"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '간 기관 + 전면 간세포 보호 쉴드 배지 (속공간 비움)',
+            customSvg: withCornerBadge('<path d="M3.5 11.5C3.5 7 7 5 12.5 5c5 0 8 2 8 5.2 0 4.2-4.8 8.8-11.5 8.8-3.5 0-5.5-2.8-5.5-7.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12.5 5c-.5 4.2.5 8.5 2 11.2"/>', 'shield'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 해독 대사 순환 아크 + 전면 간 기관(속공간 비움) + 리버 쉴드 배지',
+            customSvg: withCrestAndBadge('<path d="M3.5 11.5C3.5 7 7 5 12.5 5c5 0 8 2 8 5.2 0 4.2-4.8 8.8-11.5 8.8-3.5 0-5.5-2.8-5.5-7.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12.5 5c-.5 4.2.5 8.5 2 11.2"/>', 'orbit_flow', 'shield'),
+          },
+        ],
+      },
       {
         id: 'thistle',
         title: '밀크씨슬 (Milk Thistle)',
         enTitle: 'Milk Thistle Flower',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '밀크씨슬 엉겅퀴 꽃 실루엣', customSvg: '<path d="M12 2a4 4 0 0 1 4 4c0 3-4 6-4 6s-4-3-4-6a4 4 0 0 1 4-4Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '엉겅퀴 꽃 + 받침잎 가시 꽃받침 디테일', customSvg: '<path d="M12 2a4 4 0 0 1 4 4c0 3-4 6-4 6s-4-3-4-6a4 4 0 0 1 4-4Z"/><path d="M8 12c-2 0-3 2-3 4s3 2 7 2 7 0 7-2-1-4-3-4"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '꽃 + 꽃받침 + 실리마린 활성 에센스 드롭', customSvg: '<path d="M12 2a4 4 0 0 1 4 4c0 3-4 6-4 6s-4-3-4-6a4 4 0 0 1 4-4Z"/><path d="M8 12c-2 0-3 2-3 4s3 2 7 2 7 0 7-2-1-4-3-4"/><circle cx="12" cy="20" r="1.5" fill="none" stroke="currentColor"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '꽃 + 꽃받침 + 에센스 + 간 보호 바이탈 쉴드 오라', customSvg: '<path d="M12 2a4 4 0 0 1 4 4c0 3-4 6-4 6s-4-3-4-6a4 4 0 0 1 4-4Z"/><path d="M8 12c-2 0-3 2-3 4s3 2 7 2 7 0 7-2-1-4-3-4"/><circle cx="12" cy="20" r="1.5" fill="none" stroke="currentColor"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-dasharray="1.5 2"/><path d="M19 4l1 1.5 1.5 1-1.5 1-1 1.5-1-1.5-1.5-1 1.5-1Z"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '밀크씨슬 꽃봉오리 실루엣',
+            customSvg: '<path d="M12 3a4.2 4.2 0 0 1 4.2 4.2c0 3.2-4.2 6.2-4.2 6.2S7.8 10.4 7.8 7.2A4.2 4.2 0 0 1 12 3Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '꽃봉오리 + 전면 꽃받침 레이어 (속공간 비움으로 겹침 제거)',
+            customSvg: '<path d="M12 3a4.2 4.2 0 0 1 4.2 4.2c0 3.2-4.2 6.2-4.2 6.2S7.8 10.4 7.8 7.2A4.2 4.2 0 0 1 12 3Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M7.2 12.5c-1.8.5-2.7 2.2-2.2 3.8.6 1.8 3.2 2.2 7 2.2s6.4-.4 7-2.2c.5-1.6-.4-3.3-2.2-3.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '꽃봉오리 + 전면 꽃받침 + 하단 줄기 및 좌우 잎사귀',
+            customSvg: '<path d="M12 3a4.2 4.2 0 0 1 4.2 4.2c0 3.2-4.2 6.2-4.2 6.2S7.8 10.4 7.8 7.2A4.2 4.2 0 0 1 12 3Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M7.2 12.5c-1.8.5-2.7 2.2-2.2 3.8.6 1.8 3.2 2.2 7 2.2s6.4-.4 7-2.2c.5-1.6-.4-3.3-2.2-3.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12 18.5v3M9 20.5h6"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '보태니컬 월계수 크레스트 + 전면 밀크씨슬(속공간 비움) + 실리마린 에센스 드롭 배지',
+            customSvg: withCrestAndBadge('<path d="M12 3a4.2 4.2 0 0 1 4.2 4.2c0 3.2-4.2 6.2-4.2 6.2S7.8 10.4 7.8 7.2A4.2 4.2 0 0 1 12 3Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M7.2 12.5c-1.8.5-2.7 2.2-2.2 3.8.6 1.8 3.2 2.2 7 2.2s6.4-.4 7-2.2c.5-1.6-.4-3.3-2.2-3.8Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12 18.5v3"/>', 'laurel', 'drop'),
+          },
         ],
       },
     ],
   },
   {
-    keys: ['눈', '루테인', '지아잔틴', '시력', 'eye', 'vision', '트루아이'],
+    keys: ['눈', '루테인', '지아잔틴', '시력', '안구', 'eye', 'vision', '트루아이', '아스타잔틴'],
     enCopy: 'eye macular care',
     motifs: [
       {
@@ -554,16 +1126,36 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '맑은 눈 / 시야 (Clear Eye)',
         enTitle: 'Clear Vision',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '부드러운 안구 아몬드 외곽선', customSvg: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '안구 + 중심 동공 및 홍채 원형 링', customSvg: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '안구 + 홍채 + 루테인 황반 포커스 십자선', customSvg: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="7" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="17"/><line x1="7" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="17" y2="12"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '안구 + 홍채 + 포커스 + 맑은 수분 드롭 & 비전 샤인', customSvg: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="7" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="17"/><line x1="7" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="17" y2="12"/><path d="M19 4l1 1.5 1.5 1-1.5 1-1 1.5-1-1.5-1.5-1 1.5-1Z"/><circle cx="19" cy="18" r="1" fill="currentColor"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '부드러운 안구 아몬드 외곽선',
+            customSvg: '<path d="M2.2 12s3.5-6.5 9.8-6.5 9.8 6.5 9.8 6.5-3.5 6.5-9.8 6.5-9.8-6.5-9.8-6.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '안구 + 중심 홍채 원형 링',
+            customSvg: LIB_SVGS.eye,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '안구 + 홍채 & 동공 코어 + 상하 외곽 비간섭 광선',
+            customSvg: '<path d="M2.2 12s3.5-6.5 9.8-6.5 9.8 6.5 9.8 6.5-3.5 6.5-9.8 6.5-9.8-6.5-9.8-6.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="12" r="3.2" fill="var(--vb-icon-bg, #FFFFFF)"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/><path d="M12 2.2v1.8M7.5 3l.8 1.6M16.5 3l-.8 1.6"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '광학 포커스 뷰파인더 프레임 + 전면 안구·홍채 코어(속공간 비움) + 황반 보호 쉴드 배지',
+            customSvg: withCrestAndBadge(LIB_SVGS.eye, 'optic_scan', 'shield'),
+          },
         ],
       },
     ],
   },
   {
-    keys: ['혈당', '당케어', '바나바잎', '난소화성', 'glucose', 'sugar'],
+    keys: ['혈당', '당케어', '바나바잎', '난소화성', '탄수화물', 'glucose', 'sugar'],
     enCopy: 'blood sugar cut',
     motifs: [
       {
@@ -571,16 +1163,36 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '바나바 더블컷 (Banaba Cut)',
         enTitle: 'Carb Glucose Cut',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '바나바 잎 실루엣 미니멀 라인', customSvg: '<path d="M12 2C6.5 2 4 8 4 14c0 5 4 8 8 8s8-3 8-8c0-6-2.5-12-8-12Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '바나바 잎 + 식후 탄수화물 대각 컷팅 슬래시', customSvg: '<path d="M12 2C6.5 2 4 8 4 14c0 5 4 8 8 8s8-3 8-8c0-6-2.5-12-8-12Z"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.8"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '잎 + 슬래시 + 균형 잡힌 당 밸런스 저울 빔', customSvg: '<path d="M12 2C6.5 2 4 8 4 14c0 5 4 8 8 8s8-3 8-8c0-6-2.5-12-8-12Z"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.8"/><path d="M6 12h12M9 12v3M15 12v3"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '잎 + 슬래시 + 저울 + 안정된 혈당 수치 웨이브 라인', customSvg: '<path d="M12 2C6.5 2 4 8 4 14c0 5 4 8 8 8s8-3 8-8c0-6-2.5-12-8-12Z"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.8"/><path d="M6 12h12M9 12v3M15 12v3"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-dasharray="1.5 2"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '바나바 잎 실루엣 미니멀 라인',
+            customSvg: '<path d="M12 2.5C7 2.5 4.8 8 4.8 13.8c0 4.5 3.4 7.7 7.2 7.7s7.2-3.2 7.2-7.7C19.2 8 17 2.5 12 2.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '바나바 잎 + 중심 엽맥 라인',
+            customSvg: LIB_SVGS.leaf,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '바나바 잎 + 엽맥 + 전면 우하단 당 컷팅 쉴드 배지 (속공간 비움)',
+            customSvg: withCornerBadge(LIB_SVGS.leaf, 'shield'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 혈당 밸런스 순환 아크 + 전면 바나바 잎(속공간 비움) + 당케어 쉴드 배지',
+            customSvg: withCrestAndBadge(LIB_SVGS.leaf, 'orbit_flow', 'shield'),
+          },
         ],
       },
     ],
   },
   {
-    keys: ['홍삼', '인삼', '진생', '명작수', 'ginseng', 'immunity'],
+    keys: ['홍삼', '인삼', '진생', '명작수', '면역', '면역력', 'ginseng', 'immunity'],
     enCopy: 'ginseng heritage',
     motifs: [
       {
@@ -588,65 +1200,164 @@ const WELLNESS_MOTIF_PRESETS = [
         title: '진생 루트 (Ginseng Root)',
         enTitle: 'Royal Ginseng Root',
         levels: [
-          { level: 1, label: '1단계 심플', desc: '홍삼 몸통 주근 미니멀 실루엣', customSvg: '<path d="M12 4c-2 0-4 3-4 7 0 5 2 9 4 11 2-2 4-6 4-11 0-4-2-7-4-7Z"/>' },
-          { level: 2, label: '2단계 베이직', desc: '홍삼 주근 + 미세 잔뿌리 분기선 추가', customSvg: '<path d="M12 4c-2 0-4 3-4 7 0 5 2 9 4 11 2-2 4-6 4-11 0-4-2-7-4-7Z"/><path d="M9 14c-2 1-3 3-3 5M15 14c2 1 3 3 3 5"/>' },
-          { level: 3, label: '3단계 스탠다드', desc: '홍삼 + 잔뿌리 + 상단 붉은 진생베리 열매 송이', customSvg: '<path d="M12 4c-2 0-4 3-4 7 0 5 2 9 4 11 2-2 4-6 4-11 0-4-2-7-4-7Z"/><path d="M9 14c-2 1-3 3-3 5M15 14c2 1 3 3 3 5"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="14" cy="3" r="1.2" fill="currentColor"/><circle cx="12" cy="1.5" r="1.2" fill="currentColor"/>' },
-          { level: 4, label: '4단계 컴플렉스', desc: '홍삼 + 잔뿌리 + 베리 + 프리미엄 면역 골든 쉴드 테두리', customSvg: '<path d="M12 4c-2 0-4 3-4 7 0 5 2 9 4 11 2-2 4-6 4-11 0-4-2-7-4-7Z"/><path d="M9 14c-2 1-3 3-3 5M15 14c2 1 3 3 3 5"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="14" cy="3" r="1.2" fill="currentColor"/><circle cx="12" cy="1.5" r="1.2" fill="currentColor"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor"/>' },
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '홍삼 몸통 주근 미니멀 실루엣',
+            customSvg: '<path d="M12 5.5c-2 0-3.6 2.6-3.6 6.2 0 4.2 1.8 7.8 3.6 9.5 1.8-1.7 3.6-5.3 3.6-9.5 0-3.6-1.6-6.2-3.6-6.2Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '홍삼 주근 + 좌우 비간섭 잔뿌리 분기선',
+            customSvg: '<path d="M12 5.5c-2 0-3.6 2.6-3.6 6.2 0 4.2 1.8 7.8 3.6 9.5 1.8-1.7 3.6-5.3 3.6-9.5 0-3.6-1.6-6.2-3.6-6.2Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M8.6 13.5c-1.8.8-2.8 2.4-2.8 4.2M15.4 13.5c1.8.8 2.8 2.4 2.8 4.2"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '홍삼 + 잔뿌리 + 상단 분리된 진생베리 3구 열매',
+            customSvg: '<path d="M12 6c-1.9 0-3.4 2.5-3.4 6 0 4 1.7 7.4 3.4 9 1.7-1.6 3.4-5 3.4-9 0-3.5-1.5-6-3.4-6Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M8.8 13.8c-1.7.8-2.6 2.3-2.6 4M15.2 13.8c1.7.8 2.6 2.3 2.6 4"/><circle cx="10.2" cy="3.5" r="1" fill="currentColor" stroke="none"/><circle cx="13.8" cy="3.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="2.2" r="1" fill="currentColor" stroke="none"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 면역 쉴드 프레임 + 전면 홍삼 주근(속공간 비움) + 상단 진생베리',
+            customSvg: '<path d="M12 22s8-3.8 8-9.8V4.8L12 2 4 4.8v7.4C4 18.2 12 22 12 22Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M12 7.2c-1.6 0-2.9 2.1-2.9 5 0 3.3 1.4 6.1 2.9 7.4 1.5-1.3 2.9-4.1 2.9-7.4 0-2.9-1.3-5-2.9-5Z" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M9.3 13.5c-1.3.6-2 1.8-2 3.2M14.7 13.5c1.3.6 2 1.8 2 3.2"/><circle cx="10.5" cy="5" r="0.85" fill="currentColor" stroke="none"/><circle cx="13.5" cy="5" r="0.85" fill="currentColor" stroke="none"/>',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    keys: ['관절', '연골', '뼈', '칼슘', '보스웰리아', 'msm', '콘드로이친', '글루코사민', '조이스텝', 'joint', 'bone', 'calcium'],
+    enCopy: 'joint mobility',
+    motifs: [
+      {
+        id: 'joint',
+        title: '관절 · 연골 가동성 (Joint Cushion)',
+        enTitle: 'Joint Cushion Care',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '상하 마디가 마주보는 관절 기본 실루엣',
+            customSvg: '<path d="M9 3v4a3 3 0 0 0 6 0V3M9 21v-4a3 3 0 0 1 6 0v4"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '상하 관절 + 중앙 전면 연골 완충 캡슐 (전면 캡슐 속공간 비움)',
+            customSvg: '<path d="M9 2.5v3.8a3 3 0 0 0 6 0V2.5M9 21.5v-3.8a3 3 0 0 1 6 0v3.8"/><rect x="7.2" y="10.2" width="9.6" height="3.6" rx="1.8" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '관절 + 전면 연골 쿠션(속공간 비움) + 좌우 비간섭 가동성 아크',
+            customSvg: '<path d="M9 2.5v3.8a3 3 0 0 0 6 0V2.5M9 21.5v-3.8a3 3 0 0 1 6 0v3.8"/><rect x="7.2" y="10.2" width="9.6" height="3.6" rx="1.8" fill="var(--vb-icon-bg, #FFFFFF)"/><path d="M4.2 8.5a6.5 6.5 0 0 0 0 7M19.8 8.5a6.5 6.5 0 0 1 0 7"/>',
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 바이오 육각 프레임 + 전면 관절 마디 & 연골 쿠션(속공간 비움) + 가동성 아크',
+            customSvg: withCrestAndBadge('<path d="M9 2.5v3.8a3 3 0 0 0 6 0V2.5M9 21.5v-3.8a3 3 0 0 1 6 0v3.8" fill="var(--vb-icon-bg, #FFFFFF)"/><rect x="7.2" y="10.2" width="9.6" height="3.6" rx="1.8" fill="var(--vb-icon-bg, #FFFFFF)"/>', 'bio_hex', 'shield'),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    keys: ['기억력', '두뇌', '뇌', '인지력', '집중력', '포스파티딜세린', '은행잎', '브레인', 'brain', 'memory', 'focus'],
+    enCopy: 'brain focus',
+    motifs: [
+      {
+        id: 'brain',
+        title: '두뇌 시냅스 (Brain Synapse)',
+        enTitle: 'Neural Synapse',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '좌우 대칭 두뇌 코어 미니멀 라인',
+            customSvg: '<path d="M12 4.5a4.5 4.5 0 0 0-4.5 4.5c0 1.4.6 2.6 1.5 3.4A4 4 0 0 0 12 19.5a4 4 0 0 0 3-7.1c.9-.8 1.5-2 1.5-3.4A4.5 4.5 0 0 0 12 4.5Z" fill="var(--vb-icon-bg, #FFFFFF)"/>',
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '두뇌 외곽 + 중앙 분리선 및 좌우 대뇌 주름 디테일',
+            customSvg: LIB_SVGS.brain,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '두뇌 시냅스 + 전면 신경 활성 펄스 배지 (속공간 비움)',
+            customSvg: withCornerBadge(LIB_SVGS.brain, 'pulse'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 바이오 육각 신경망 링 + 전면 두뇌 코어 & 시냅스 펄스 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge(LIB_SVGS.brain, 'bio_hex', 'pulse'),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    keys: ['혈행', '혈압', '콜레스테롤', '코엔자임', 'coq10', '오메가', '오메가3', '알티지', '심장', '순환', 'omega', 'heart', 'circulation'],
+    enCopy: 'circulation care',
+    motifs: [
+      {
+        id: 'heart',
+        title: '심혈관 · 혈행 순환 (Heart Circulation)',
+        enTitle: 'Cardio Circulation',
+        levels: [
+          {
+            level: 1,
+            label: '1단계 심플',
+            desc: '심혈관 하트 코어 미니멀 실루엣',
+            customSvg: LIB_SVGS.heart,
+          },
+          {
+            level: 2,
+            label: '2단계 베이직',
+            desc: '하트 코어 + 내부 바이탈 맥박 파형',
+            customSvg: `${LIB_SVGS.heart}<path d="M7.5 12h2l1.3-2.5 2.2 5 1.3-2.5h2.2"/>`,
+          },
+          {
+            level: 3,
+            label: '3단계 스탠다드',
+            desc: '하트 코어 + 맥박 파형 + 전면 혈류 순환 아크 배지 (속공간 비움)',
+            customSvg: withCornerBadge(`${LIB_SVGS.heart}<path d="M7.5 12h2l1.3-2.5 2.2 5 1.3-2.5h2.2"/>`, 'cycle'),
+          },
+          {
+            level: 4,
+            label: '4단계 컴플렉스',
+            desc: '후면 혈류 순환 듀얼 아크 + 전면 심혈관 하트 코어 & 맥박 배지 (속공간 비움)',
+            customSvg: withCrestAndBadge(`${LIB_SVGS.heart}<path d="M7.5 12h2l1.3-2.5 2.2 5 1.3-2.5h2.2"/>`, 'orbit_flow', 'pulse'),
+          },
         ],
       },
     ],
   },
 ];
 
-/**
- * 키워드에 대해 여러 가지 버전의 모티프(예: 수면 -> 달, 침대, 별, 자는 얼굴 등)를 제안하고,
- * 각 모티프마다 바툴 슬라이더로 1단계(심플) ~ 4단계(컴플렉스) 복잡도를 즉시 조절할 수 있도록 번들링
- */
 export function searchMotifClusters(indexData, rawKeyword) {
   const kw = (rawKeyword || '수면').trim();
   const lower = kw.toLowerCase();
 
-  // 1. 사전 정의된 글로벌 건강기능식품·일반식품 모티프 매칭 확인
-  for (const preset of WELLNESS_MOTIF_PRESETS) {
-    if (preset.keys.some(k => lower === k || lower.includes(k) || k.includes(lower))) {
-      const hydratedMotifs = preset.motifs.map(m => ({
-        id: m.id,
-        title: m.title,
-        enTitle: m.enTitle,
-        currentLevel: 1,
-        levels: m.levels.map(lvl => ({
-          level: lvl.level,
-          label: lvl.label,
-          desc: lvl.desc,
-          icon: {
-            id: `motif:${m.id}:lvl${lvl.level}`,
-            name: `${m.id}-lvl${lvl.level}`,
-            setCode: 'T',
-            setName: 'VB Progressive Motif',
-            innerSvg: lvl.customSvg,
-            complexity: lvl.level * 4,
-          },
-        })),
-      }));
-      return {
-        keyword: kw,
-        enCopy: preset.enCopy,
-        motifs: hydratedMotifs,
-      };
-    }
-  }
-
-  // 2. 사전에 없는 경우 글로벌 인덱스 검색 결과로부터 3개 모티프 동적 생성
-  // (동일한 베이스 디자인에 1~4단계 디테일이 누적 추가되는 원칙 100% 적용)
   const searchRes = searchCandidateIcons(indexData, kw, 0);
-  const candidates = searchRes.candidates;
+  const candidates = searchRes.candidates || [];
+  const fallbackLeafSvg = LIB_SVGS.leaf;
 
-  const base1 = candidates[0] || { name: kw, innerSvg: '<circle cx="12" cy="12" r="9"/>' };
-  const base2 = candidates[4] || candidates[1] || base1;
-  const base3 = candidates[8] || candidates[2] || base1;
+  const badgeOrder = ['leaf', 'drop', 'shield', 'pulse', 'cycle', 'slice', 'hexagon', 'flame'];
+  const crestOrder = ['laurel', 'bio_hex', 'orbit_flow', 'shield_crest', 'optic_scan'];
 
-  const makeCumulativeLevels = (baseIcon, baseName) => {
-    const rawSvg = baseIcon.innerSvg || '<circle cx="12" cy="12" r="9"/>';
+  const makeCumulativeLevels = (baseIcon, baseName, variantIdx = 0) => {
+    const rawSvg = baseIcon.innerSvg || fallbackLeafSvg;
+    const badge1 = badgeOrder[variantIdx % badgeOrder.length];
+    const badge2 = badgeOrder[(variantIdx + 2) % badgeOrder.length];
+    const crest = crestOrder[variantIdx % crestOrder.length];
+
     return [
       {
         level: 1,
@@ -657,23 +1368,104 @@ export function searchMotifClusters(indexData, rawKeyword) {
       {
         level: 2,
         label: '2단계 베이직',
-        desc: `${baseName} 기본 실루엣 + 반짝이 별 포인트 추가`,
-        icon: { ...baseIcon, innerSvg: `${rawSvg}<path d="M19 3v3M20.5 4.5h-3"/>` },
+        desc: `${baseName} 코어 + 전면 웰니스 포인트 배지 (속공간 비움)`,
+        icon: {
+          ...baseIcon,
+          innerSvg: withCornerBadge(rawSvg, badge1),
+        },
       },
       {
         level: 3,
         label: '3단계 스탠다드',
-        desc: `${baseName} 실루엣 + 보조 별 + 바이오 에너지 링 추가`,
-        icon: { ...baseIcon, innerSvg: `${rawSvg}<path d="M19 2v3M20.5 3.5h-3"/><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-dasharray="1.5 2"/>` },
+        desc: `${baseName} 코어 + 전면 기능성 쉴드·순환 배지 (속공간 비움)`,
+        icon: {
+          ...baseIcon,
+          innerSvg: withCornerBadge(rawSvg, badge2),
+        },
       },
       {
         level: 4,
         label: '4단계 컴플렉스',
-        desc: `${baseName} 실루엣 + 별무리 + 에너지 링 + 활력 스파클 오라`,
-        icon: { ...baseIcon, innerSvg: `${rawSvg}<path d="M19 2v3M20.5 3.5h-3"/><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-dasharray="1.5 2"/><path d="M4 19l1 1.5 1.5 1-1.5 1-1 1.5-1-1.5-1.5-1 1.5-1Z"/><circle cx="5" cy="5" r="0.8" fill="currentColor"/>` },
+        desc: `후면 마스터 크레스트 프레임 + 전면 ${baseName} & 기능성 배지 (속공간 비움)`,
+        icon: {
+          ...baseIcon,
+          innerSvg: withCrestAndBadge(rawSvg, crest, badge1),
+        },
       },
     ];
   };
+
+  const allPresets = [...WELLNESS_MOTIF_PRESETS, ...EXTRA_WELLNESS_MOTIF_PRESETS];
+  let bestPreset = null;
+  let bestScore = 0;
+
+  for (const preset of allPresets) {
+    let score = 0;
+    for (const k of preset.keys) {
+      const kl = k.trim().toLowerCase();
+      if (!kl) continue;
+      if (lower === kl) {
+        score = Math.max(score, 120 + kl.length * 5);
+      } else if (kl.length >= 2 && lower.includes(kl)) {
+        score = Math.max(score, 30 + kl.length * 8);
+      } else if (lower.length >= 2 && kl.includes(lower)) {
+        score = Math.max(score, 15 + lower.length * 4);
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestPreset = preset;
+    }
+  }
+
+  if (bestPreset && bestScore > 0) {
+    const hydratedMotifs = bestPreset.motifs.map(m => ({
+      id: m.id,
+      title: m.title,
+      enTitle: m.enTitle,
+      currentLevel: 1,
+      levels: m.levels.map(lvl => ({
+        level: lvl.level,
+        label: lvl.label,
+        desc: lvl.desc,
+        icon: {
+          id: `motif:${m.id}:lvl${lvl.level}`,
+          name: `${m.id}-lvl${lvl.level}`,
+          setCode: 'T',
+          setName: 'VB Progressive Motif',
+          innerSvg: lvl.customSvg,
+          complexity: lvl.level * 4,
+        },
+      })),
+    }));
+
+    // 모티프가 3개 미만인 경우 8,281개 글로벌 스튜디오 아이콘 라이브러리에서 연관 후보를 추가하여 풍부한 선택지 제공
+    let extraIdx = 0;
+    while (hydratedMotifs.length < 3 && candidates[extraIdx]) {
+      const cand = candidates[extraIdx * 3] || candidates[extraIdx];
+      if (cand) {
+        const mNum = hydratedMotifs.length + 1;
+        hydratedMotifs.push({
+          id: `lib-${cand.id || mNum}`,
+          title: `글로벌 라이브러리 심볼 · ${cand.name || kw}`,
+          enTitle: `${bestPreset.enCopy} Symbol ${mNum}`,
+          currentLevel: 1,
+          levels: makeCumulativeLevels(cand, cand.name || kw, mNum),
+        });
+      }
+      extraIdx++;
+    }
+
+    return {
+      keyword: kw,
+      enCopy: bestPreset.enCopy,
+      motifs: hydratedMotifs,
+    };
+  }
+
+  const base1 = candidates[0] || { name: kw, innerSvg: fallbackLeafSvg };
+  const base2 = candidates[4] || candidates[1] || base1;
+  const base3 = candidates[8] || candidates[2] || base1;
 
   return {
     keyword: kw,
@@ -684,21 +1476,21 @@ export function searchMotifClusters(indexData, rawKeyword) {
         title: `모티프 1 · ${base1.name || kw}`,
         enTitle: `${searchRes.enCopy} Core`,
         currentLevel: 1,
-        levels: makeCumulativeLevels(base1, base1.name || kw),
+        levels: makeCumulativeLevels(base1, base1.name || kw, 0),
       },
       {
         id: 'motif-2',
         title: `모티프 2 · ${base2.name || '보조 심볼'}`,
         enTitle: `${searchRes.enCopy} Variant`,
         currentLevel: 1,
-        levels: makeCumulativeLevels(base2, base2.name || '보조 심볼'),
+        levels: makeCumulativeLevels(base2, base2.name || '보조 심볼', 1),
       },
       {
         id: 'motif-3',
         title: `모티프 3 · ${base3.name || '확장 심볼'}`,
         enTitle: `${searchRes.enCopy} Extended`,
         currentLevel: 1,
-        levels: makeCumulativeLevels(base3, base3.name || '확장 심볼'),
+        levels: makeCumulativeLevels(base3, base3.name || '확장 심볼', 2),
       },
     ],
   };
@@ -726,22 +1518,23 @@ export function renderVbStyledIconSvg(candidate, variantId = 'circle-line', { ko
   const isFilledSource = candidate.setCode === 'F';
   const isSolidBadge = variantId === 'circle-solid';
   const fg = isSolidBadge ? '#FFFFFF' : VB_BLACK;
+  const bg = isSolidBadge ? VB_BLACK : '#FFFFFF';
   const strokeW = 2.4;
 
-  // 24x24 원본 픽토그램을 120x120 캔버스 중앙에 배치하기 위한 변환 계산
-  let iconScale = 2.25;
+  // 24x24 원본 픽토그램을 120x120 캔버스 중앙에 시원하게 배치하기 위한 스케일
+  let iconScale = 2.65;
   let iconOffsetY = 0;
   if (variantId === 'standalone') {
-    iconScale = 3.5;
+    iconScale = 4.0;
   } else if (variantId === 'circle-arc') {
-    iconScale = 2.05;
-    iconOffsetY = 4;
+    iconScale = 2.4;
+    iconOffsetY = 5;
   } else if (variantId === 'circle-solid') {
-    iconScale = 1.9;
+    iconScale = 2.35;
     iconOffsetY = 1;
   } else if (variantId === 'circle-keyword') {
-    iconScale = 1.85;
-    iconOffsetY = -8;
+    iconScale = 2.3;
+    iconOffsetY = -9;
   }
 
   const tx = +(60 - 12 * iconScale).toFixed(2);
@@ -749,8 +1542,8 @@ export function renderVbStyledIconSvg(candidate, variantId = 'circle-line', { ko
   const innerStrokeW = +(strokeW / iconScale).toFixed(2);
 
   const glyphGroup = isFilledSource
-    ? `<g transform="translate(${tx} ${ty}) scale(${iconScale})" fill="${fg}" stroke="none">${candidate.innerSvg}</g>`
-    : `<g transform="translate(${tx} ${ty}) scale(${iconScale})" fill="none" stroke="${fg}" stroke-width="${innerStrokeW}" stroke-linecap="round" stroke-linejoin="round">${candidate.innerSvg}</g>`;
+    ? `<g transform="translate(${tx} ${ty}) scale(${iconScale})" fill="${fg}" stroke="none" style="--vb-icon-bg:${bg};--vb-icon-fg:${fg};color:${fg};">${candidate.innerSvg}</g>`
+    : `<g transform="translate(${tx} ${ty}) scale(${iconScale})" fill="none" stroke="${fg}" stroke-width="${innerStrokeW}" stroke-linecap="round" stroke-linejoin="round" style="--vb-icon-bg:${bg};--vb-icon-fg:${fg};color:${fg};">${candidate.innerSvg}</g>`;
 
   const arcTopId = `arc-top-${uid}-${variantId}`;
   const enClean = escXml((enText || 'vital wellness').toLowerCase());
@@ -786,7 +1579,7 @@ export function renderVbStyledIconSvg(candidate, variantId = 'circle-line', { ko
     frameSvg = `<rect x="14" y="14" width="92" height="92" rx="24" ry="24" fill="none" stroke="${VB_BLACK}" stroke-width="${strokeW}"/>`;
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" style="--vb-icon-bg:${bg};--vb-icon-fg:${fg};color:${fg};">
     ${frameSvg}
     ${textSvg}
     ${glyphGroup}
@@ -808,56 +1601,94 @@ export function renderCandidateThumbSvg(candidate) {
  * 단일 선택 아이콘 30×30mm (85.04×85.04pt) 아트보드 .ai / .svg 생성
  */
 export function buildSingleIconExportSvg(candidate, variantId, { koText = '', enText = '' } = {}) {
-  const inner = renderVbStyledIconSvg(candidate, variantId, { koText, enText, uid: 'export' })
+  const isSolidBadge = variantId === 'circle-solid';
+  const bg = isSolidBadge ? VB_BLACK : '#FFFFFF';
+  const fg = isSolidBadge ? '#FFFFFF' : VB_BLACK;
+  let inner = renderVbStyledIconSvg(candidate, variantId, { koText, enText, uid: 'export' })
     .replace(/^[\s\S]*?<svg[^>]*>/i, '')
     .replace(/<\/svg>\s*$/i, '');
+  inner = inner.split('var(--vb-icon-bg, #FFFFFF)').join(bg);
+  inner = inner.split('var(--vb-icon-fg, #101820)').join(fg);
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="30mm" viewBox="0 0 120 120">
+<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="30mm" viewBox="0 0 120 120" style="background:${isSolidBadge ? bg : 'transparent'};">
   ${inner}
 </svg>`;
 }
 
 /**
- * 전체 .ai 시트 생성: 각 키워드별 12개 형태 후보 + 선택한 형태의 6가지 바이탈뷰티 버전 모두 포함
+ * 전체 .ai 시트 생성: 각 키워드별 모티프 누적 디테일(Lv.1~4) + 바이탈뷰티 6가지 배지 버전 모두 포함
  */
 export function buildAllKeywordsSheetSvg(keywordBlocks) {
-  const rowHeight = 250;
-  const totalH = Math.max(280, keywordBlocks.length * rowHeight + 40);
-  const totalW = 920;
+  const rowHeight = 310;
+  const totalH = Math.max(340, keywordBlocks.length * rowHeight + 40);
+  const totalW = 960;
 
   const rowsSvg = keywordBlocks.map((block, bIdx) => {
     const y0 = 24 + bIdx * rowHeight;
-    const candsSvg = block.candidates.map((cand, cIdx) => {
-      const cx = 24 + cIdx * 72;
-      const cy = y0 + 28;
-      const glyph = cand.setCode === 'F'
-        ? `<g transform="translate(${cx + 16} ${cy + 10}) scale(1.35)" fill="${VB_BLACK}" stroke="none">${cand.innerSvg}</g>`
-        : `<g transform="translate(${cx + 16} ${cy + 10}) scale(1.35)" fill="none" stroke="${VB_BLACK}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${cand.innerSvg}</g>`;
-      return `
-        <rect x="${cx}" y="${cy}" width="64" height="64" fill="#FFFFFF" stroke="${cand.id === block.selectedCandidate.id ? VB_BLACK : '#D5D8DE'}" stroke-width="${cand.id === block.selectedCandidate.id ? 1.5 : 0.7}"/>
-        ${glyph}
-        <text x="${cx + 32}" y="${cy + 56}" text-anchor="middle" fill="#666B75" font-size="7.5" font-family="'Noto Sans KR',sans-serif">${escXml(cand.tierLabel)}</text>`;
-    }).join('');
+    let motifsOrCandsSvg = '';
+    let primaryIcon = null;
+
+    if (block.motifs && block.motifs.length) {
+      const allLevels = [];
+      block.motifs.forEach((m, mIdx) => {
+        m.levels.forEach((lvl, lIdx) => {
+          allLevels.push({
+            motifTitle: m.title,
+            level: lvl.level,
+            label: lvl.label,
+            icon: lvl.icon,
+            isPrimary: mIdx === 0 && lIdx === 0,
+          });
+        });
+      });
+
+      primaryIcon = block.motifs[0]?.levels[0]?.icon || null;
+
+      motifsOrCandsSvg = allLevels.slice(0, 12).map((item, cIdx) => {
+        const cx = 24 + cIdx * 76;
+        const cy = y0 + 26;
+        const glyph = item.icon?.setCode === 'F'
+          ? `<g transform="translate(${cx + 20} ${cy + 10}) scale(1.4)" fill="${VB_BLACK}" stroke="none">${item.icon.innerSvg}</g>`
+          : `<g transform="translate(${cx + 20} ${cy + 10}) scale(1.4)" fill="none" stroke="${VB_BLACK}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${item.icon ? item.icon.innerSvg : ''}</g>`;
+        return `
+          <rect x="${cx}" y="${cy}" width="68" height="66" fill="#FFFFFF" stroke="${item.isPrimary ? VB_BLACK : '#D5D8DE'}" stroke-width="${item.isPrimary ? 1.5 : 0.7}" rx="3"/>
+          ${glyph}
+          <text x="${cx + 34}" y="${cy + 58}" text-anchor="middle" fill="#666B75" font-size="7" font-family="'Noto Sans KR',sans-serif">Lv.${item.level} ${escXml(item.label)}</text>`;
+      }).join('');
+    } else if (block.candidates && block.candidates.length) {
+      primaryIcon = block.selectedCandidate || block.candidates[0];
+      motifsOrCandsSvg = block.candidates.map((cand, cIdx) => {
+        const cx = 24 + cIdx * 72;
+        const cy = y0 + 28;
+        const glyph = cand.setCode === 'F'
+          ? `<g transform="translate(${cx + 16} ${cy + 10}) scale(1.35)" fill="${VB_BLACK}" stroke="none">${cand.innerSvg}</g>`
+          : `<g transform="translate(${cx + 16} ${cy + 10}) scale(1.35)" fill="none" stroke="${VB_BLACK}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${cand.innerSvg}</g>`;
+        return `
+          <rect x="${cx}" y="${cy}" width="64" height="64" fill="#FFFFFF" stroke="${cand.id === primaryIcon?.id ? VB_BLACK : '#D5D8DE'}" stroke-width="${cand.id === primaryIcon?.id ? 1.5 : 0.7}"/>
+          ${glyph}
+          <text x="${cx + 32}" y="${cy + 56}" text-anchor="middle" fill="#666B75" font-size="7.5" font-family="'Noto Sans KR',sans-serif">${escXml(cand.tierLabel)}</text>`;
+      }).join('');
+    }
 
     const variantsSvg = VB_ICON_VARIANTS.map((v, vIdx) => {
-      const vx = 24 + vIdx * 144;
-      const vy = y0 + 108;
-      const inner = renderVbStyledIconSvg(block.selectedCandidate, v.id, {
+      const vx = 24 + vIdx * 152;
+      const vy = y0 + 112;
+      const inner = primaryIcon ? renderVbStyledIconSvg(primaryIcon, v.id, {
         koText: block.keyword,
         enText: block.enCopy,
         uid: `sheet-${bIdx}-${vIdx}`,
       })
         .replace(/^[\s\S]*?<svg[^>]*>/i, '')
-        .replace(/<\/svg>\s*$/i, '');
+        .replace(/<\/svg>\s*$/i, '') : '';
       return `
-        <rect x="${vx}" y="${vy}" width="132" height="124" fill="#FFFFFF" stroke="#D5D8DE" stroke-width="0.7"/>
-        <g transform="translate(${vx + 22} ${vy + 8}) scale(0.73)">${inner}</g>
-        <text x="${vx + 66}" y="${vy + 114}" text-anchor="middle" fill="#4A505C" font-size="8.5" font-family="'Noto Sans KR',sans-serif">${escXml(v.label)}</text>`;
+        <rect x="${vx}" y="${vy}" width="142" height="150" fill="#FFFFFF" stroke="#D5D8DE" stroke-width="0.7" rx="4"/>
+        <g transform="translate(${vx + 23} ${vy + 10}) scale(0.8)">${inner}</g>
+        <text x="${vx + 71}" y="${vy + 138}" text-anchor="middle" fill="#4A505C" font-size="9" font-family="'Noto Sans KR',sans-serif">${escXml(v.label)}</text>`;
     }).join('');
 
     return `
       <text x="24" y="${y0 + 16}" fill="${VB_BLACK}" font-size="13" font-weight="700" font-family="'Noto Sans KR',sans-serif">${escXml(block.keyword)} <tspan fill="#7A808C" font-weight="400" font-size="11">${escXml(block.enCopy)}</tspan></text>
-      ${candsSvg}
+      ${motifsOrCandsSvg}
       ${variantsSvg}`;
   }).join('\n');
 

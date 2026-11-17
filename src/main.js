@@ -2,9 +2,10 @@
    Brand Operating Site — Main Entry
    ═══════════════════════════════════════ */
 import { loadBrand } from './utils/brand.js';
-import { registerRoute, startRouter } from './utils/router.js';
+import { registerRoute, startRouter, refreshCurrentRoute } from './utils/router.js';
 import { renderSidebar, updateSidebarActive, isDesignGuidePath } from './components/sidebar.js';
 import { renderHeader } from './components/header.js';
+import { onLangChange, translateDomIfEn } from './utils/i18n.js';
 import { renderGuidelinePage } from './pages/guideline.js';
 import { renderStrategyPage } from './pages/strategy.js';
 import { renderAssetPage, renderAssetLibraryPage } from './pages/assets.js';
@@ -27,7 +28,7 @@ function init() {
   registerRoute('/guideline/wordmark', (el) => renderGuidelinePage(el, 'wordmark'));
   registerRoute('/guideline/monogram', (el) => renderGuidelinePage(el, 'monogram'));
   registerRoute('/strategy', (el) => renderGuidelinePage(el, 'slogan'));
-  registerRoute('/assets', (el) => renderAssetPage(el));
+  registerRoute('/assets', (el) => renderAssetLibraryPage(el));
   registerRoute('/colors', (el) => renderGuidelinePage(el, 'colors'));
   registerRoute('/typography', (el) => renderGuidelinePage(el, 'typography'));
   registerRoute('/versions', (el) => renderVersionPage(el));
@@ -47,6 +48,15 @@ function init() {
     }
     updateSidebarActive();
     renderHeader(document.getElementById('header'));
+    translateDomIfEn(document.getElementById('content'));
+  });
+
+  // Re-render entire UI when language is toggled (EN <-> KR)
+  onLangChange(() => {
+    renderSidebar(document.getElementById('sidebar'));
+    renderHeader(document.getElementById('header'));
+    refreshCurrentRoute();
+    translateDomIfEn(document.getElementById('content'));
   });
 
   const content = document.getElementById('content');

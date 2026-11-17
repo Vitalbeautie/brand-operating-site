@@ -9,19 +9,20 @@ import { renderStrategyPage } from './strategy.js';
 import { renderColorPage } from './colors.js';
 import { renderTypographyPage } from './typography.js';
 import { setDesignGuideScrollActive } from '../components/sidebar.js';
+import { t } from '../utils/i18n.js';
 
 export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
   const incItems = [
-    { label: '다른 서체를 적용하지 마시오.', img: '/assets/guidelines/wm_inc_1.png' },
-    { label: '테두리를 넣지 마시오.', img: '/assets/guidelines/wm_inc_2.png' },
-    { label: '색상을 변경하지 마시오.', img: '/assets/guidelines/wm_inc_3.png' },
-    { label: '비례를 왜곡하지 마시오.', img: '/assets/guidelines/wm_inc_4.png' },
-    { label: '임의의 문자와 함께 사용하지 마시오.', img: '/assets/guidelines/wm_inc_5.png' },
-    { label: '간격을 임의로 조정하지 마시오.', img: '/assets/guidelines/wm_inc_6.png' },
-    { label: '라인으로 처리하지 마시오.', img: '/assets/guidelines/wm_inc_7.png' },
-    { label: '기울여 사용하지 마시오.', img: '/assets/guidelines/wm_inc_8.png' },
-    { label: '효과를 적용하지 마시오.', img: '/assets/guidelines/wm_inc_9.png' },
+    { label: t('다른 서체를 적용하지 마시오.', 'Do not apply unauthorized typefaces.'), img: '/assets/guidelines/wm_inc_1.png' },
+    { label: t('테두리를 넣지 마시오.', 'Do not add outlines or strokes.'), img: '/assets/guidelines/wm_inc_2.png' },
+    { label: t('색상을 변경하지 마시오.', 'Do not alter the designated colors.'), img: '/assets/guidelines/wm_inc_3.png' },
+    { label: t('비례를 왜곡하지 마시오.', 'Do not distort the proportions.'), img: '/assets/guidelines/wm_inc_4.png' },
+    { label: t('임의의 문자와 함께 사용하지 마시오.', 'Do not pair with arbitrary text.'), img: '/assets/guidelines/wm_inc_5.png' },
+    { label: t('간격을 임의로 조정하지 마시오.', 'Do not modify letter spacing.'), img: '/assets/guidelines/wm_inc_6.png' },
+    { label: t('라인으로 처리하지 마시오.', 'Do not render as an outline.'), img: '/assets/guidelines/wm_inc_7.png' },
+    { label: t('기울여 사용하지 마시오.', 'Do not skew, tilt, or italicize.'), img: '/assets/guidelines/wm_inc_8.png' },
+    { label: t('효과를 적용하지 마시오.', 'Do not apply drop shadows or effects.'), img: '/assets/guidelines/wm_inc_9.png' },
   ];
 
   const grayscaleTop = ['#E2E3E5', '#C8C9CC', '#AFB1B4', '#949699', '#7B7D80'];
@@ -37,12 +38,12 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <h2 style="font-family:var(--font-en); font-size:26px; font-weight:300; letter-spacing:2.5px; margin:0 0 18px 0; text-transform:uppercase; color:#101820;">
           WORDMARK
         </h2>
-        <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:680px; margin-bottom:14px;">
-          바이탈뷰티 영문·국문 워드마크입니다. 형태는 그리드 데이터로만 축소·확대하고, 주변 1X 여백과 최소 크기를 지킵니다.<br>출처: VITALBEAUTIE BI Guidelines.
+        <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:680px;">
+          ${t(
+            '바이탈뷰티 영문·국문 워드마크입니다. 형태는 그리드 데이터로만 축소·확대하고, 주변 1X 여백과 최소 크기를 지킵니다.<br>출처: VITALBEAUTIE BI Guidelines.',
+            'Official English and Korean wordmarks of VITALBEAUTIE. Scale strictly using master vector grid data while preserving the 1X exclusion zone and minimum size.<br>Source: VITALBEAUTIE BI Guidelines.'
+          )}
         </div>
-        <button type="button" id="btn-copy-wm-code" style="background:none; border:none; padding:0; font-size:11px; color:#7A808C; cursor:pointer; letter-spacing:0.5px;">
-          이 디자인 코드 복사
-        </button>
       </div>
 
       <!-- Block 1: CORE WORDMARK -->
@@ -50,16 +51,17 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">CORE WORDMARK</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            바이탈뷰티의 기본 영문·국문 로고입니다. 로고타입의 형태를 임의로 바꾸면 본래 이미지가 손상되므로 반드시 표준 형태를 사용합니다.
+            ${t(
+              '바이탈뷰티의 기본 영문·국문 로고입니다. 로고타입의 형태를 임의로 바꾸면 본래 이미지가 손상되므로 반드시 표준 형태를 사용합니다.',
+              'The primary English and Korean logotypes of VITALBEAUTIE. Always use the standard master artwork without any unauthorized modification.'
+            )}
             <br><br>
             <span style="color:#7A808C; font-size:12.5px;">
-              원본은 BI 가이드 PDF 3쪽에서 추출했습니다. 벡터 AI 원본이 있으면 원천 데이터에 등록해 다운로드용으로 바꿀 수 있습니다.
+              ${t(
+                '원본은 BI 가이드 PDF 3쪽에서 추출했습니다. 벡터 AI 원본이 있으면 원천 데이터에 등록해 다운로드용으로 바꿀 수 있습니다.',
+                'Extracted from page 3 of the official BI Guidelines PDF. Native vector .AI master files are available in the Asset Library.'
+              )}
             </span>
-          </div>
-          <div style="margin-top:20px;">
-            <a href="/assets/guidelines/VITALBEAUTIE_Brand_Identity_Guidelines.pdf" download="VITALBEAUTIE_Brand_Identity_Guidelines.pdf" style="font-family:var(--font-en); font-size:10.5px; font-weight:600; letter-spacing:1.2px; color:#101820; text-decoration:none;">
-              BI GUIDELINES PDF ↓
-            </a>
           </div>
         </div>
 
@@ -90,16 +92,17 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">EXCLUSION ZONE</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            로고 타입은 명확히 인식시키기 위해 <b>1X 이상</b>을 깨끗한 공간으로 확보해야 합니다. 회색 표시 영역이 최소 여백입니다.
+            ${t(
+              '로고 타입은 명확히 인식시키기 위해 <b>1X 이상</b>을 깨끗한 공간으로 확보해야 합니다. 회색 표시 영역이 최소 여백입니다.',
+              'To ensure clear visual recognition, maintain a minimum clear space of <b>at least 1X</b> around the wordmark. The shaded gray area indicates the minimum exclusion zone.'
+            )}
             <br><br>
             <span style="color:#7A808C; font-size:12.5px;">
-              가시성·패밀리룩 도구는 이 기준인 워드마크 높이의 <b style="color:#101820;">100% (1X)</b>로 여백을 계산합니다.
+              ${t(
+                '가시성·패밀리룩 도구는 이 기준인 워드마크 높이의 <b style="color:#101820;">100% (1X)</b>로 여백을 계산합니다.',
+                'The Brand Visibility tool automatically calculates clear space as <b style="color:#101820;">100% (1X)</b> of the wordmark height.'
+              )}
             </span>
-          </div>
-          <div style="margin-top:20px;">
-            <a href="#/gov/logo-fit" style="font-family:var(--font-en); font-size:10.5px; font-weight:600; letter-spacing:1.2px; color:#101820; text-decoration:none;">
-              BRAND VISIBILITY →
-            </a>
           </div>
         </div>
 
@@ -116,10 +119,16 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">MINIMUM SIZE</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            영문 워드마크는 가로폭 기준 <b>20mm 이하</b>로 사용하지 않습니다. 국문 워드마크는 <b>30mm 이하</b>로 사용하지 않습니다. 그 이하에서는 가독성이 떨어지고 왜곡이 생길 수 있습니다.
+            ${t(
+              '영문 워드마크는 가로폭 기준 <b>20mm 이하</b>로 사용하지 않습니다. 국문 워드마크는 <b>30mm 이하</b>로 사용하지 않습니다. 그 이하에서는 가독성이 떨어지고 왜곡이 생길 수 있습니다.',
+              'Do not reproduce the English wordmark smaller than <b>20mm in width</b>, or the Korean wordmark smaller than <b>30mm in width</b>, to prevent loss of legibility.'
+            )}
             <br><br>
             <span style="color:#7A808C; font-size:12.5px;">
-              도구의 기본 판정은 영문 로고 20mm입니다. 국문 원고는 별도로 30mm를 적용해야 합니다.
+              ${t(
+                '도구의 기본 판정은 영문 로고 20mm입니다. 국문 원고는 별도로 30mm를 적용해야 합니다.',
+                'The default validation threshold is 20mm for the English wordmark and 30mm for the Korean wordmark.'
+              )}
             </span>
           </div>
         </div>
@@ -143,9 +152,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">BACKGROUND USAGE</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            한글·영문 로고는 <b>블랙과 화이트로만</b> 사용합니다. 색상 배경에서는 White Color를 사용합니다.
-            <br><br>
-            배경이 사진이거나 단색일 때는 Black 로고를, 짙은 명도나 복잡한 배경에서는 White Color 로고를 사용합니다. 자사몰 브랜드관 등 커뮤니케이션 툴은 Black 배경과 White Color 로고를 적용합니다.
+            ${t(
+              '한글·영문 로고는 <b>블랙과 화이트로만</b> 사용합니다. 색상 배경에서는 White Color를 사용합니다.<br><br>배경이 사진이거나 단색일 때는 Black 로고를, 짙은 명도나 복잡한 배경에서는 White Color 로고를 사용합니다. 자사몰 브랜드관 등 커뮤니케이션 툴은 Black 배경과 White Color 로고를 적용합니다.',
+              'Both English and Korean wordmarks must be used strictly in <b>VITALBEAUTIE BLACK or White</b>. Always use the White wordmark on colored backgrounds.<br><br>Use the Black wordmark on light solid or photographic backgrounds, and the White wordmark on dark or complex backgrounds.'
+            )}
           </div>
         </div>
 
@@ -175,18 +185,13 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">INCORRECT USAGE</h3>
           <div class="text-block-content" style="font-size:12.5px; color:#222; line-height:1.95;">
-            • 다른 서체를 적용하지 마시오.<br>
-            • 테두리를 넣지 마시오.<br>
-            • 색상을 변경하지 마시오.<br>
-            • 비례를 왜곡하지 마시오.<br>
-            • 임의의 문자와 함께 사용하지 마시오.<br>
-            • 간격을 임의로 조정하지 마시오.<br>
-            • 라인으로 처리하지 마시오.<br>
-            • 기울여 사용하지 마시오.<br>
-            • 효과를 적용하지 마시오.
+            ${incItems.map(i => `• ${i.label}`).join('<br>')}
             <br><br>
             <span style="color:#7A808C; font-size:12px; line-height:1.65; display:block;">
-              로고타입을 사용하는 경우에는 그리드 데이터를 이용해 정확하게 축소·확대해야 합니다.
+              ${t(
+                '로고타입을 사용하는 경우에는 그리드 데이터를 이용해 정확하게 축소·확대해야 합니다.',
+                'Always scale the logotype proportionally using the official master vector artwork.'
+              )}
             </span>
           </div>
         </div>
@@ -214,11 +219,11 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           SYMBOL
         </h2>
         <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:680px; margin-bottom:14px;">
-          바이탈뷰티의 기본 심볼 LAB PROVEN입니다. 최신의 웰니스가 바이탈뷰티랩에서 과학적으로 검증되어 완성된다는 메시지를 담습니다.
+          ${t(
+            '바이탈뷰티의 기본 심볼 LAB PROVEN입니다. 최신의 웰니스가 바이탈뷰티랩에서 과학적으로 검증되어 완성된다는 메시지를 담습니다.',
+            'The official LAB PROVEN symbol of VITALBEAUTIE, signifying that modern wellness is scientifically verified and perfected at the VITALBEAUTIE Lab.'
+          )}
         </div>
-        <button type="button" id="btn-copy-sym-code" style="background:none; border:none; padding:0; font-size:11px; color:#7A808C; cursor:pointer; letter-spacing:0.5px;">
-          이 디자인 코드 복사
-        </button>
       </div>
 
       <!-- Block 1: CORE SYMBOL -->
@@ -226,10 +231,13 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">CORE SYMBOL</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            바이탈뷰티가 추구하는 최신의 웰니스(Lab-proven High Performance Wellness)는 바이탈뷰티랩에서 과학적으로 검증되어 완성된다는 메시지를 담습니다.
+            ${t(
+              '바이탈뷰티가 추구하는 최신의 웰니스(Lab-proven High Performance Wellness)는 바이탈뷰티랩에서 과학적으로 검증되어 완성된다는 메시지를 담습니다.',
+              'Represents VITALBEAUTIE’s commitment to Lab-proven High Performance Wellness—scientifically formulated and verified at the V=B Laboratory.'
+            )}
             <br><br>
             <span style="color:#7A808C; font-size:12.5px;">
-              링 카피: Lab Solution by V=B Laboratory · cooperation development
+              ${t('링 카피: Lab Solution by V=B Laboratory · cooperation development', 'Ring Copy: Lab Solution by V=B Laboratory · cooperation development')}
             </span>
           </div>
         </div>
@@ -251,7 +259,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">SYSTEM</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            심볼마크의 시각상징 색상은 로고와 같은 VITALBEAUTIE BLACK입니다. 워드마크와 함께 쓰거나, 패키지·사진 위에서는 White color 배경 심볼을 사용합니다.
+            ${t(
+              '심볼마크의 시각상징 색상은 로고와 같은 VITALBEAUTIE BLACK입니다. 워드마크와 함께 쓰거나, 패키지·사진 위에서는 White color 배경 심볼을 사용합니다.',
+              'The primary color of the symbol mark is VITALBEAUTIE BLACK, matching the wordmark. On packaging or photographic backgrounds, use the White background symbol.'
+            )}
           </div>
         </div>
 
@@ -268,9 +279,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">PLACEMENT GUIDE</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            제품 패키지에 적용할 경우 White color 배경 심볼을 사용합니다.
-            <br><br>
-            배경이 사진일 때 짙은 명도나 단색이면 White Color 배경 심볼을, 복잡한 사진이면 면적을 확보한 뒤 로고를 적용합니다.
+            ${t(
+              '제품 패키지에 적용할 경우 White color 배경 심볼을 사용합니다.<br><br>배경이 사진일 때 짙은 명도나 단색이면 White Color 배경 심볼을, 복잡한 사진이면 면적을 확보한 뒤 로고를 적용합니다.',
+              'When applied to product packaging, use the White background symbol.<br><br>On dark or solid photographic backgrounds, apply the White symbol; on complex imagery, secure an uncluttered area before placing the symbol.'
+            )}
           </div>
         </div>
 
@@ -284,7 +296,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">EXCLUSION ZONE</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            정해진 형태의 변형을 지양하며, 시각상징이 다른 요소의 침해 없이 전달되도록 최소 여백을 지킵니다. 인쇄 최소 크기는 15mm입니다.
+            ${t(
+              '정해진 형태의 변형을 지양하며, 시각상징이 다른 요소의 침해 없이 전달되도록 최소 여백을 지킵니다. 인쇄 최소 크기는 15mm입니다.',
+              'Preserve the designated exclusion zone around the symbol so no other graphic elements intrude. The minimum print diameter is 15mm.'
+            )}
           </div>
         </div>
 
@@ -298,7 +313,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">MINIMUM SIZE</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            로고의 가독성 확보를 위해 최소 크기 15mm보다 줄여서 사용하지 않습니다.
+            ${t(
+              '로고의 가독성 확보를 위해 최소 크기 15mm보다 줄여서 사용하지 않습니다.',
+              'To maintain legibility of the ring typography, never reproduce the symbol smaller than 15mm in diameter.'
+            )}
           </div>
         </div>
 
@@ -316,10 +334,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">INCORRECT USAGE</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.95;">
-            • 색상을 변경하지 마시오.<br>
-            • 비례를 왜곡하지 마시오.<br>
-            • 기울여 사용하지 마시오.<br>
-            • 문자를 변경하지 마시오.
+            ${t(
+              '• 색상을 변경하지 마시오.<br>• 비례를 왜곡하지 마시오.<br>• 기울여 사용하지 마시오.<br>• 문자를 변경하지 마시오.',
+              '• Do not alter the symbol colors.<br>• Do not distort proportions.<br>• Do not tilt or rotate.<br>• Do not modify the internal typography.'
+            )}
           </div>
         </div>
 
@@ -333,7 +351,10 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.5px;">BACKGROUND</h3>
           <div class="text-block-content" style="font-size:13px; color:#222; line-height:1.75;">
-            심볼 색상은 VITALBEAUTIE BLACK과 White입니다. 배경 명도에 따라 블랙 심볼 또는 화이트 배경 심볼을 고릅니다.
+            ${t(
+              '심볼 색상은 VITALBEAUTIE BLACK과 White입니다. 배경 명도에 따라 블랙 심볼 또는 화이트 배경 심볼을 고릅니다.',
+              'The symbol is used strictly in VITALBEAUTIE BLACK or White. Select the Black or White symbol according to background luminance.'
+            )}
           </div>
         </div>
 
@@ -435,6 +456,13 @@ function setupDesignGuideScrollSpy() {
     { id: 'block-mono-5', path: '/guideline/monogram' },
     { id: 'block-mono-6', path: '/guideline/monogram' },
     { id: 'block-mono-7', path: '/guideline/monogram' },
+    { id: 'block-slogan-1', path: '/strategy' },
+    { id: 'block-slogan-2', path: '/strategy' },
+    { id: 'block-color-main', path: '/colors' },
+    { id: 'block-color-product', path: '/colors' },
+    { id: 'block-typo-en', path: '/typography' },
+    { id: 'block-typo-kr', path: '/typography' },
+    { id: 'block-typo-jp', path: '/typography' },
   ];
 
   let ticking = false;

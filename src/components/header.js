@@ -3,6 +3,7 @@
    ═══════════════════════════════════════ */
 import { getBrand } from '../utils/brand.js';
 import { getCurrentPath } from '../utils/router.js';
+import { isEn, toggleLang } from '../utils/i18n.js';
 
 const PAGE_INFO = {
   '/': { title: 'BRAND GUIDELINE', section: 'DESIGN GUIDE' },
@@ -46,7 +47,7 @@ export function renderHeader(container) {
         <span class="mobile-header-subtitle">BRAND GUIDELINE</span>
       </div>
       <div class="mobile-actions">
-        <button id="header-lang-toggle-btn" class="header-action-btn btn-lang-square" title="Language">EN</button>
+        <button id="header-lang-toggle-btn" class="header-action-btn btn-lang-square" title="Language">${isEn() ? 'KR' : 'EN'}</button>
         <button id="menu-toggle-btn" class="header-action-btn hamburger-btn" title="메뉴">
           <span></span>
           <span></span>
@@ -68,7 +69,7 @@ function setupMobileMenu(container) {
     toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       sidebar.classList.toggle('sidebar-open');
-      if (overlay) overlay.classList.toggle('active');
+      if (overlay) overlay.classList.remove('active');
     });
   }
 
@@ -82,10 +83,7 @@ function setupMobileMenu(container) {
   const langBtn = container.querySelector('#header-lang-toggle-btn');
   if (langBtn) {
     langBtn.addEventListener('click', () => {
-      const isEn = langBtn.textContent === 'EN';
-      langBtn.textContent = isEn ? 'KO' : 'EN';
-      document.body.classList.toggle('lang-en', isEn);
-      document.body.classList.toggle('lang-ko', !isEn);
+      toggleLang();
     });
   }
 }
