@@ -4406,7 +4406,7 @@ function renderPopHeaderSvg(W, pop, showGuides = false, dimLine = null, calloutL
     });
   }
 
-  // Compute vertical positions centered inside [-popH, 0] with wider line spacing
+  // Compute vertical positions centered inside [-popH, 0] with natural default line-height
   let totalTextH = 0;
   const rowGaps = [];
   rows.forEach((r, i) => {
@@ -4414,9 +4414,8 @@ function renderPopHeaderSvg(W, pop, showGuides = false, dimLine = null, calloutL
     totalTextH += capH;
     if (i < rows.length - 1) {
       const next = rows[i + 1];
-      const gap = r.groupIdx !== next.groupIdx
-        ? Math.max(3.8, (r.px + next.px) * 0.30)
-        : Math.max(2.6, r.px * 0.38);
+      // 기본 타이포그래피 행간(line-height ~1.2) 적용: 과도하게 벌어지지 않는 기본 간격
+      const gap = Math.max(1.0, (r.px + next.px) * 0.10);
       rowGaps.push(gap);
       totalTextH += gap;
     }

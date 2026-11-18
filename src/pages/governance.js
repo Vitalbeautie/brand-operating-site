@@ -311,21 +311,22 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
 
                 <!-- POP 윗줄 설정 -->
                 <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-light);">
-                  <label class="gov-label" style="font-weight:700; color:#101820;">POP 윗줄 문안</label>
+                  <label class="gov-label" style="font-weight:700; color:#101820;">POP 윗줄 문안 (줄당 최대 8자 권장)</label>
                   <input id="lf-pop-l1-text" class="gov-input" value="올리브영 1위 기념" placeholder="윗줄 문안 입력">
+                  <div id="lf-pop-l1-warn" style="display:none; color:#E52421; font-size:11.5px; font-weight:600; margin-top:4px;"></div>
                   <div class="gov-row" style="margin-top:6px;">
                     <div>
                       <label class="gov-label">윗줄 폰트</label>
                       <select id="lf-pop-l1-font" class="gov-select">
-                        <option value="shingo" selected>신고딕체</option>
-                        <option value="omni">옴니고딕체</option>
+                        <option value="omni" selected>옴니고딕체</option>
+                        <option value="shingo">신고딕체</option>
                       </select>
                     </div>
                     <div>
                       <label class="gov-label">윗줄 굵기</label>
                       <select id="lf-pop-l1-weight" class="gov-select">
-                        <option value="800">Heavy (050)</option>
-                        <option value="700" selected>Bold (040)</option>
+                        <option value="800" selected>Heavy (050)</option>
+                        <option value="700">Bold (040)</option>
                         <option value="500">Medium (030)</option>
                         <option value="300">Light (020)</option>
                         <option value="100">Thin (010)</option>
@@ -345,21 +346,22 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
 
                 <!-- POP 아랫줄 설정 -->
                 <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-light);">
-                  <label class="gov-label" style="font-weight:700; color:#101820;">POP 아랫줄 문안</label>
+                  <label class="gov-label" style="font-weight:700; color:#101820;">POP 아랫줄 문안 (줄당 최대 8자 권장)</label>
                   <input id="lf-pop-l2-text" class="gov-input" value="+ 5일분 추가 증정" placeholder="아랫줄 문안 입력">
+                  <div id="lf-pop-l2-warn" style="display:none; color:#E52421; font-size:11.5px; font-weight:600; margin-top:4px;"></div>
                   <div class="gov-row" style="margin-top:6px;">
                     <div>
                       <label class="gov-label">아랫줄 폰트</label>
                       <select id="lf-pop-l2-font" class="gov-select">
-                        <option value="shingo" selected>신고딕체</option>
-                        <option value="omni">옴니고딕체</option>
+                        <option value="omni" selected>옴니고딕체</option>
+                        <option value="shingo">신고딕체</option>
                       </select>
                     </div>
                     <div>
                       <label class="gov-label">아랫줄 굵기</label>
                       <select id="lf-pop-l2-weight" class="gov-select">
-                        <option value="800">Heavy (050)</option>
-                        <option value="700" selected>Bold (040)</option>
+                        <option value="800" selected>Heavy (050)</option>
+                        <option value="700">Bold (040)</option>
                         <option value="500">Medium (030)</option>
                         <option value="300">Light (020)</option>
                         <option value="100">Thin (010)</option>
@@ -609,19 +611,41 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
       h: Math.max(10, +($('lf-pop-h')?.value || 35)),
       bgHex: bgRes.hex,
       line1Text: $('lf-pop-l1-text')?.value || '',
-      line1Font: $('lf-pop-l1-font')?.value || 'shingo',
-      line1Weight: +($('lf-pop-l1-weight')?.value || 700),
+      line1Font: $('lf-pop-l1-font')?.value || 'omni',
+      line1Weight: +($('lf-pop-l1-weight')?.value || 800),
       line1Pt: Math.max(6, +($('lf-pop-l1-pt')?.value || 14)),
       line1Color: l1ColRes.hex,
       line2Text: $('lf-pop-l2-text')?.value || '',
-      line2Font: $('lf-pop-l2-font')?.value || 'shingo',
-      line2Weight: +($('lf-pop-l2-weight')?.value || 700),
+      line2Font: $('lf-pop-l2-font')?.value || 'omni',
+      line2Weight: +($('lf-pop-l2-weight')?.value || 800),
       line2Pt: Math.max(6, +($('lf-pop-l2-pt')?.value || 18)),
       line2Color: l2ColRes.hex,
     };
   };
 
+  const checkPopTextLimit = (inpId, warnId) => {
+    const inp = $(inpId);
+    const warn = $(warnId);
+    if (!inp || !warn) return;
+    const lines = (inp.value || '').split('\n');
+    const maxLineLen = lines.reduce((max, l) => Math.max(max, l.length), 0);
+    if (maxLineLen > 8) {
+      inp.style.borderColor = '#E52421';
+      inp.style.background = '#FFF5F5';
+      warn.style.display = 'block';
+      warn.innerHTML = `⚠ 줄당 글자수가 너무 많습니다 (권장 최대 8자 · 현재 ${maxLineLen}자)`;
+    } else {
+      inp.style.borderColor = '';
+      inp.style.background = '';
+      warn.style.display = 'none';
+      warn.innerHTML = '';
+    }
+  };
+
   const run = () => {
+    checkPopTextLimit('lf-pop-l1-text', 'lf-pop-l1-warn');
+    checkPopTextLimit('lf-pop-l2-text', 'lf-pop-l2-warn');
+
     const w = Math.max(30, +$('lf-w').value || 80);
     const h = Math.max(50, +$('lf-h').value || 140);
     const pop = buildPopConfig(w);
