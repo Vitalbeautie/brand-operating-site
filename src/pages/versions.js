@@ -285,7 +285,7 @@ export function renderVersionPage(container) {
     container.innerHTML = `
       <div style="margin-bottom:28px;">
         <div style="border-left:2px solid #D5D8DE; padding-left:14px; font-size:13.5px; color:#5A6270; line-height:1.6;">
-          가이드가 바뀔 때마다 파일을 올리면 시간 순으로 남습니다. 파일은 이 브라우저에 저장됩니다.
+          변경된 브랜드 가이드와 디자인 파일을 등록하고 이전 버전을 확인할 수 있습니다. 파일은 현재 사용 중인 브라우저에 저장되며 다른 사용자와 자동 공유되지 않습니다.
         </div>
       </div>
 

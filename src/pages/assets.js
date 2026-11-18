@@ -253,7 +253,7 @@ export function renderAssetLibraryPage(container) {
     container.innerHTML = `
       <div style="margin-bottom:28px;">
         <div style="border-left:2px solid #D5D8DE; padding-left:14px; font-size:13.5px; color:#5A6270; line-height:1.6;">
-          영문 워드마크, 국문 워드마크, 심볼을 PDF, AI, PNG, SVG로 내려받습니다.
+          바이탈뷰티의 영문·국문 워드마크와 심볼을 확인하고, PDF·AI·PNG·SVG 등 필요한 형식으로 다운로드할 수 있습니다.
         </div>
       </div>
 

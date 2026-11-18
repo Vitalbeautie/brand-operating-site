@@ -196,10 +196,15 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
     },
   };
 
+  const DESCRIPTIONS = {
+    layout: '제품 라인과 패키지 크기(가로·세로)를 입력하면, 라인별 디자인 규칙에 맞춰 단상자 전면 레이아웃을 실시간으로 생성합니다. 규격에 따른 로고와 제품 정보의 배치를 미리 확인할 수 있습니다.',
+    icon: '성분이나 기능 키워드를 입력하면, 바이탈뷰티의 디자인 스타일에 맞는 픽토그램을 생성합니다. 생성된 아이콘은 벡터 파일로 다운로드해 디자인에 활용할 수 있습니다.',
+  };
+
   el.innerHTML = `
     <div style="margin-bottom:22px;">
-      <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
-        폭과 높이를 mm로 입력하면 선택한 라인 로직에 맞춰 단상자 전면을 실시간으로 시뮬레이션합니다. Icon Generator는 키워드에 맞는 글로벌 공용 픽토그램을 바이탈뷰티 스타일로 다시 그립니다.
+      <div id="bv-desc-display" style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
+        ${DESCRIPTIONS[activeSubTab]}
       </div>
     </div>
 
@@ -508,6 +513,8 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
       el.querySelectorAll('.bv-subtab').forEach(b => b.classList.toggle('active', b.getAttribute('data-bv-tab') === activeSubTab));
       $('bv-pane-layout').style.display = activeSubTab === 'layout' ? 'block' : 'none';
       $('bv-pane-icon').style.display = activeSubTab === 'icon' ? 'block' : 'none';
+      const descEl = el.querySelector('#bv-desc-display');
+      if (descEl) descEl.textContent = DESCRIPTIONS[activeSubTab];
       const targetHash = activeSubTab === 'icon' ? '#/gov/icon-generator' : '#/gov/logo-fit';
       if (window.location.hash !== targetHash) {
         history.replaceState(null, '', targetHash);
@@ -1277,7 +1284,7 @@ export function renderFamilyLookPage(el) {
   el.innerHTML = `${head(
     'Module 02 · Global Functional Color & Pantone Recommender',
     'Family Look · 성분·기능 기반 글로벌 팬톤 컬러 제안',
-    `건강기능식품·일반식품의 성분이나 기능 키워드를 입력하면 글로벌 시장에서 통용되는 대표 컬러 계열과 그 선정 근거를 제시하고, 바이탈뷰티 기존 제품군(${PACKAGE_LINES.allProducts.length}종)과 겹치지 않는 공식 PANTONE Solid Coated 컬러칩을 제안합니다.`
+    '제품의 성분이나 기능을 입력하면 관련 컬러와 선정 이유를 제안합니다. 기존 바이탈뷰티 제품 41종의 컬러와 비교해 차별화된 PANTONE 컬러 후보를 추천합니다.'
   )}
     <div class="gov-layout">
       <!-- 좌측: 성분 또는 기능 & 대표 컬러(17개) & 최소 색차 (ΔE2000) -->
@@ -1682,7 +1689,7 @@ export function renderLocalizationPage(el) {
   el.innerHTML = `
     <div style="margin-bottom:22px;">
       <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
-        선택한 라인(메타그린 · 이너뷰티)의 디자인 규칙에 맞춰 한국·미국·일본 표시 기준별 전면 패키지를 실시간 시뮬레이션합니다.
+        제품 라인과 패키지 규격을 선택하면 한국·미국·일본의 표시 형식에 맞춰 패키지 전면을 시뮬레이션합니다. 국가별 문안과 레이아웃 차이를 비교할 수 있습니다.
       </div>
     </div>
 
