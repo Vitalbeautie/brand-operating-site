@@ -83,10 +83,11 @@ export function renderTypographyPage(container) {
   const brand = getBrand();
   if (!brand || !container) return;
 
-  const blocksHtml = TYPEFACE_SECTIONS.map(sec => {
+  const blocksHtml = TYPEFACE_SECTIONS.map((sec, idx) => {
     const defaultW = sec.weights.find(w => w.defaultActive) || sec.weights[1];
+    const isLast = idx === TYPEFACE_SECTIONS.length - 1;
     return `
-      <div class="guide-block" id="${sec.id}" style="padding-bottom:68px; border-bottom:1px solid #ECEEF2;">
+      <div class="guide-block" id="${sec.id}" style="padding-bottom:${isLast ? '140px' : '68px'}; ${isLast ? '' : 'border-bottom:1px solid #ECEEF2;'} scroll-margin-top:90px;">
         <!-- Left Column: Title & Description -->
         <div class="block-text-column">
           <h3 class="block-title" style="font-family:var(--font-en); font-size:15px; font-weight:400; letter-spacing:1.4px; color:#101820; margin-bottom:10px;">
@@ -165,7 +166,7 @@ export function renderTypographyPage(container) {
   }).join('');
 
   container.innerHTML = `
-    <section class="guide-section" id="section-typography" style="margin-bottom:80px; scroll-margin-top:80px;">
+    <section class="guide-section" id="section-typography" style="margin-bottom:80px; padding-bottom:380px; scroll-margin-top:80px;">
       <!-- Top Intro Header -->
       <div style="margin-bottom:36px;">
         <h2 style="font-family:var(--font-en); font-size:26px; font-weight:300; letter-spacing:2.5px; margin:0 0 18px 0; text-transform:uppercase; color:#101820;">

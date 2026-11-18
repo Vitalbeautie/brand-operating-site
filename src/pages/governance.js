@@ -198,7 +198,6 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
 
   el.innerHTML = `
     <div style="margin-bottom:22px;">
-      <div style="font-size:13px; color:#5A606E; margin-bottom:10px; font-weight:400;">브랜드 식별자 가시성</div>
       <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
         폭과 높이를 mm로 입력하면 선택한 라인 로직에 맞춰 단상자 전면을 실시간으로 시뮬레이션합니다. Icon Generator는 키워드에 맞는 글로벌 공용 픽토그램을 바이탈뷰티 스타일로 다시 그립니다.
       </div>
@@ -1585,9 +1584,8 @@ export function renderLocalizationPage(el) {
   };
 
   el.innerHTML = `
-    <div style="margin-bottom:20px;">
-      <h2 style="font-size:20px; font-weight:700; color:#101820; letter-spacing:0.5px; margin:0 0 6px;">GLOBAL PACKAGING LOCALIZER</h2>
-      <div style="font-size:12.5px; color:#5A606E; line-height:1.6;">
+    <div style="margin-bottom:22px;">
+      <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
         선택한 라인(메타그린 · 이너뷰티)의 디자인 규칙에 맞춰 한국·미국·일본 표시 기준별 전면 패키지를 실시간 시뮬레이션합니다.
       </div>
     </div>

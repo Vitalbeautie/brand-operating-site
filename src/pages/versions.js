@@ -284,8 +284,6 @@ export function renderVersionPage(container) {
 
     container.innerHTML = `
       <div style="margin-bottom:28px;">
-        <h1 style="font-family:var(--font-en); font-weight:300; letter-spacing:2px; font-size:28px; margin:0 0 6px 0; color:#101820;">VERSION HISTORY</h1>
-        <div style="font-size:14px; font-weight:600; color:#101820; margin-bottom:10px;">가이드 이력</div>
         <div style="border-left:2px solid #D5D8DE; padding-left:14px; font-size:13.5px; color:#5A6270; line-height:1.6;">
           가이드가 바뀔 때마다 파일을 올리면 시간 순으로 남습니다. 파일은 이 브라우저에 저장됩니다.
         </div>

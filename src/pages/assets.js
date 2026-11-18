@@ -227,10 +227,7 @@ export function renderAssetLibraryPage(container) {
     `).join('');
 
     container.innerHTML = `
-      <div style="margin-bottom:32px;">
-        <div style="font-family:var(--font-en); font-size:34px; font-weight:300; letter-spacing:3px; color:#101820; margin-bottom:28px; text-transform:uppercase;">BRAND GUIDELINE</div>
-        <h1 style="font-family:var(--font-en); font-weight:300; letter-spacing:2px; font-size:30px; margin:0 0 8px 0; color:#101820; text-transform:uppercase;">BRAND ASSET LIBRARY</h1>
-        <div style="font-size:14px; font-weight:600; color:#101820; margin-bottom:12px;">브랜드 에셋 라이브러리</div>
+      <div style="margin-bottom:28px;">
         <div style="border-left:2px solid #D5D8DE; padding-left:14px; font-size:13.5px; color:#5A6270; line-height:1.6;">
           영문 워드마크, 국문 워드마크, 심볼을 AI, PNG, SVG로 내려받습니다.
         </div>

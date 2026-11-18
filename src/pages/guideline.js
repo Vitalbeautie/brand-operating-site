@@ -475,7 +475,9 @@ function setupDesignGuideScrollSpy() {
         // Check if user scrolled near the bottom of the page
         const scrollBottom = window.innerHeight + window.scrollY;
         const docHeight = document.documentElement.scrollHeight;
-        if (docHeight - scrollBottom < 80) {
+        const isNearBottom = docHeight - scrollBottom < 220;
+
+        if (isNearBottom) {
           activePath = '/typography';
         } else {
           for (const s of SECTIONS) {
@@ -495,6 +497,15 @@ function setupDesignGuideScrollSpy() {
           const rect = el.getBoundingClientRect();
           if (rect.top <= triggerPoint + 60 && b.path === activePath) {
             activeBlockId = b.id;
+          }
+        }
+
+        // Japanese Typography 블록이 화면에 충분히 진입하거나 최하단 스크롤 시 마지막 블록 활성화
+        const jpEl = document.getElementById('block-typo-jp');
+        if (jpEl && activePath === '/typography') {
+          const jpRect = jpEl.getBoundingClientRect();
+          if (jpRect.top <= triggerPoint + 80 || isNearBottom) {
+            activeBlockId = 'block-typo-jp';
           }
         }
 
