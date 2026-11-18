@@ -2198,49 +2198,16 @@ export function suggestFamilyLook(options = {}) {
       return bScore - aScore;
     };
 
-    const targetPerShade = 5;
-    // 기본적으로 사용자 지정 최소 색차(minDeltaE) 미달이면 무조건 제외
-    const strictOnly = options.strictOnly !== false;
-
     const pickShadeCards = (pool) => {
-      // 1. 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩 우선 필터링
-      const eligible = pool
+      // 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩만 엄격하게 필터링
+      return pool
         .filter(c => !usedCodes.has(c.normCode) && c.minD >= minDeltaE)
-        .map(c => ({ ...c, isStrict: true, isRelaxed: false }))
         .sort((a, b) => {
-          // minDeltaE 이상인 칩들 중 차별성(minD)과 글로벌 적합도를 결합하여 정렬
           const aScore = a.minD * 1.8 + (a.C || 0) * 0.6;
           const bScore = b.minD * 1.8 + (b.C || 0) * 0.6;
           return bScore - aScore;
-        });
-
-      // 엄격 필터 모드: 사용자가 지정한 minDeltaE 미만인 후보는 절대 제안하지 않음
-      if (strictOnly) {
-        return eligible.slice(0, Math.min(8, eligible.length));
-      }
-
-      if (eligible.length >= targetPerShade) {
-        return eligible.slice(0, Math.min(6, eligible.length));
-      }
-
-      // 2. 완화 추천 모드: 해당 풀에서 minDeltaE 이상인 칩이 부족한 경우, eligible 칩을 모두 넣고
-      // 풀 내에서 기존 제품과 겹치지 않으며 색차(minD)가 가장 높은 칩 순으로 보충하되 isRelaxed 플래그를 부여해 UI에서 명확히 구분
-      const result = [...eligible];
-      const fallback = pool
-        .filter(c => !usedCodes.has(c.normCode) && !result.some(r => r.pantoneCode === c.pantoneCode))
-        .sort((a, b) => b.minD - a.minD)
-        .map(c => ({
-          ...c,
-          isStrict: false,
-          isRelaxed: true,
-          relaxedDeltaE: c.minD,
-        }));
-
-      for (const c of fallback) {
-        result.push(c);
-        if (result.length >= targetPerShade) break;
-      }
-      return result;
+        })
+        .slice(0, 8);
     };
 
     const proposedDeep = pickShadeCards(poolDeep);
@@ -2346,47 +2313,7 @@ export function suggestChips(options = {}, count = 8) {
         nearestName: nearest.name,
         nearestPantone: nearest.pantone,
         nearestHex: nearest.hex,
-        isStrict: true,
-        isRelaxed: false,
       });
-    }
-  }
-
-  // 기본적으로 사용자 지정 최소 색차(minDeltaE) 미달이면 무조건 제외
-  const strictOnly = opts.strictOnly !== false;
-  if (!strictOnly && candidates.length < count) {
-    for (const pms of PANTONE_COATED_WITH_LAB) {
-      if (!targetFamilies.includes(pms.family)) continue;
-      if (candidates.some(c => c.pantoneCode === pms.code)) continue;
-      const normPms = pms.code.toUpperCase().replace(/^PANTONE\s*/i, '').replace(/\s+/g, '');
-      if (usedCodes.has(normPms)) continue;
-
-      let nearest = usedList[0];
-      let minD = Infinity;
-      for (const u of usedList) {
-        const d = deltaE2000(u.lab, pms.lab);
-        if (d < minD) {
-          minD = d;
-          nearest = u;
-        }
-      }
-      if (minD >= 4.0) {
-        candidates.push({
-          pantoneCode: pms.code,
-          hex: pms.hex,
-          family: pms.family,
-          lab: pms.lab,
-          minD,
-          hue: Math.round(pms.hue),
-          score: minD,
-          nearestName: nearest.name,
-          nearestPantone: nearest.pantone,
-          nearestHex: nearest.hex,
-          isStrict: false,
-          isRelaxed: true,
-          relaxedDeltaE: minD,
-        });
-      }
     }
   }
 
