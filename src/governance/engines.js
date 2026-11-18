@@ -2199,7 +2199,8 @@ export function suggestFamilyLook(options = {}) {
     };
 
     const targetPerShade = 5;
-    const strictOnly = Boolean(options.strictOnly);
+    // 기본적으로 사용자 지정 최소 색차(minDeltaE) 미달이면 무조건 제외
+    const strictOnly = options.strictOnly !== false;
 
     const pickShadeCards = (pool) => {
       // 1. 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩 우선 필터링
@@ -2351,8 +2352,8 @@ export function suggestChips(options = {}, count = 8) {
     }
   }
 
-  // 만약 엄격한 minDeltaE로 인해 후보가 부족하면 기준을 소폭 완화해 최소 count개 확보 (strictOnly 모드 제외)
-  const strictOnly = Boolean(opts.strictOnly);
+  // 기본적으로 사용자 지정 최소 색차(minDeltaE) 미달이면 무조건 제외
+  const strictOnly = opts.strictOnly !== false;
   if (!strictOnly && candidates.length < count) {
     for (const pms of PANTONE_COATED_WITH_LAB) {
       if (!targetFamilies.includes(pms.family)) continue;

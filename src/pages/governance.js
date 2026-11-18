@@ -1265,7 +1265,6 @@ export function renderVisualDnaPage(el) {
 export function renderFamilyLookPage(el) {
   let selectedToneId = 'auto'; // 기본 키워드 기반 전체 패밀리 제안
   let selectedMinDe = 10;
-  let strictDeMode = false;
   let pageOffset = 0;
 
   const renderChips = () => REPRESENTATIVE_COLOR_CHIPS.map(chip => `
@@ -1291,25 +1290,12 @@ export function renderFamilyLookPage(el) {
           ${renderChips()}
         </div>
 
-        <label class="gov-label" style="font-size:14px;font-weight:700;color:#101820;margin-top:24px;margin-bottom:4px;">기존 컬러와 최소 색차 (ΔE2000)</label>
+        <label class="gov-label" style="font-size:14px;font-weight:700;color:#101820;margin-top:24px;margin-bottom:8px;">기존 컬러와 최소 색차 (ΔE2000)</label>
         <div class="fl-de-bar" id="fl-de-bar">
           <button type="button" class="fl-de-btn ${selectedMinDe === 6 ? 'active' : ''}" data-de="6">6</button>
           <button type="button" class="fl-de-btn ${selectedMinDe === 10 ? 'active' : ''}" data-de="10">10</button>
           <button type="button" class="fl-de-btn ${selectedMinDe === 15 ? 'active' : ''}" data-de="15">15</button>
           <button type="button" class="fl-de-btn ${selectedMinDe === 20 ? 'active' : ''}" data-de="20">20</button>
-        </div>
-        <div style="margin-top:10px;">
-          <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#101820; cursor:pointer;">
-            <input type="checkbox" id="fl-strict-toggle" ${strictDeMode ? 'checked' : ''} />
-            설정 색차(ΔE ${selectedMinDe}) 엄격 필터링 (기준 미달 제안 완전 제외)
-          </label>
-        </div>
-        <p class="fl-de-desc" style="margin-top:8px;">
-          숫자가 클수록 기존 제품과 더 확실히 다른 색만 남깁니다. 10이면 매대에서 나란히 놓아도 구분되는 수준입니다. 각 제안 아래에는 그 색과 가장 가까운 기존 제품의 컬러와 Pantone 번호를 나란히 비교합니다.
-        </p>
-        <div style="margin-top:12px; padding:10px 12px; background:#F8F9FC; border:1px solid #E1E4ED; border-radius:4px; font-size:11.5px; color:#5A6270; line-height:1.55;">
-          <strong style="color:#101820; display:block; margin-bottom:2px;">※ 디지털 예상 색차 vs 인쇄 실측 색차 안내</strong>
-          화면의 색차는 sRGB 디지털 데이터 기준 CIE ΔE2000 예측치이며, 실제 인쇄 용지(코팅/비코팅지/알루미늄박 등), 인쇄 잉크 조색 및 조명 환경에 따른 분광 측색계(Spectrophotometer) 실측 색차와 차이가 있을 수 있습니다. 양산 전 실제 교정지 측색을 필히 권장합니다.
         </div>
       </div>
 
@@ -1322,11 +1308,12 @@ export function renderFamilyLookPage(el) {
   const $ = id => el.querySelector('#' + id);
 
   const renderSuggestions = () => {
+    // 기본적으로 기준 미달 칩은 완전 제외 (strictOnly: true)
     const res = suggestFamilyLook({
       funcText: $('fl-func').value,
       selectedToneId,
       minDeltaE: selectedMinDe,
-      strictOnly: strictDeMode,
+      strictOnly: true,
       offset: pageOffset,
     });
 
@@ -1343,18 +1330,11 @@ export function renderFamilyLookPage(el) {
       `).join('');
 
       const renderCard = c => `
-        <div class="fl-rec-card ${c.isRelaxed ? 'fl-rec-card-relaxed' : ''}" data-copy-hex="${c.hex}" data-copy-label="${c.pantoneCode}" style="cursor:pointer; ${c.isRelaxed ? 'border:1px dashed #FFA39E;' : ''}" title="클릭하여 HEX (${c.hex}) 복사">
+        <div class="fl-rec-card" data-copy-hex="${c.hex}" data-copy-label="${c.pantoneCode}" style="cursor:pointer;" title="클릭하여 HEX (${c.hex}) 복사">
           <div class="fl-rec-swatch-box" style="background:${c.hex}">
             <span class="fl-rec-shade-tag">${c.shade}</span>
           </div>
           <div class="fl-rec-body">
-            ${c.isRelaxed ? `
-              <div style="margin-bottom:6px;">
-                <span class="fl-relaxed-badge" style="background:#FFF1F0; border:1px solid #FFA39E; color:#CF1322; font-size:9.5px; font-weight:700; padding:1px 5px; border-radius:3px; display:inline-block;">
-                  완화 제안 (ΔE ${c.minD.toFixed(1)} &lt; ${selectedMinDe})
-                </span>
-              </div>
-            ` : ''}
             <div class="fl-rec-pms">${c.pantoneCode}</div>
             <div class="fl-rec-hex" style="display:inline-flex;align-items:center;gap:6px;padding:1px 6px;border:1px solid #E1E4ED;background:#F8F9FC;color:#101820;font-weight:600;margin-bottom:6px;">
               <span>${c.hex}</span>
@@ -1376,7 +1356,7 @@ export function renderFamilyLookPage(el) {
                 <div class="fl-rec-col-right">
                   <div class="fl-rec-code-sm">${c.nearestPantone}</div>
                   <div class="fl-rec-name-sm">${c.nearestName}</div>
-                  <div class="fl-rec-de-sm" title="sRGB 변환 기반 디지털 예상 색차">예상 ΔE ${c.minD.toFixed(1)}</div>
+                  <div class="fl-rec-de-sm">ΔE ${c.minD.toFixed(1)}</div>
                 </div>
               </div>
             </div>
@@ -1491,30 +1471,9 @@ export function renderFamilyLookPage(el) {
       el.querySelectorAll('#fl-de-bar .fl-de-btn').forEach(b => {
         b.classList.toggle('active', +b.getAttribute('data-de') === selectedMinDe);
       });
-      const strictLabel = el.querySelector('#fl-strict-toggle')?.parentElement;
-      if (strictLabel) {
-        strictLabel.innerHTML = `
-          <input type="checkbox" id="fl-strict-toggle" ${strictDeMode ? 'checked' : ''} />
-          설정 색차(ΔE ${selectedMinDe}) 엄격 필터링 (기준 미달 제안 완전 제외)
-        `;
-        $('fl-strict-toggle').onchange = e => {
-          strictDeMode = e.target.checked;
-          pageOffset = 0;
-          renderSuggestions();
-        };
-      }
       renderSuggestions();
     };
   });
-
-  const strictToggle = $('fl-strict-toggle');
-  if (strictToggle) {
-    strictToggle.onchange = e => {
-      strictDeMode = e.target.checked;
-      pageOffset = 0;
-      renderSuggestions();
-    };
-  }
 
   renderSuggestions();
 }
