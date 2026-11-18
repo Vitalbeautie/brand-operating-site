@@ -3,6 +3,7 @@
    VITALBEAUTIE Official Master Brand Assets (Wordmark & Symbol)
    ═══════════════════════════════════════ */
 import { showToast } from '../utils/helpers.js';
+import { buildPdfBlob } from '../governance/engines.js';
 
 /* ─── MASTER ASSETS LIST (바이탈뷰티 공식 워드마크 & 심볼 마스터 에셋) ─── */
 const MASTER_ASSETS_LIST = [
@@ -115,6 +116,28 @@ function triggerBrowserDownload(blobOrUrl, fileName) {
 async function downloadAssetFile(asset, format) {
   const baseName = asset.downloadName || asset.id;
 
+  // 0. 인쇄용 벡터 .PDF 다운로드
+  if (format === 'pdf') {
+    try {
+      let svgText = '';
+      if (asset.fileSvg) {
+        const resp = await fetch(asset.fileSvg, { cache: 'no-cache' });
+        if (resp.ok) svgText = await resp.text();
+      }
+      if (!svgText && asset.previewHtml && asset.previewHtml.includes('<svg')) {
+        svgText = asset.previewHtml;
+      }
+      if (svgText) {
+        const blob = buildPdfBlob(svgText, baseName);
+        triggerBrowserDownload(blob, `${baseName}.pdf`);
+        showToast(`${baseName}.pdf 인쇄용 벡터 PDF 파일이 다운로드되었습니다.`);
+        return;
+      }
+    } catch (err) {
+      console.warn('PDF 생성 실패, 대체 다운로드 시도', err);
+    }
+  }
+
   // 1. 공식 원본 .AI 파일 다운로드
   if (format === 'ai' && asset.fileAi) {
     try {
@@ -217,6 +240,7 @@ export function renderAssetLibraryPage(container) {
         <div class="al-body">
           <strong class="al-title">${asset.name}</strong>
           <div class="al-dl-row" style="margin-top:10px;">
+            <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="pdf">⬇ .PDF</button>
             <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="ai">⬇ .AI</button>
             <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="svg">⬇ .SVG</button>
             <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="png">⬇ .PNG</button>
@@ -229,7 +253,7 @@ export function renderAssetLibraryPage(container) {
     container.innerHTML = `
       <div style="margin-bottom:28px;">
         <div style="border-left:2px solid #D5D8DE; padding-left:14px; font-size:13.5px; color:#5A6270; line-height:1.6;">
-          영문 워드마크, 국문 워드마크, 심볼을 AI, PNG, SVG로 내려받습니다.
+          영문 워드마크, 국문 워드마크, 심볼을 PDF, AI, PNG, SVG로 내려받습니다.
         </div>
       </div>
 

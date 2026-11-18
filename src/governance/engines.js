@@ -1759,6 +1759,10 @@ export function buildIllustratorAiBlob(svgText, title = 'VITALBEAUTIE_Asset') {
   return new Blob(chunks, { type: 'application/pdf' });
 }
 
+export function buildPdfBlob(svgText, title = 'VITALBEAUTIE_Asset') {
+  return buildIllustratorAiBlob(svgText, title);
+}
+
 export function generateDnaIcon(shapeKey, accentKey, withMotif = true) {
   return generateCustomDnaIcon({ keyword: shapeKey, enArc: accentKey }).svg;
 }
@@ -2195,10 +2199,13 @@ export function suggestFamilyLook(options = {}) {
     };
 
     const targetPerShade = 5;
+    const strictOnly = Boolean(options.strictOnly);
+
     const pickShadeCards = (pool) => {
       // 1. 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩 우선 필터링
       const eligible = pool
         .filter(c => !usedCodes.has(c.normCode) && c.minD >= minDeltaE)
+        .map(c => ({ ...c, isStrict: true, isRelaxed: false }))
         .sort((a, b) => {
           // minDeltaE 이상인 칩들 중 차별성(minD)과 글로벌 적합도를 결합하여 정렬
           const aScore = a.minD * 1.8 + (a.C || 0) * 0.6;
@@ -2206,16 +2213,27 @@ export function suggestFamilyLook(options = {}) {
           return bScore - aScore;
         });
 
+      // 엄격 필터 모드: 사용자가 지정한 minDeltaE 미만인 후보는 절대 제안하지 않음
+      if (strictOnly) {
+        return eligible.slice(0, Math.min(8, eligible.length));
+      }
+
       if (eligible.length >= targetPerShade) {
         return eligible.slice(0, Math.min(6, eligible.length));
       }
 
-      // 2. 해당 풀에서 minDeltaE 이상인 칩이 부족한 경우, eligible 칩을 모두 넣고
-      // 풀 내에서 기존 제품과 겹치지 않으며 색차(minD)가 가장 높은 칩 순으로 보충
+      // 2. 완화 추천 모드: 해당 풀에서 minDeltaE 이상인 칩이 부족한 경우, eligible 칩을 모두 넣고
+      // 풀 내에서 기존 제품과 겹치지 않으며 색차(minD)가 가장 높은 칩 순으로 보충하되 isRelaxed 플래그를 부여해 UI에서 명확히 구분
       const result = [...eligible];
       const fallback = pool
         .filter(c => !usedCodes.has(c.normCode) && !result.some(r => r.pantoneCode === c.pantoneCode))
-        .sort((a, b) => b.minD - a.minD);
+        .sort((a, b) => b.minD - a.minD)
+        .map(c => ({
+          ...c,
+          isStrict: false,
+          isRelaxed: true,
+          relaxedDeltaE: c.minD,
+        }));
 
       for (const c of fallback) {
         result.push(c);
@@ -2327,12 +2345,15 @@ export function suggestChips(options = {}, count = 8) {
         nearestName: nearest.name,
         nearestPantone: nearest.pantone,
         nearestHex: nearest.hex,
+        isStrict: true,
+        isRelaxed: false,
       });
     }
   }
 
-  // 만약 엄격한 minDeltaE로 인해 후보가 부족하면 기준을 소폭 완화해 최소 count개 확보
-  if (candidates.length < count) {
+  // 만약 엄격한 minDeltaE로 인해 후보가 부족하면 기준을 소폭 완화해 최소 count개 확보 (strictOnly 모드 제외)
+  const strictOnly = Boolean(opts.strictOnly);
+  if (!strictOnly && candidates.length < count) {
     for (const pms of PANTONE_COATED_WITH_LAB) {
       if (!targetFamilies.includes(pms.family)) continue;
       if (candidates.some(c => c.pantoneCode === pms.code)) continue;
@@ -2348,7 +2369,7 @@ export function suggestChips(options = {}, count = 8) {
           nearest = u;
         }
       }
-      if (minD >= 7) {
+      if (minD >= 4.0) {
         candidates.push({
           pantoneCode: pms.code,
           hex: pms.hex,
@@ -2360,6 +2381,9 @@ export function suggestChips(options = {}, count = 8) {
           nearestName: nearest.name,
           nearestPantone: nearest.pantone,
           nearestHex: nearest.hex,
+          isStrict: false,
+          isRelaxed: true,
+          relaxedDeltaE: minD,
         });
       }
     }

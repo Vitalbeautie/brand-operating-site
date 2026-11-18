@@ -5,7 +5,7 @@ import { IDENTITY, DNA_KEYWORDS, PACKAGE_LINES, REGULATIONS, LOCALE_TYPO, SAMPLE
 import { MG_LINE, SIZE_CLASS, TYPO, HFF_MARK, RULE_CATALOG, PRESETS } from '../data/packageFront.js';
 import { REPRESENTATIVE_COLOR_CHIPS } from '../data/pantoneCoated.js';
 import {
-  suggestLogo, generateDnaIcon, generateCustomDnaIcon, buildIllustratorAiBlob, ensureAiFontsLoaded, getPictogramLibrary,
+  suggestLogo, generateDnaIcon, generateCustomDnaIcon, buildIllustratorAiBlob, buildPdfBlob, ensureAiFontsLoaded, getPictogramLibrary,
   checkDna, suggestChips, suggestFamilyLook, checkChip, checkSpecScale, checkRegulation, autoLayout,
   parseKoreanPackageFile, translateKoPackageText, renderLocalizedPackageSvg,
   resolvePantoneInput, autoSpecPackageFront, checkPackageFront, renderPackageFrontSvg,
@@ -448,7 +448,8 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
             <div style="display:flex; align-items:center; gap:8px;">
               <button type="button" id="lf-guide-btn-meta" class="btn btn-outline btn-sm">메타그린 빨간 가이드 치수선 ON</button>
               <button type="button" id="lf-guide-btn-ib" class="btn btn-outline btn-sm" style="display:none;">이너뷰티 빨간 가이드 치수선 ON</button>
-              <button type="button" id="lf-dl-ai" class="btn btn-primary btn-sm">.AI 파일 다운로드</button>
+              <button type="button" id="lf-dl-pdf" class="btn btn-outline btn-sm">.PDF 다운로드</button>
+              <button type="button" id="lf-dl-ai" class="btn btn-primary btn-sm">.AI 다운로드</button>
             </div>
           </div>
           <div id="lf-canvas" class="pf-canvas-wrap" style="background:#ffffff; border:none; box-shadow:none;"></div>
@@ -481,7 +482,10 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
         <div class="ig-center-col">
           <div class="ig-center-head">
             <span class="ig-col-title" style="margin:0;">생성 배지</span>
-            <button type="button" id="ig-dl-all-ai" class="ig-btn-outline">↓ 전체 .ai</button>
+            <div style="display:flex; gap:6px;">
+              <button type="button" id="ig-dl-all-pdf" class="ig-btn-outline">↓ 전체 .pdf</button>
+              <button type="button" id="ig-dl-all-ai" class="ig-btn-outline">↓ 전체 .ai</button>
+            </div>
           </div>
           <div id="ig-kw-list" class="ig-kw-list">
             <div style="padding:40px 20px; text-align:center; color:#7A808C; font-size:13px;">글로벌 아이콘 인덱스를 불러오는 중입니다...</div>
@@ -687,6 +691,21 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
     $('lf-canvas').innerHTML = renderPackageFrontSvg(spec, logic === 'metagreen' ? showGuidesMeta : false);
   };
 
+  const downloadPdfFile = async () => {
+    if (!currentSpec) return;
+    await ensureAiFontsLoaded();
+    const svgForPdf = logic === 'innerbeauty'
+      ? renderInnerBeautyFrontSvg(currentSpec, showGuidesIb)
+      : renderPackageFrontSvg(currentSpec, logic === 'metagreen' ? showGuidesMeta : false);
+    const safeName = `${currentSpec.lineName}_${currentSpec.productName || 'Package'}`.replace(/\s+/g, '_');
+    const blob = buildPdfBlob(svgForPdf, `VITALBEAUTIE_BrandVisibility_${safeName}`);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `VITALBEAUTIE_BrandVisibility_${safeName}_${currentSpec.w}x${currentSpec.h}mm.pdf`;
+    a.click();
+    showToast('Adobe PDF (.pdf) 인쇄 교정용 파일이 다운로드되었습니다');
+  };
+
   const downloadAiFile = async () => {
     if (!currentSpec) return;
     await ensureAiFontsLoaded();
@@ -797,6 +816,7 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
     run();
   };
 
+  $('lf-dl-pdf').onclick = downloadPdfFile;
   $('lf-dl-ai').onclick = downloadAiFile;
 
   applyDefaults('hff', 'metagreen');
@@ -809,7 +829,8 @@ function setupIconGenerator(el) {
   const kwInput = el.querySelector('#ig-kw-input');
   const kwListEl = el.querySelector('#ig-kw-list');
   const inspectorEl = el.querySelector('#ig-inspector');
-  const dlAllBtn = el.querySelector('#ig-dl-all-ai');
+  const dlAllAiBtn = el.querySelector('#ig-dl-all-ai');
+  const dlAllPdfBtn = el.querySelector('#ig-dl-all-pdf');
 
   let indexData = null;
   let selectedKw = null;
@@ -901,18 +922,33 @@ function setupIconGenerator(el) {
         </ul>
 
         <div class="ig-insp-actions">
+          <button type="button" id="ig-dl-single-pdf" class="ig-btn-outline">↓ .pdf (30×30mm)</button>
           <button type="button" id="ig-dl-single-ai" class="ig-btn-black">↓ .ai (30×30mm)</button>
           <button type="button" id="ig-dl-single-svg" class="ig-btn-outline">↓ .svg</button>
         </div>
 
         <p class="ig-insp-foot">
-          AI 파일은 30×30mm 아트보드로 즉시 일러스트레이터에서 편집 가능한 벡터 파일로 저장됩니다.
+          PDF 및 AI 파일은 30×30mm 아트보드의 인쇄용 벡터 데이터로 저장됩니다.
         </p>
       </div>
     `;
 
+    const singlePdfBtn = inspectorEl.querySelector('#ig-dl-single-pdf');
     const singleAiBtn = inspectorEl.querySelector('#ig-dl-single-ai');
     const singleSvgBtn = inspectorEl.querySelector('#ig-dl-single-svg');
+
+    if (singlePdfBtn) {
+      singlePdfBtn.onclick = () => {
+        const exportSvg = buildSingleIconExportSvg(cand, variant.id, {
+          koText: activeKo,
+          enText: activeEn,
+        });
+        const safeKw = block.keyword.replace(/\s+/g, '_');
+        const blob = buildPdfBlob(exportSvg, `VITALBEAUTIE_${safeKw}_${motif.id}_Lv${curLevel}_${variant.id}`);
+        triggerDownload(blob, `VITALBEAUTIE_Icon_${safeKw}_${motif.id}_Lv${curLevel}_${variant.id}_30x30mm.pdf`);
+        showToast(`${block.keyword} - ${motif.title} Lv.${curLevel} (${variant.label}) .pdf 파일이 다운로드되었습니다`);
+      };
+    }
 
     if (singleAiBtn) {
       singleAiBtn.onclick = () => {
@@ -1016,6 +1052,7 @@ function setupIconGenerator(el) {
             </div>
 
             <div class="ig-motif-action-row">
+              <button type="button" class="btn btn-sm btn-outline ig-dl-pdf-single" data-kw="${block.keyword}" data-motif-id="${motif.id}">.PDF 벡터 다운로드</button>
               <button type="button" class="btn btn-sm btn-outline ig-dl-ai-single" data-kw="${block.keyword}" data-motif-id="${motif.id}">.AI 벡터 다운로드</button>
               <button type="button" class="btn btn-sm btn-outline ig-dl-svg-single" data-kw="${block.keyword}" data-motif-id="${motif.id}">.SVG 다운로드</button>
             </div>
@@ -1068,6 +1105,31 @@ function setupIconGenerator(el) {
         selectedKw = card.getAttribute('data-kw');
         selectedMotifId = card.getAttribute('data-motif-id');
         renderInspector();
+      };
+    });
+
+    // 이벤트 바인딩: 개별 모티프 .PDF 다운로드
+    kwListEl.querySelectorAll('.ig-dl-pdf-single').forEach(btn => {
+      btn.onclick = () => {
+        const kw = btn.getAttribute('data-kw');
+        const motifId = btn.getAttribute('data-motif-id');
+        const block = currentBlocks.find(b => b.keyword === kw);
+        const motif = block?.motifs.find(m => m.id === motifId);
+        if (!motif) return;
+        const curLevel = motifLevels[`${kw}:${motif.id}`] || 1;
+        const levelObj = motif.levels[curLevel - 1] || motif.levels[0];
+        const customArc = el.querySelector('#ig-arc-input')?.value.trim();
+        const customKo = el.querySelector('#ig-ko-input')?.value.trim();
+        const activeKo = customKo || block.keyword;
+        const activeEn = customArc || block.enCopy;
+        const exportSvg = buildSingleIconExportSvg(levelObj.icon, selectedVariantId || 'circle-line', {
+          koText: activeKo,
+          enText: activeEn,
+        });
+        const safeKw = block.keyword.replace(/\s+/g, '_');
+        const blob = buildPdfBlob(exportSvg, `VITALBEAUTIE_${safeKw}_${motif.id}_Lv${curLevel}`);
+        triggerDownload(blob, `VITALBEAUTIE_Icon_${safeKw}_${motif.id}_Lv${curLevel}.pdf`);
+        showToast(`${block.keyword} - ${motif.title} (Lv.${curLevel}) .pdf 파일이 다운로드되었습니다`);
       };
     });
 
@@ -1142,8 +1204,19 @@ function setupIconGenerator(el) {
     });
   }
 
-  if (dlAllBtn) {
-    dlAllBtn.onclick = () => {
+  if (dlAllPdfBtn) {
+    dlAllPdfBtn.onclick = () => {
+      if (!currentBlocks.length) return;
+      const sheetSvg = buildAllKeywordsSheetSvg(currentBlocks);
+      const safeNames = currentBlocks.map(b => b.keyword.replace(/\s+/g, '_')).join('_');
+      const blob = buildPdfBlob(sheetSvg, `VITALBEAUTIE_All_Icons_${safeNames}`);
+      triggerDownload(blob, `VITALBEAUTIE_IconSheet_${safeNames}.pdf`);
+      showToast('전체 키워드 아이콘 시트 (.pdf) 파일이 다운로드되었습니다');
+    };
+  }
+
+  if (dlAllAiBtn) {
+    dlAllAiBtn.onclick = () => {
       if (!currentBlocks.length) return;
       const sheetSvg = buildAllKeywordsSheetSvg(currentBlocks);
       const safeNames = currentBlocks.map(b => b.keyword.replace(/\s+/g, '_')).join('_');
@@ -1168,6 +1241,7 @@ export function renderVisualDnaPage(el) {
 export function renderFamilyLookPage(el) {
   let selectedToneId = 'auto'; // 기본 키워드 기반 전체 패밀리 제안
   let selectedMinDe = 10;
+  let strictDeMode = false;
   let pageOffset = 0;
 
   const renderChips = () => REPRESENTATIVE_COLOR_CHIPS.map(chip => `
@@ -1200,9 +1274,19 @@ export function renderFamilyLookPage(el) {
           <button type="button" class="fl-de-btn ${selectedMinDe === 15 ? 'active' : ''}" data-de="15">15</button>
           <button type="button" class="fl-de-btn ${selectedMinDe === 20 ? 'active' : ''}" data-de="20">20</button>
         </div>
-        <p class="fl-de-desc">
+        <div style="margin-top:10px;">
+          <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#101820; cursor:pointer;">
+            <input type="checkbox" id="fl-strict-toggle" ${strictDeMode ? 'checked' : ''} />
+            설정 색차(ΔE ${selectedMinDe}) 엄격 필터링 (기준 미달 제안 완전 제외)
+          </label>
+        </div>
+        <p class="fl-de-desc" style="margin-top:8px;">
           숫자가 클수록 기존 제품과 더 확실히 다른 색만 남깁니다. 10이면 매대에서 나란히 놓아도 구분되는 수준입니다. 각 제안 아래에는 그 색과 가장 가까운 기존 제품의 컬러와 Pantone 번호를 나란히 비교합니다.
         </p>
+        <div style="margin-top:12px; padding:10px 12px; background:#F8F9FC; border:1px solid #E1E4ED; border-radius:4px; font-size:11.5px; color:#5A6270; line-height:1.55;">
+          <strong style="color:#101820; display:block; margin-bottom:2px;">※ 디지털 예상 색차 vs 인쇄 실측 색차 안내</strong>
+          화면의 색차는 sRGB 디지털 데이터 기준 CIE ΔE2000 예측치이며, 실제 인쇄 용지(코팅/비코팅지/알루미늄박 등), 인쇄 잉크 조색 및 조명 환경에 따른 분광 측색계(Spectrophotometer) 실측 색차와 차이가 있을 수 있습니다. 양산 전 실제 교정지 측색을 필히 권장합니다.
+        </div>
       </div>
 
       <!-- 우측: 레퍼런스 이미지(media_1794186795723_91b94d0e.jpg) 100% 동일 레이아웃 -->
@@ -1218,6 +1302,7 @@ export function renderFamilyLookPage(el) {
       funcText: $('fl-func').value,
       selectedToneId,
       minDeltaE: selectedMinDe,
+      strictOnly: strictDeMode,
       offset: pageOffset,
     });
 
@@ -1234,11 +1319,18 @@ export function renderFamilyLookPage(el) {
       `).join('');
 
       const renderCard = c => `
-        <div class="fl-rec-card" data-copy-hex="${c.hex}" data-copy-label="${c.pantoneCode}" style="cursor:pointer;" title="클릭하여 HEX (${c.hex}) 복사">
+        <div class="fl-rec-card ${c.isRelaxed ? 'fl-rec-card-relaxed' : ''}" data-copy-hex="${c.hex}" data-copy-label="${c.pantoneCode}" style="cursor:pointer; ${c.isRelaxed ? 'border:1px dashed #FFA39E;' : ''}" title="클릭하여 HEX (${c.hex}) 복사">
           <div class="fl-rec-swatch-box" style="background:${c.hex}">
             <span class="fl-rec-shade-tag">${c.shade}</span>
           </div>
           <div class="fl-rec-body">
+            ${c.isRelaxed ? `
+              <div style="margin-bottom:6px;">
+                <span class="fl-relaxed-badge" style="background:#FFF1F0; border:1px solid #FFA39E; color:#CF1322; font-size:9.5px; font-weight:700; padding:1px 5px; border-radius:3px; display:inline-block;">
+                  완화 제안 (ΔE ${c.minD.toFixed(1)} &lt; ${selectedMinDe})
+                </span>
+              </div>
+            ` : ''}
             <div class="fl-rec-pms">${c.pantoneCode}</div>
             <div class="fl-rec-hex" style="display:inline-flex;align-items:center;gap:6px;padding:1px 6px;border:1px solid #E1E4ED;background:#F8F9FC;color:#101820;font-weight:600;margin-bottom:6px;">
               <span>${c.hex}</span>
@@ -1260,7 +1352,7 @@ export function renderFamilyLookPage(el) {
                 <div class="fl-rec-col-right">
                   <div class="fl-rec-code-sm">${c.nearestPantone}</div>
                   <div class="fl-rec-name-sm">${c.nearestName}</div>
-                  <div class="fl-rec-de-sm">ΔE ${c.minD.toFixed(1)}</div>
+                  <div class="fl-rec-de-sm" title="sRGB 변환 기반 디지털 예상 색차">예상 ΔE ${c.minD.toFixed(1)}</div>
                 </div>
               </div>
             </div>
@@ -1375,9 +1467,30 @@ export function renderFamilyLookPage(el) {
       el.querySelectorAll('#fl-de-bar .fl-de-btn').forEach(b => {
         b.classList.toggle('active', +b.getAttribute('data-de') === selectedMinDe);
       });
+      const strictLabel = el.querySelector('#fl-strict-toggle')?.parentElement;
+      if (strictLabel) {
+        strictLabel.innerHTML = `
+          <input type="checkbox" id="fl-strict-toggle" ${strictDeMode ? 'checked' : ''} />
+          설정 색차(ΔE ${selectedMinDe}) 엄격 필터링 (기준 미달 제안 완전 제외)
+        `;
+        $('fl-strict-toggle').onchange = e => {
+          strictDeMode = e.target.checked;
+          pageOffset = 0;
+          renderSuggestions();
+        };
+      }
       renderSuggestions();
     };
   });
+
+  const strictToggle = $('fl-strict-toggle');
+  if (strictToggle) {
+    strictToggle.onchange = e => {
+      strictDeMode = e.target.checked;
+      pageOffset = 0;
+      renderSuggestions();
+    };
+  }
 
   renderSuggestions();
 }
@@ -1798,12 +1911,31 @@ export function renderLocalizationPage(el) {
             ${svg}
           </div>
           <div style="display:flex; gap:6px; margin-top:8px;">
-            <button type="button" class="btn btn-outline btn-xs loc-download-ai" data-country="${t.code}" style="width:100%; justify-content:center; font-size:11px; padding:7px 0;">
-              ⬇ .ai 다운로드
+            <button type="button" class="btn btn-outline btn-xs loc-download-pdf" data-country="${t.code}" style="flex:1; justify-content:center; font-size:11px; padding:7px 0;">
+              ⬇ .PDF 다운로드
+            </button>
+            <button type="button" class="btn btn-primary btn-xs loc-download-ai" data-country="${t.code}" style="flex:1; justify-content:center; font-size:11px; padding:7px 0;">
+              ⬇ .AI 다운로드
             </button>
           </div>
         </div>`;
     }).join('');
+
+    // .PDF 다운로드 이벤트 바인딩
+    $('loc-sim-out').querySelectorAll('.loc-download-pdf').forEach(btn => {
+      btn.onclick = async () => {
+        await ensureAiFontsLoaded();
+        const country = btn.dataset.country;
+        const svg = renderLocalizedPackageSvg(locState, country);
+        const safeName = `${locState.lineName}_${locState.productName || 'Package'}`.replace(/\s+/g, '_');
+        const blob = buildPdfBlob(svg, `VITALBEAUTIE_Localizer_${country}_${safeName}`);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `VITALBEAUTIE_Localizer_${country}_${safeName}_${locState.w}x${locState.h}mm.pdf`;
+        a.click();
+        showToast(`${country} 버전 Adobe PDF (.pdf) 인쇄 교정용 파일이 다운로드되었습니다`);
+      };
+    });
 
     // .ai 다운로드 이벤트 바인딩
     $('loc-sim-out').querySelectorAll('.loc-download-ai').forEach(btn => {
