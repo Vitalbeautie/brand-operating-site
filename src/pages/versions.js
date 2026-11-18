@@ -263,25 +263,17 @@ export function renderVersionPage(container) {
     const historyRowsHtml = allVersions.map((item, idx) => {
       const isLatest = idx === 0;
       return `
-        <div class="vh-item" data-id="${item.id}" style="position:relative; padding:0 0 38px 28px;">
-          <span style="position:absolute; left:-5px; top:4px; width:9px; height:9px; background:#9A8C60; display:block;"></span>
-          <div style="font-size:12.5px; color:#9A8C60; margin-bottom:4px;">
-            ${item.date}${isLatest ? ` <span style="display:inline-block; margin-left:6px; font-size:11px; font-weight:700; color:#101820;">· 최신 버전 (LATEST)</span>` : ''}
-          </div>
-          <div style="font-size:16px; font-weight:700; color:#101820; margin-bottom:5px;">
-            ${item.title}
-          </div>
-          ${item.memo ? `<div style="font-size:13.5px; color:#101820; line-height:1.55; margin-bottom:5px;">${item.memo}</div>` : ''}
-          <div style="font-size:12px; color:#5A6270; margin-bottom:10px;">
-            ${item.fileName} · ${item.fileSize || 'PDF'}
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <button type="button" class="vh-download-btn" data-id="${item.id}" style="display:inline-flex; align-items:center; gap:6px; background:#FFFFFF; border:1px solid #D5D8DE; padding:7px 14px; font-size:12.5px; font-weight:600; color:#101820; cursor:pointer;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              다운로드
+        <div class="vh-item" data-id="${item.id}" style="position:relative; padding:0 0 28px 24px;">
+          <span style="position:absolute; left:-4.5px; top:6px; width:9px; height:9px; background:#9A8C60; border-radius:50%; display:block;"></span>
+          <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
+            <div style="font-size:16px; font-weight:700; color:#101820;">
+              ${item.title}
+            </div>
+            <button type="button" class="vh-download-btn" data-id="${item.id}" style="background:none; border:none; padding:0; color:#5A6270; font-size:13.5px; font-family:var(--font-en); text-decoration:underline; cursor:pointer;" title="PDF 다운로드">
+              ${item.fileName || '.pdf'}
             </button>
             ${!item.isOfficial ? `
-              <button type="button" class="vh-delete-btn" data-id="${item.id}" style="background:none; border:none; color:#B00020; font-size:12px; cursor:pointer; padding:4px 6px;">
+              <button type="button" class="vh-delete-btn" data-id="${item.id}" style="background:none; border:none; color:#B00020; font-size:11.5px; cursor:pointer; padding:0 4px;" title="삭제">
                 삭제
               </button>
             ` : ''}

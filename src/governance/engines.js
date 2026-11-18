@@ -2196,18 +2196,29 @@ export function suggestFamilyLook(options = {}) {
 
     const targetPerShade = 5;
     const pickShadeCards = (pool) => {
-      const sorted = pool.sort(rankFn);
-      // 기존 제품과 겹치지 않는 칩 우선 선택, 최소 targetPerShade(5개) 이상 보장
-      const nonOverlap = sorted.filter(c => !usedCodes.has(c.normCode) && c.minD >= 4.0);
-      if (nonOverlap.length >= targetPerShade) {
-        return nonOverlap.slice(0, Math.min(6, nonOverlap.length));
+      // 1. 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩 우선 필터링
+      const eligible = pool
+        .filter(c => !usedCodes.has(c.normCode) && c.minD >= minDeltaE)
+        .sort((a, b) => {
+          // minDeltaE 이상인 칩들 중 차별성(minD)과 글로벌 적합도를 결합하여 정렬
+          const aScore = a.minD * 1.8 + (a.C || 0) * 0.6;
+          const bScore = b.minD * 1.8 + (b.C || 0) * 0.6;
+          return bScore - aScore;
+        });
+
+      if (eligible.length >= targetPerShade) {
+        return eligible.slice(0, Math.min(6, eligible.length));
       }
-      // 부족 시 전체 풀에서 차별성 높은 순으로 채워 5개 보장
-      const result = [...nonOverlap];
-      for (const c of sorted) {
-        if (!result.some(r => r.pantoneCode === c.pantoneCode)) {
-          result.push(c);
-        }
+
+      // 2. 해당 풀에서 minDeltaE 이상인 칩이 부족한 경우, eligible 칩을 모두 넣고
+      // 풀 내에서 기존 제품과 겹치지 않으며 색차(minD)가 가장 높은 칩 순으로 보충
+      const result = [...eligible];
+      const fallback = pool
+        .filter(c => !usedCodes.has(c.normCode) && !result.some(r => r.pantoneCode === c.pantoneCode))
+        .sort((a, b) => b.minD - a.minD);
+
+      for (const c of fallback) {
+        result.push(c);
         if (result.length >= targetPerShade) break;
       }
       return result;
@@ -3777,67 +3788,264 @@ export function resolvePantoneInput(raw) {
   const s = (raw || '').trim();
   if (!s) return { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '메타그린 대표 그린' };
 
-  // 0) 한글/영문 컬러명 직접 입력 시 (white, black, 화이트, 블랙 등)
-  const normName = s.toLowerCase().replace(/^pantone\s+/i, '').replace(/\s+/g, '');
-  const namedColorMap = {
+  // 0) 한글/영문 통용 컬러명 직접 입력 시 (레몬색, 연두색, 연한 핑크, 핫핑크, 연보라, 하늘색, 네온옐로우 등)
+  const normRaw = s.toLowerCase().trim();
+  const cleanTerm = normRaw
+    .replace(/^pantone\s+/i, '')
+    .replace(/색상$|색$|color$|colour$/i, '')
+    .replace(/\s+/g, '');
+
+  const COMMON_NAMED_COLORS = {
+    // 화이트 / 블랙
     white: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
     w: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
     wh: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
     whitec: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
-    whiteu: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
-    '화이트': { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
-    '흰색': { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
-    '백색': { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
-    '하양': { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
-    '하얀색': { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
-    '순백': { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
+    화이트: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
+    흰: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
+    흰색: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
+    백색: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
+    하양: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
+    하얀: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
+    순백: { code: 'WHITE', shortCode: 'WHITE', hex: '#FFFFFF', name: '화이트 (White)' },
     black: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
     bk: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
     blk: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    k: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    k100: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
     blackc: { code: 'PANTONE Black C', shortCode: 'Black C', hex: '#1D1D1B', name: '블랙 (Black)' },
-    blacku: { code: 'PANTONE Black U', shortCode: 'Black U', hex: '#1D1D1B', name: '블랙 (Black)' },
-    '블랙': { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    '검정': { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    '검정색': { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    '검은색': { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    '흑색': { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    '먹색': { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
-    red: { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '레드 (Red)' },
-    '레드': { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '레드 (Red)' },
-    '빨강': { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '레드 (Red)' },
-    '빨간색': { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '레드 (Red)' },
-    green: { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '그린 (Green)' },
-    '그린': { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '그린 (Green)' },
-    '초록': { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '그린 (Green)' },
-    '초록색': { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '그린 (Green)' },
+    블랙: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
+    검정: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
+    검은: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
+    흑색: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
+    먹: { code: 'BLACK', shortCode: 'BLACK', hex: '#1D1D1B', name: '블랙 (Black)' },
+
+    // 레몬 / 네온 옐로우 / 옐로우
+    lemon: { code: 'PANTONE 394C', shortCode: '394C', hex: '#FFF44F', name: '레몬 (Lemon Yellow)' },
+    레몬: { code: 'PANTONE 394C', shortCode: '394C', hex: '#FFF44F', name: '레몬 (Lemon Yellow)' },
+    연노랑: { code: 'PANTONE 100C', shortCode: '100C', hex: '#FFF88A', name: '연노랑 (Pale Yellow)' },
+    연한노랑: { code: 'PANTONE 100C', shortCode: '100C', hex: '#FFF88A', name: '연한 노랑 (Light Yellow)' },
+    라이트옐로우: { code: 'PANTONE 100C', shortCode: '100C', hex: '#FFF88A', name: '라이트 옐로우' },
+    lightyellow: { code: 'PANTONE 100C', shortCode: '100C', hex: '#FFF88A', name: 'Light Yellow' },
+    paleyellow: { code: 'PANTONE 100C', shortCode: '100C', hex: '#FFF88A', name: 'Pale Yellow' },
+    neonyellow: { code: 'PANTONE 3945C', shortCode: '3945C', hex: '#FFF600', name: '네온 옐로우 (Neon Yellow)' },
+    fluoyellow: { code: 'PANTONE 3945C', shortCode: '3945C', hex: '#FFF600', name: '형광 옐로우' },
+    네온옐로우: { code: 'PANTONE 3945C', shortCode: '3945C', hex: '#FFF600', name: '네온 옐로우 (Neon Yellow)' },
+    형광노랑: { code: 'PANTONE 3945C', shortCode: '3945C', hex: '#FFF600', name: '형광 노랑' },
+    형광옐로우: { code: 'PANTONE 3945C', shortCode: '3945C', hex: '#FFF600', name: '형광 옐로우' },
     yellow: { code: 'PANTONE 109C', shortCode: '109C', hex: '#FFD100', name: '옐로우 (Yellow)' },
-    '옐로우': { code: 'PANTONE 109C', shortCode: '109C', hex: '#FFD100', name: '옐로우 (Yellow)' },
-    '노랑': { code: 'PANTONE 109C', shortCode: '109C', hex: '#FFD100', name: '옐로우 (Yellow)' },
-    '노란색': { code: 'PANTONE 109C', shortCode: '109C', hex: '#FFD100', name: '옐로우 (Yellow)' },
-    blue: { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '블루 (Blue)' },
-    '블루': { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '블루 (Blue)' },
-    '파랑': { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '블루 (Blue)' },
-    '파란색': { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '블루 (Blue)' },
+    옐로우: { code: 'PANTONE 109C', shortCode: '109C', hex: '#FFD100', name: '옐로우 (Yellow)' },
+    노랑: { code: 'PANTONE 109C', shortCode: '109C', hex: '#FFD100', name: '옐로우 (Yellow)' },
+    진노랑: { code: 'PANTONE 1235C', shortCode: '1235C', hex: '#FFB81C', name: '진노랑 (Deep Yellow)' },
+    진한노랑: { code: 'PANTONE 1235C', shortCode: '1235C', hex: '#FFB81C', name: '진한 노랑' },
+    deepyellow: { code: 'PANTONE 1235C', shortCode: '1235C', hex: '#FFB81C', name: 'Deep Yellow' },
+    darkyellow: { code: 'PANTONE 1235C', shortCode: '1235C', hex: '#FFB81C', name: 'Dark Yellow' },
+    머스타드: { code: 'PANTONE 124C', shortCode: '124C', hex: '#EAAA00', name: '머스타드 (Mustard)' },
+    mustard: { code: 'PANTONE 124C', shortCode: '124C', hex: '#EAAA00', name: 'Mustard' },
+    겨자: { code: 'PANTONE 124C', shortCode: '124C', hex: '#EAAA00', name: '겨자 (Mustard)' },
+
+    // 연두 / 라임 / 그린
+    연두: { code: 'PANTONE 2270C', shortCode: '2270C', hex: '#8EE53F', name: '연두 (Yellow Green)' },
+    연한연두: { code: 'PANTONE 2267C', shortCode: '2267C', hex: '#B8F274', name: '연한 연두 (Pale Green)' },
+    연연두: { code: 'PANTONE 2267C', shortCode: '2267C', hex: '#B8F274', name: '연연두' },
+    진연두: { code: 'PANTONE 376C', shortCode: '376C', hex: '#70BD00', name: '진한 연두' },
+    진한연두: { code: 'PANTONE 376C', shortCode: '376C', hex: '#70BD00', name: '진한 연두' },
+    yellowgreen: { code: 'PANTONE 2270C', shortCode: '2270C', hex: '#8EE53F', name: 'Yellow Green' },
+    lightgreen: { code: 'PANTONE 2270C', shortCode: '2270C', hex: '#8EE53F', name: 'Light Green' },
+    chartreuse: { code: 'PANTONE 389C', shortCode: '389C', hex: '#CEDC00', name: 'Chartreuse' },
+    라임: { code: 'PANTONE 389C', shortCode: '389C', hex: '#CEDC00', name: '라임 (Lime)' },
+    lime: { code: 'PANTONE 389C', shortCode: '389C', hex: '#CEDC00', name: 'Lime' },
+    네온그린: { code: 'PANTONE 802C', shortCode: '802C', hex: '#44D62C', name: '네온 그린 (Neon Green)' },
+    neongreen: { code: 'PANTONE 802C', shortCode: '802C', hex: '#44D62C', name: 'Neon Green' },
+    형광연두: { code: 'PANTONE 802C', shortCode: '802C', hex: '#44D62C', name: '형광 연두' },
+    형광초록: { code: 'PANTONE 802C', shortCode: '802C', hex: '#44D62C', name: '형광 초록' },
+    green: { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '메타그린 대표 그린 (Green)' },
+    그린: { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '그린 (Green)' },
+    초록: { code: 'PANTONE 348C', shortCode: '348C', hex: '#00843D', name: '초록 (Green)' },
+    연초록: { code: 'PANTONE 3546C', shortCode: '3546C', hex: '#39B54A', name: '연초록 (Light Green)' },
+    진초록: { code: 'PANTONE 3435C', shortCode: '3435C', hex: '#004724', name: '진초록 (Dark Green)' },
+    진한초록: { code: 'PANTONE 3435C', shortCode: '3435C', hex: '#004724', name: '진한 초록' },
+    darkgreen: { code: 'PANTONE 3435C', shortCode: '3435C', hex: '#004724', name: 'Dark Green' },
+    deepgreen: { code: 'PANTONE 3435C', shortCode: '3435C', hex: '#004724', name: 'Deep Green' },
+    포레스트그린: { code: 'PANTONE 3435C', shortCode: '3435C', hex: '#004724', name: '포레스트 그린' },
+    민트: { code: 'PANTONE 353C', shortCode: '353C', hex: '#AAD196', name: '슈퍼시카 민트 (Mint)' },
+    mint: { code: 'PANTONE 353C', shortCode: '353C', hex: '#AAD196', name: 'Mint' },
+    mintgreen: { code: 'PANTONE 353C', shortCode: '353C', hex: '#AAD196', name: 'Mint Green' },
+    올리브: { code: 'PANTONE 5753C', shortCode: '5753C', hex: '#5B6734', name: '올리브 (Olive)' },
+    olive: { code: 'PANTONE 5753C', shortCode: '5753C', hex: '#5B6734', name: 'Olive' },
+    카키: { code: 'PANTONE 5753C', shortCode: '5753C', hex: '#5B6734', name: '카키 (Khaki)' },
+    khaki: { code: 'PANTONE 5753C', shortCode: '5753C', hex: '#5B6734', name: 'Khaki' },
+
+    // 핑크 (연핑크, 핫핑크, 진한 핑크, 코랄, 피치)
+    연핑크: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: '슈퍼콜라겐 연핑크 (Light Pink)' },
+    연한핑크: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: '연한 핑크 (Light Pink)' },
+    연분홍: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: '연분홍 (Light Pink)' },
+    연한분홍: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: '연한 분홍 (Light Pink)' },
+    베이비핑크: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: '베이비 핑크 (Baby Pink)' },
+    lightpink: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: 'Light Pink' },
+    palepink: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: 'Pale Pink' },
+    softpink: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: 'Soft Pink' },
+    babypink: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6B9D4', name: 'Baby Pink' },
     pink: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6A9C5', name: '핑크 (Pink)' },
-    '핑크': { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6A9C5', name: '핑크 (Pink)' },
-    '분홍': { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6A9C5', name: '핑크 (Pink)' },
+    핑크: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6A9C5', name: '핑크 (Pink)' },
+    분홍: { code: 'PANTONE 230C', shortCode: '230C', hex: '#F6A9C5', name: '분홍 (Pink)' },
+    핫핑크: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: '핫핑크 (Hot Pink)' },
+    진핑크: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: '진핑크 (Deep Pink)' },
+    진한핑크: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: '진한 핑크 (Deep Pink)' },
+    진한분홍: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: '진한 분홍' },
+    진분홍: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: '진분홍' },
+    hotpink: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: 'Hot Pink' },
+    deeppink: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: 'Deep Pink' },
+    darkpink: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: 'Dark Pink' },
+    vividpink: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: 'Vivid Pink' },
+    마젠타: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: '마젠타 (Magenta)' },
+    magenta: { code: 'PANTONE 213C', shortCode: '213C', hex: '#E31C79', name: 'Magenta' },
+    코랄: { code: 'PANTONE 2345C', shortCode: '2345C', hex: '#EB5B56', name: '코랄 (Coral)' },
+    coral: { code: 'PANTONE 2345C', shortCode: '2345C', hex: '#EB5B56', name: 'Coral' },
+    연코랄: { code: 'PANTONE 1765C', shortCode: '1765C', hex: '#FF9994', name: '연코랄 (Light Coral)' },
+    살구: { code: 'PANTONE 1555C', shortCode: '1555C', hex: '#F5C1A2', name: '살구 (Apricot)' },
+    피치: { code: 'PANTONE 1555C', shortCode: '1555C', hex: '#F5C1A2', name: '피치 (Peach)' },
+    peach: { code: 'PANTONE 1555C', shortCode: '1555C', hex: '#F5C1A2', name: 'Peach' },
+    apricot: { code: 'PANTONE 1555C', shortCode: '1555C', hex: '#F5C1A2', name: 'Apricot' },
+
+    // 보라 / 라벤더
+    연보라: { code: 'PANTONE 2645C', shortCode: '2645C', hex: '#B89FD5', name: '연보라 (Lavender)' },
+    연한보라: { code: 'PANTONE 2645C', shortCode: '2645C', hex: '#B89FD5', name: '연한 보라 (Light Purple)' },
+    라벤더: { code: 'PANTONE 2645C', shortCode: '2645C', hex: '#B89FD5', name: '라벤더 (Lavender)' },
+    lavender: { code: 'PANTONE 2645C', shortCode: '2645C', hex: '#B89FD5', name: 'Lavender' },
+    lilac: { code: 'PANTONE 2645C', shortCode: '2645C', hex: '#B89FD5', name: 'Lilac' },
+    lightpurple: { code: 'PANTONE 2645C', shortCode: '2645C', hex: '#B89FD5', name: 'Light Purple' },
+    palepurple: { code: 'PANTONE 2645C', shortCode: '2645C', hex: '#B89FD5', name: 'Pale Purple' },
     purple: { code: 'PANTONE 266C', shortCode: '266C', hex: '#6B3FA0', name: '퍼플 (Purple)' },
-    '퍼플': { code: 'PANTONE 266C', shortCode: '266C', hex: '#6B3FA0', name: '퍼플 (Purple)' },
-    '보라': { code: 'PANTONE 266C', shortCode: '266C', hex: '#6B3FA0', name: '퍼플 (Purple)' },
+    퍼플: { code: 'PANTONE 266C', shortCode: '266C', hex: '#6B3FA0', name: '퍼플 (Purple)' },
+    보라: { code: 'PANTONE 266C', shortCode: '266C', hex: '#6B3FA0', name: '보라 (Purple)' },
+    violet: { code: 'PANTONE 266C', shortCode: '266C', hex: '#6B3FA0', name: 'Violet' },
+    바이올렛: { code: 'PANTONE 266C', shortCode: '266C', hex: '#6B3FA0', name: '바이올렛 (Violet)' },
+    진보라: { code: 'PANTONE 273C', shortCode: '273C', hex: '#371870', name: '진보라 (Deep Purple)' },
+    진한보라: { code: 'PANTONE 273C', shortCode: '273C', hex: '#371870', name: '진한 보라' },
+    deeppurple: { code: 'PANTONE 273C', shortCode: '273C', hex: '#371870', name: 'Deep Purple' },
+    darkpurple: { code: 'PANTONE 273C', shortCode: '273C', hex: '#371870', name: 'Dark Purple' },
+
+    // 하늘 / 블루 / 네이비
+    하늘: { code: 'PANTONE 2915C', shortCode: '2915C', hex: '#75C5F0', name: '하늘색 (Sky Blue)' },
+    하늘색: { code: 'PANTONE 2915C', shortCode: '2915C', hex: '#75C5F0', name: '하늘색 (Sky Blue)' },
+    연하늘: { code: 'PANTONE 290C', shortCode: '290C', hex: '#B9D9EB', name: '연하늘 (Pale Sky Blue)' },
+    연한하늘: { code: 'PANTONE 290C', shortCode: '290C', hex: '#B9D9EB', name: '연한 하늘색' },
+    스카이블루: { code: 'PANTONE 2915C', shortCode: '2915C', hex: '#75C5F0', name: '스카이 블루 (Sky Blue)' },
+    skyblue: { code: 'PANTONE 2915C', shortCode: '2915C', hex: '#75C5F0', name: 'Sky Blue' },
+    lightblue: { code: 'PANTONE 2915C', shortCode: '2915C', hex: '#75C5F0', name: 'Light Blue' },
+    palesky: { code: 'PANTONE 290C', shortCode: '290C', hex: '#B9D9EB', name: 'Pale Sky' },
+    연파랑: { code: 'PANTONE 2915C', shortCode: '2915C', hex: '#75C5F0', name: '연파랑 (Light Blue)' },
+    연한파랑: { code: 'PANTONE 2915C', shortCode: '2915C', hex: '#75C5F0', name: '연한 파랑' },
+    blue: { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '블루 (Blue)' },
+    블루: { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '블루 (Blue)' },
+    파랑: { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '파랑 (Blue)' },
+    청색: { code: 'PANTONE 2935C', shortCode: '2935C', hex: '#0057B8', name: '청색 (Blue)' },
+    진파랑: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: '진파랑 (Deep Blue)' },
+    진한파랑: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: '진한 파랑' },
+    darkblue: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: 'Dark Blue' },
+    deepblue: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: 'Deep Blue' },
+    네이비: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: '네이비 (Navy)' },
+    navy: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: 'Navy' },
+    딥네이비: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: '딥 네이비 (Deep Navy)' },
+    남색: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: '남색 (Navy)' },
+    곤색: { code: 'PANTONE 294C', shortCode: '294C', hex: '#002F6C', name: '곤색 (Navy)' },
+    청록: { code: 'PANTONE 326C', shortCode: '326C', hex: '#00A896', name: '청록 (Teal)' },
+    teal: { code: 'PANTONE 326C', shortCode: '326C', hex: '#00A896', name: 'Teal' },
+    터콰이즈: { code: 'PANTONE 326C', shortCode: '326C', hex: '#00A896', name: '터콰이즈 (Turquoise)' },
+    turquoise: { code: 'PANTONE 326C', shortCode: '326C', hex: '#00A896', name: 'Turquoise' },
+
+    // 오렌지 / 주황 / 레드
     orange: { code: 'PANTONE 1585C', shortCode: '1585C', hex: '#FF6A13', name: '오렌지 (Orange)' },
-    '오렌지': { code: 'PANTONE 1585C', shortCode: '1585C', hex: '#FF6A13', name: '오렌지 (Orange)' },
-    '주황': { code: 'PANTONE 1585C', shortCode: '1585C', hex: '#FF6A13', name: '오렌지 (Orange)' },
+    오렌지: { code: 'PANTONE 1585C', shortCode: '1585C', hex: '#FF6A13', name: '오렌지 (Orange)' },
+    주황: { code: 'PANTONE 1585C', shortCode: '1585C', hex: '#FF6A13', name: '주황 (Orange)' },
+    연주황: { code: 'PANTONE 1555C', shortCode: '1555C', hex: '#F5C1A2', name: '연주황 (Light Orange)' },
+    연한주황: { code: 'PANTONE 1555C', shortCode: '1555C', hex: '#F5C1A2', name: '연한 주황' },
+    lightorange: { code: 'PANTONE 1555C', shortCode: '1555C', hex: '#F5C1A2', name: 'Light Orange' },
+    진주황: { code: 'PANTONE 165C', shortCode: '165C', hex: '#FF4D00', name: '진주황 (Deep Orange)' },
+    진한주황: { code: 'PANTONE 165C', shortCode: '165C', hex: '#FF4D00', name: '진한 주황' },
+    deeporange: { code: 'PANTONE 165C', shortCode: '165C', hex: '#FF4D00', name: 'Deep Orange' },
+    red: { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '레드 (Red)' },
+    레드: { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '레드 (Red)' },
+    빨강: { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '빨강 (Red)' },
+    빨간: { code: 'RED', shortCode: 'RED', hex: '#E02020', name: '빨간 (Red)' },
+    연빨강: { code: 'PANTONE 1785C', shortCode: '1785C', hex: '#FF5C67', name: '연빨강 (Light Red)' },
+    연한빨강: { code: 'PANTONE 1785C', shortCode: '1785C', hex: '#FF5C67', name: '연한 빨강' },
+    lightred: { code: 'PANTONE 1785C', shortCode: '1785C', hex: '#FF5C67', name: 'Light Red' },
+    진빨강: { code: 'PANTONE 200C', shortCode: '200C', hex: '#BA0C2F', name: '진빨강 (Dark Red)' },
+    진한빨강: { code: 'PANTONE 200C', shortCode: '200C', hex: '#BA0C2F', name: '진한 빨강' },
+    darkred: { code: 'PANTONE 200C', shortCode: '200C', hex: '#BA0C2F', name: 'Dark Red' },
+    deepred: { code: 'PANTONE 200C', shortCode: '200C', hex: '#BA0C2F', name: 'Deep Red' },
+    버건디: { code: 'PANTONE 207C', shortCode: '207C', hex: '#A6192E', name: '버건디 (Burgundy)' },
+    burgundy: { code: 'PANTONE 207C', shortCode: '207C', hex: '#A6192E', name: 'Burgundy' },
+    와인: { code: 'PANTONE 207C', shortCode: '207C', hex: '#A6192E', name: '와인 (Wine)' },
+    wine: { code: 'PANTONE 207C', shortCode: '207C', hex: '#A6192E', name: 'Wine' },
+
+    // 브라운 / 베이지 / 아이보리 / 그레이
+    brown: { code: 'PANTONE 4625C', shortCode: '4625C', hex: '#4F2C1D', name: '브라운 (Brown)' },
+    브라운: { code: 'PANTONE 4625C', shortCode: '4625C', hex: '#4F2C1D', name: '브라운 (Brown)' },
+    갈색: { code: 'PANTONE 4625C', shortCode: '4625C', hex: '#4F2C1D', name: '갈색 (Brown)' },
+    초코: { code: 'PANTONE 4625C', shortCode: '4625C', hex: '#4F2C1D', name: '초콜릿 (Chocolate)' },
+    chocolate: { code: 'PANTONE 4625C', shortCode: '4625C', hex: '#4F2C1D', name: 'Chocolate' },
+    베이지: { code: 'PANTONE 7527C', shortCode: '7527C', hex: '#D6D2C4', name: '베이지 (Beige)' },
+    beige: { code: 'PANTONE 7527C', shortCode: '7527C', hex: '#D6D2C4', name: 'Beige' },
+    아이보리: { code: 'IVORY', shortCode: 'IVORY', hex: '#FFFFF0', name: '아이보리 (Ivory)' },
+    ivory: { code: 'IVORY', shortCode: 'IVORY', hex: '#FFFFF0', name: 'Ivory' },
+    크림: { code: 'CREAM', shortCode: 'CREAM', hex: '#FFFDD0', name: '크림 (Cream)' },
+    cream: { code: 'CREAM', shortCode: 'CREAM', hex: '#FFFDD0', name: 'Cream' },
     gray: { code: 'GRAY', shortCode: 'GRAY', hex: '#8C929A', name: '그레이 (Gray)' },
     grey: { code: 'GRAY', shortCode: 'GRAY', hex: '#8C929A', name: '그레이 (Gray)' },
-    '그레이': { code: 'GRAY', shortCode: 'GRAY', hex: '#8C929A', name: '그레이 (Gray)' },
-    '회색': { code: 'GRAY', shortCode: 'GRAY', hex: '#8C929A', name: '그레이 (Gray)' },
-    gold: { code: 'GOLD', shortCode: 'GOLD', hex: '#B4975A', name: '골드 (Gold)' },
-    '골드': { code: 'GOLD', shortCode: 'GOLD', hex: '#B4975A', name: '골드 (Gold)' },
+    그레이: { code: 'GRAY', shortCode: 'GRAY', hex: '#8C929A', name: '그레이 (Gray)' },
+    회색: { code: 'GRAY', shortCode: 'GRAY', hex: '#8C929A', name: '그레이 (Gray)' },
+    연회색: { code: 'LIGHT GRAY', shortCode: 'LIGHT GRAY', hex: '#D1D5DB', name: '연회색 (Light Gray)' },
+    밝은회색: { code: 'LIGHT GRAY', shortCode: 'LIGHT GRAY', hex: '#D1D5DB', name: '밝은 회색' },
+    lightgray: { code: 'LIGHT GRAY', shortCode: 'LIGHT GRAY', hex: '#D1D5DB', name: 'Light Gray' },
+    lightgrey: { code: 'LIGHT GRAY', shortCode: 'LIGHT GRAY', hex: '#D1D5DB', name: 'Light Grey' },
+    진회색: { code: 'DARK GRAY', shortCode: 'DARK GRAY', hex: '#4B5563', name: '진회색 (Dark Gray)' },
+    어두운회색: { code: 'DARK GRAY', shortCode: 'DARK GRAY', hex: '#4B5563', name: '어두운 회색' },
+    darkgray: { code: 'DARK GRAY', shortCode: 'DARK GRAY', hex: '#4B5563', name: 'Dark Gray' },
+    darkgrey: { code: 'DARK GRAY', shortCode: 'DARK GRAY', hex: '#4B5563', name: 'Dark Grey' },
+    차콜: { code: 'CHARCOAL', shortCode: 'CHARCOAL', hex: '#374151', name: '차콜 (Charcoal)' },
+    charcoal: { code: 'CHARCOAL', shortCode: 'CHARCOAL', hex: '#374151', name: 'Charcoal' },
+    쥐색: { code: 'CHARCOAL', shortCode: 'CHARCOAL', hex: '#374151', name: '쥐색 (Charcoal)' },
+    gold: { code: 'PANTONE 871C', shortCode: '871C', hex: '#B4975A', name: '골드 (Gold)' },
+    골드: { code: 'PANTONE 871C', shortCode: '871C', hex: '#B4975A', name: '골드 (Gold)' },
+    금: { code: 'PANTONE 871C', shortCode: '871C', hex: '#B4975A', name: '금색 (Gold)' },
+    silver: { code: 'SILVER', shortCode: 'SILVER', hex: '#C0C0C0', name: '실버 (Silver)' },
+    실버: { code: 'SILVER', shortCode: 'SILVER', hex: '#C0C0C0', name: '실버 (Silver)' },
+    은: { code: 'SILVER', shortCode: 'SILVER', hex: '#C0C0C0', name: '은색 (Silver)' },
   };
-  if (namedColorMap[normName]) {
-    return namedColorMap[normName];
+
+  // 1) 정확한 컬러명 매핑 확인
+  if (COMMON_NAMED_COLORS[cleanTerm]) {
+    return COMMON_NAMED_COLORS[cleanTerm];
+  }
+
+  // 2) 수식어(연한, 진한, 핫, 네온, 라이트, 다크 등) 분해 매핑
+  const isLight = /^(연한|연|밝은|라이트|light|pale|soft)/i.test(cleanTerm);
+  const isDark = /^(진한|진|어두운|다크|딥|dark|deep)/i.test(cleanTerm);
+  const isHot = /^(핫|비비드|hot|vivid)/i.test(cleanTerm);
+  const isNeon = /^(네온|형광|neon|fluo)/i.test(cleanTerm);
+
+  const baseTerm = cleanTerm
+    .replace(/^(연한|연|밝은|라이트|진한|진|어두운|다크|딥|핫|비비드|네온|형광|light|pale|soft|dark|deep|hot|vivid|neon|fluo)/i, '')
+    .trim();
+
+  if (baseTerm && COMMON_NAMED_COLORS[baseTerm]) {
+    const baseObj = COMMON_NAMED_COLORS[baseTerm];
+    if (isNeon || isHot) {
+      if (COMMON_NAMED_COLORS[`네온${baseTerm}`]) return COMMON_NAMED_COLORS[`네온${baseTerm}`];
+      if (COMMON_NAMED_COLORS[`핫${baseTerm}`]) return COMMON_NAMED_COLORS[`핫${baseTerm}`];
+    }
+    if (isLight) {
+      if (COMMON_NAMED_COLORS[`연한${baseTerm}`]) return COMMON_NAMED_COLORS[`연한${baseTerm}`];
+      if (COMMON_NAMED_COLORS[`연${baseTerm}`]) return COMMON_NAMED_COLORS[`연${baseTerm}`];
+      if (COMMON_NAMED_COLORS[`라이트${baseTerm}`]) return COMMON_NAMED_COLORS[`라이트${baseTerm}`];
+    }
+    if (isDark) {
+      if (COMMON_NAMED_COLORS[`진한${baseTerm}`]) return COMMON_NAMED_COLORS[`진한${baseTerm}`];
+      if (COMMON_NAMED_COLORS[`진${baseTerm}`]) return COMMON_NAMED_COLORS[`진${baseTerm}`];
+      if (COMMON_NAMED_COLORS[`다크${baseTerm}`]) return COMMON_NAMED_COLORS[`다크${baseTerm}`];
+    }
+    return baseObj;
   }
 
   // 1) 직접 #HEX 입력 시 (6자리 또는 #포함 3자리)

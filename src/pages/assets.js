@@ -216,9 +216,7 @@ export function renderAssetLibraryPage(container) {
         </div>
         <div class="al-body">
           <strong class="al-title">${asset.name}</strong>
-          <span class="al-sub">${asset.enName} · <code style="font-size:11px; color:#555;">${asset.downloadName}</code></span>
-          <p class="al-desc">${asset.desc}</p>
-          <div class="al-dl-row">
+          <div class="al-dl-row" style="margin-top:10px;">
             <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="ai">⬇ .AI</button>
             <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="svg">⬇ .SVG</button>
             <button type="button" class="al-dl-btn" data-id="${asset.id}" data-format="png">⬇ .PNG</button>
