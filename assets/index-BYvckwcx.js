@@ -2300,13 +2300,13 @@ APIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 �
         ${zc("RIGHT",w,A,l,o,i,e,t,n,r,!1)}
         ${zc("BOTTOM",y,C,s,l,i,e,t,n,r,!1)}
       </svg>
-    `}const h=a==="LEFT"||a==="RIGHT"?l:s,d=a==="TOP"||a==="BOTTOM"?Math.max(38,l):o,f=r==="before"?52:18,u=12,p=-f,g=-u,m=h+f*2,x=d+u*2;return`
+    `}const h=a==="LEFT"||a==="RIGHT"?l:s,d=a==="TOP"||a==="BOTTOM"?Math.max(38,l):o,f=52,u=12,p=-f,g=-u,m=h+f*2,x=d+u*2;return`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="${p} ${g} ${m} ${x}" class="pf-svg" width="100%" height="480" style="display:block; margin:0 auto; background:#FFFFFF;">
       ${zc(a,0,0,h,d,i,e,t,n,r,r==="before")}
     </svg>
   `}function NC(i){let e=JSON.parse(JSON.stringify(wR)),t="metagreen",n="carton",r="FRONT",a=null,s=!1,o=null,l=null;const h=["A-topline","A-tag-size","A-tag-pos","B-gap-tag-title","B-ing-pt","C-cap-pt","D-safe-margin","B-hff-mark","B-left-subhead","C-right-nutrition","C-back-header","C-back-legal","C-top-pop","D-bottom-barcode"];let d=new Set(h);const f=()=>{const m=l||Au("",""),x=e.lines[t]||e.lines.metagreen,v=m.foodType==="food",b=x.titlePtStd||24,y=v?x.foodIngPtStd:+(b*x.hffIngRatio).toFixed(1);return{line:t,pkgType:n,foodType:m.foodType||"hff",fileName:o||"바이탈(26)메타그린브이레디60정단1473_수정.ai",frontPanelMm:{w:m.wMm||76,h:m.hMm||138},sideWidthMm:m.sideWMm||42,measured:{...m,topLineMm:1.1,tagW:38.8,tagH:5.6,tagOffsetX:3.2,gapTagToTitleMm:+(x.gapTagToTitleStdMm+2.3).toFixed(1),titlePt:b,ingPt:+(y+2).toFixed(1),capPt:8.5,safeMarginMinMm:1.8,hffMarkMm:13,leftSubHeadPt:11,rightNutritionPt:9.2,backHeaderPt:13,backLegalBodyPt:9,topPopMarginMm:1.7,bottomRecyclePt:6}}},u=()=>{const m=f(),x=Vv(m,e,new Set),v=Vv(m,e,d),b=x.checks.filter(P=>P.status==="FAIL").length,y=x.checks.filter(P=>P.status==="WARN").length,w=x.checks.filter(P=>P.autoFixable),F=w.filter(P=>d.has(P.id)).length,A=s?jv(m,x.effectiveSpec,x.checks,a,"before",r):"",C=s?jv(m,v.effectiveSpec,v.checks,a,"after",r):"",_=s?jv(m,v.effectiveSpec,v.checks,null,"after","ALL"):"",N=[["FRONT","전면 (FRONT)"],["LEFT","좌측면 (LEFT)"],["RIGHT","우측면 (RIGHT)"],["BACK","후면 (BACK)"],["TOP","상단 (TOP)"],["BOTTOM","하단 (BOTTOM)"],["ALL","전체 원화 (6면 전개도)"]];i.innerHTML=`
       <!-- 헤더 설명 및 가이드 엑셀 다운로드 버튼 -->
-      <div style="margin-bottom:20px; border-left:2px solid #101820; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="margin-bottom:20px; border-left:2px solid #D5D8DE; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <p style="font-size:13.5px; color:#475467; margin:0; line-height:1.6; max-width:780px;">
           마스터가 승인한 브랜드 가이드 및 원화 실측 규칙을 기준으로 원본 AI/PDF/EPS 원고를 검수하고,
           규칙 기반 자동 수정안을 원본과 실시간 비교한 후 체크된 수정사항이 반영된 전체 원화 AI 파일로 저장합니다.
@@ -2555,7 +2555,7 @@ ${m.join(", ")}`}),x>=3){s=!0;break}}Object.keys(r).forEach(h=>{r[h].length===0&
     </svg>
   `,overflowDetails:N}}function MC(i){let e="metagreen",t="KR",n="ALL",r=!1,a=!1,s=null,o=null,l=null,h=null;const d=()=>{const m=wd[e]||wd.metagreen;return s?{meta:{...m.defaultMeta,...s.meta},panelBlocks:s.panelBlocks}:{meta:m.defaultMeta,panelBlocks:m.defaultBlocks}},f=()=>{const m=wd[e]||wd.metagreen,x=PC[t]||PC.KR,{meta:v,panelBlocks:b}=d(),y=OC(m,x,b,v,l,"ALL"),w=n==="ALL"?y:OC(m,x,b,v,l,n),F=y.overflowDetails,A=F.length===0,C=wp({lineName:v.productLine||m.defaultLineName,productName:v.productName||"",pkgType:v.packageType||"Carton",code:v.code||"",fileName:h||o||"",ext:"ai"}),_=[["ALL","전체 원화 (6면 전개도)"],["FRONT","전면 (FRONT)"],["LEFT","좌측면 (LEFT)"],["RIGHT","우측면 (RIGHT)"],["BACK","후면 (BACK)"],["TOP","상단 (TOP)"],["BOTTOM","하단 (BOTTOM)"]];i.innerHTML=`
       <!-- 헤더 설명 및 가이드 엑셀 다운로드 버튼 -->
-      <div style="margin-bottom:20px; border-left:2px solid #101820; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="margin-bottom:20px; border-left:2px solid #D5D8DE; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <p style="font-size:13.5px; color:#475467; margin:0; line-height:1.6; max-width:780px;">
           인허가(RA) 승인 엑셀 문안과 패키지 도면(.eps / .ai)을 업로드하면 좌우 2mm 마진·본문 10pt·후면 제품명 15pt(판형별 13pt)·분류별 0.3mm 구분선(상하 1.5mm 간격)·소비기한 11mm 박스(하단 15mm 띄움 / 미국 12mm) 규칙으로 자동 조판합니다.
         </p>
