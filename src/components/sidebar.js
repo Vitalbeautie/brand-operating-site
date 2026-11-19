@@ -91,23 +91,31 @@ const NAV_SECTIONS = [
     section: 'BI / PI GOVERNANCE',
     items: [
       {
-        path: '/gov/logo-fit',
-        label: '01 BRAND VISIBILITY',
+        path: '/creation/layout-proposal',
+        label: '01 DESIGN CREATION',
         num: 'G1',
         subItems: [
-          { path: '/gov/logo-fit', label: 'LAYOUT PROPOSAL' },
-          { path: '/gov/icon-generator', label: 'ICON GENERATOR' },
+          { path: '/creation/layout-proposal', aliases: ['/gov/logo-fit'], label: 'LAYOUT PROPOSAL' },
+          { path: '/creation/icon-generator', aliases: ['/gov/icon-generator', '/gov/visual-dna'], label: 'ICON GENERATOR' },
+          { path: '/creation/color-recommender', aliases: ['/gov/family-look'], label: 'COLOR RECOMMENDER' },
         ],
       },
       {
-        path: '/gov/family-look',
-        label: '02 FAMILY LOOK',
+        path: '/validation/design-checker',
+        label: '02 DESIGN VALIDATION',
         num: 'G2',
+        subItems: [
+          { path: '/validation/design-checker', aliases: ['/gov/design-checker'], label: 'DESIGN CHECKER & AUTO FIX' },
+        ],
       },
       {
-        path: '/gov/localization',
-        label: '03 LOCALIZATION',
+        path: '/localization/layout-simulator',
+        label: '03 GLOBAL LOCALIZATION',
         num: 'G3',
+        subItems: [
+          { path: '/localization/layout-simulator', aliases: ['/gov/localization'], label: 'LAYOUT SIMULATOR' },
+          { path: '/localization/packaging-production', aliases: ['/gov/packaging-production'], label: 'PACKAGING PRODUCTION' },
+        ],
       },
     ],
   },
@@ -158,48 +166,80 @@ const SEARCH_INDEX = [
     keywords: ['타이포그래피', '타이포', '서체', '폰트', '글꼴', '영문서체', '국문서체', '일문서체', '일본어', '랄웨이', '신고딕', '본고딕', 'typography', 'font', 'typeface', 'raleway', 'korean', 'english', 'japanese'],
   },
   {
+    title: 'LAYOUT PROPOSAL (패키지 레이아웃 생성)',
+    sub: '01 DESIGN CREATION · 단상자 전면 규격 · 로고 가시성 시뮬레이터',
+    path: '/creation/layout-proposal',
+    scrollId: null,
+    keywords: ['레이아웃', '시뮬레이션', '시뮬레이터', '가시성', '단상자', '패키지', '제품명', '건강기능식품', 'layout', 'proposal', 'simulation', 'visibility', 'logo fit', 'package'],
+  },
+  {
     title: 'ICON GENERATOR (기능 아이콘 생성기)',
-    sub: 'BI / PI GOVERNANCE · 과일/채소/다이어트/콜라겐/신체기관 4단계 아이콘',
-    path: '/gov/icon-generator',
+    sub: '01 DESIGN CREATION · 바이탈뷰티 픽토그램 생성 및 벡터 다운로드',
+    path: '/creation/icon-generator',
     scrollId: null,
     keywords: ['아이콘', '픽토그램', '배지', '모티프', '아이콘생성', '아이콘제너레이터', '과일', '채소', '다이어트', '콜라겐', '신체기관', '수면', 'icon', 'icon generator', 'badge', 'pictogram', 'motif'],
   },
   {
-    title: 'LAYOUT PROPOSAL (패키지 레이아웃 시뮬레이션)',
-    sub: 'BI / PI GOVERNANCE · 단상자 전면 규격 · 로고 가시성 시뮬레이터',
-    path: '/gov/logo-fit',
+    title: 'COLOR RECOMMENDER (컬러 추천 · 구 Family Look)',
+    sub: '01 DESIGN CREATION · 성분·기능 기반 차별화 PANTONE 컬러 후보 추천',
+    path: '/creation/color-recommender',
     scrollId: null,
-    keywords: ['레이아웃', '시뮬레이션', '시뮬레이터', '가시성', '단상자', '패키지', '제품명', '건강기능식품', 'layout', 'simulation', 'visibility', 'logo fit', 'package'],
+    keywords: ['컬러추천', '색상추천', '패밀리룩', '색차', '팬톤추천', 'color recommender', 'family look', 'color recommendation', 'delta e'],
   },
   {
-    title: 'FAMILY LOOK (패밀리룩 · 글로벌 컬러 추천)',
-    sub: 'BI / PI GOVERNANCE · 글로벌 18대 브랜드 학습 기반 팬톤 추천',
-    path: '/gov/family-look',
+    title: 'DESIGN CHECKER & AUTO FIX (AI 원고 검수 및 자동 수정)',
+    sub: '02 DESIGN VALIDATION · Illustrator AI 원고 규칙 검수 및 자동 수정',
+    path: '/validation/design-checker',
     scrollId: null,
-    keywords: ['패밀리룩', '컬러추천', '색상추천', '색차', '올리', '고리', '쏜', '글로벌브랜드', 'family look', 'color recommendation', 'delta e'],
+    keywords: ['검수', '체커', '자동수정', '오토픽스', '프리플라이트', '칼선', '원고검수', 'design validation', 'design checker', 'auto fix', 'preflight', 'ai'],
   },
   {
-    title: 'LOCALIZATION (글로벌 로컬라이제이션)',
-    sub: 'BI / PI GOVERNANCE · 한국(MFDS) · 미국(FDA) · 일본(CAA) 패키지 변환',
-    path: '/gov/localization',
+    title: 'LAYOUT SIMULATOR (국가별 패키지 레이아웃 시뮬레이터)',
+    sub: '03 GLOBAL LOCALIZATION · 한국·미국·일본 표시 형식 전면 시뮬레이션',
+    path: '/localization/layout-simulator',
     scrollId: null,
-    keywords: ['로컬라이제이션', '다국어', '번역', '수출', '미국', '일본', '영문패키지', '일문패키지', 'fda', 'caa', 'mfds', 'localization', 'global'],
+    keywords: ['로컬라이제이션', '시뮬레이터', '다국어', '번역', '수출', '미국', '일본', '영문패키지', '일문패키지', 'fda', 'caa', 'mfds', 'localization', 'layout simulator'],
+  },
+  {
+    title: 'PACKAGING PRODUCTION (Excel → AI 자동 조판)',
+    sub: '03 GLOBAL LOCALIZATION · 승인 엑셀 문안 Illustrator 6면 도면 자동 배치',
+    path: '/localization/packaging-production',
+    scrollId: null,
+    keywords: ['패키징프로덕션', '엑셀', '도면', '자동배치', '전개도', '인허가', 'packaging production', 'excel', 'xlsx', 'dieline', 'auto layout'],
   },
   {
     title: 'ASSET LIBRARY (공식 에셋 라이브러리)',
-    sub: 'ARCHIVE · 워드마크 · 심볼 · 인증마크 .AI / .SVG 원본 다운로드',
+    sub: 'ARCHIVE · 워드마크 · 심볼 PDF / AI / PNG / SVG 다운로드',
     path: '/assets',
     scrollId: null,
     keywords: ['에셋', '다운로드', '원본', '자료실', '라이브러리', '일러스트', 'ai', 'svg', 'gmp', '건강기능식품마크', 'asset', 'library', 'download'],
   },
   {
     title: 'VERSION HISTORY (버전 히스토리)',
-    sub: 'ARCHIVE · 가이드라인 개정 이력',
+    sub: 'ARCHIVE · 브랜드 가이드 및 디자인 파일 버전 관리',
     path: '/versions',
     scrollId: null,
     keywords: ['버전', '히스토리', '연혁', '업데이트', 'version', 'history', 'changelog'],
   },
 ];
+
+function isSubItemMatched(sub, currentPath) {
+  if (!sub || !sub.path) return false;
+  if (sub.path === currentPath) return true;
+  if (Array.isArray(sub.aliases) && sub.aliases.includes(currentPath)) return true;
+  return false;
+}
+
+function isGroupMatched(item, currentPath) {
+  if (item.path === '/guideline/wordmark' && (currentPath === '/' || currentPath === '/guideline' || currentPath === '/guideline/wordmark')) {
+    return true;
+  }
+  if (item.path === currentPath) return true;
+  if (Array.isArray(item.subItems) && item.subItems.some(sub => isSubItemMatched(sub, currentPath))) {
+    return true;
+  }
+  return false;
+}
 
 export function renderSidebar(container) {
   if (!container) return;
@@ -210,9 +250,7 @@ export function renderSidebar(container) {
   NAV_SECTIONS.forEach(section => {
     navHtml += `<div class="sidebar-section-label">${section.section}</div>`;
     section.items.forEach(item => {
-      const isWmRoot = item.path === '/guideline/wordmark' && (currentPath === '/' || currentPath === '/guideline' || currentPath === '/guideline/wordmark');
-      const isGovRoot = item.path === '/gov/logo-fit' && (currentPath === '/gov/logo-fit' || currentPath === '/gov/icon-generator' || currentPath === '/gov/visual-dna');
-      const active = (item.path === currentPath || isWmRoot || isGovRoot) ? ' active' : '';
+      const active = isGroupMatched(item, currentPath) ? ' active' : '';
 
       navHtml += `<div class="nav-group${active}" data-group-path="${item.path}">`;
       navHtml += `
@@ -224,10 +262,11 @@ export function renderSidebar(container) {
           ${item.subItems.map((sub, sIdx) => {
             const subHref = sub.path ? `#${sub.path}` : `#${item.path}`;
             const isSubActive = sub.path
-              ? (currentPath === sub.path || (sub.path === '/gov/icon-generator' && currentPath === '/gov/visual-dna'))
+              ? isSubItemMatched(sub, currentPath)
               : (active && sIdx === 0);
+            const aliasAttr = Array.isArray(sub.aliases) ? `data-aliases="${sub.aliases.join(',')}"` : '';
             return `
-            <a href="${subHref}" class="nav-sub-link${isSubActive ? ' active' : ''}" ${sub.target ? `data-scroll="${sub.target}"` : ''} ${sub.path ? `data-subpath="${sub.path}"` : ''}>
+            <a href="${subHref}" class="nav-sub-link${isSubActive ? ' active' : ''}" ${sub.target ? `data-scroll="${sub.target}"` : ''} ${sub.path ? `data-subpath="${sub.path}"` : ''} ${aliasAttr}>
               ${sub.label}
             </a>`;
           }).join('')}
@@ -442,11 +481,12 @@ function setupSidebarEvents(container) {
 
 export function updateSidebarActive() {
   const currentPath = getCurrentPath();
+  const allItems = NAV_SECTIONS.flatMap(sec => sec.items);
+
   document.querySelectorAll('.nav-group').forEach(group => {
     const p = group.getAttribute('data-group-path');
-    const isWmRoot = p === '/guideline/wordmark' && (currentPath === '/' || currentPath === '/guideline' || currentPath === '/guideline/wordmark');
-    const isGovRoot = p === '/gov/logo-fit' && (currentPath === '/gov/logo-fit' || currentPath === '/gov/icon-generator' || currentPath === '/gov/visual-dna');
-    const isMatch = p === currentPath || isWmRoot || isGovRoot;
+    const itemObj = allItems.find(it => it.path === p);
+    const isMatch = itemObj ? isGroupMatched(itemObj, currentPath) : (p === currentPath);
     group.classList.toggle('active', isMatch);
     const link = group.querySelector('.nav-link');
     if (link) link.classList.toggle('active', isMatch);
@@ -454,7 +494,8 @@ export function updateSidebarActive() {
 
   document.querySelectorAll('.nav-sub-link[data-subpath]').forEach(sub => {
     const sp = sub.getAttribute('data-subpath');
-    const active = currentPath === sp || (sp === '/gov/icon-generator' && currentPath === '/gov/visual-dna');
+    const aliases = (sub.getAttribute('data-aliases') || '').split(',').filter(Boolean);
+    const active = currentPath === sp || aliases.includes(currentPath);
     sub.classList.toggle('active', active);
   });
 }
@@ -466,7 +507,7 @@ export function updateSidebarActive() {
 export function setDesignGuideScrollActive(activePath, activeBlockId = null) {
   document.querySelectorAll('.nav-group').forEach(group => {
     const p = group.getAttribute('data-group-path');
-    if (p && p.startsWith('/gov/')) return;
+    if (p && (p.startsWith('/creation/') || p.startsWith('/validation/') || p.startsWith('/localization/') || p.startsWith('/gov/'))) return;
     const isMatch = p === activePath;
     group.classList.toggle('active', isMatch);
     const link = group.querySelector('.nav-link');

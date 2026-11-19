@@ -3456,17 +3456,17 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
       ? "'Noto Sans JP','Noto Sans CJK SC','Hiragino Kaku Gothic ProN','Meiryo',sans-serif"
       : "'VB-ShinGothic','RIX-신고딕se-pro','210 OmniGothic','Noto Sans KR',sans-serif";
 
-  // 제품명 폰트 크기 결정 (슬라이더 값 실시간 연동, 자동 축소 제거: 기본값 22 / 15.5 / 22 / 12)
+  // 제품명 폰트 크기 결정 (가이드 실측: KR 26pt, US Alright Sans 21pt, JP 22pt)
   const titlePt = country === 'KR'
-    ? (+parsed.krTitlePt || 22)
+    ? (+parsed.krTitlePt || 26)
     : country === 'US'
-      ? (+parsed.enTitlePt || 15.5)
+      ? (+parsed.enTitlePt || 21)
       : (+parsed.jaTitlePt || 22);
   const dietaryPt = +parsed.dietaryPt || 12;
 
   const titlePx = titlePt * PT_MM;
   const titleStep = titlePx * 1.15;
-  const gapTagName = sc.gapTagToName ? sc.gapTagToName[0] : 5.5;
+  const gapTagName = 5.0; // Metagreen_layoutguide2.ai 기준 5.0mm 고정
   const titleStartY = tagY1 + gapTagName + titlePx * 0.84;
 
   // 타이틀 줄바꿈: 좌우 2mm 마진(safeW)을 넘어가면 라인명(Bold 700) 아래로 제품명(Light 300)이 내려가도록 분리
@@ -3503,8 +3503,8 @@ export function renderLocalizedPackageSvg(parsed, country = 'KR') {
   let subBottomY = titleBottomY;
 
   if (country === 'US' && isHff) {
-    const dPx = dietaryPt * PT_MM;
-    const dY = titleBottomY + dPx * 0.88 + 1.5;
+    const dPx = dietaryPt * PT_MM; // 12pt
+    const dY = titleBottomY + 3.5 + dPx * 0.88; // 3.5mm 간격
     subTitleSvg = `<text x="${W / 2}" y="${dY}" text-anchor="middle" fill="#FFFFFF" font-size="${dPx}" font-weight="700" font-family="${fontFam}">Dietary Supplement</text>`;
     subBottomY = dY;
   } else if (country === 'JP' && isHff) {

@@ -13,13 +13,26 @@ const PAGE_INFO = {
   '/strategy': { title: 'BRAND GUIDELINE', section: 'DESIGN GUIDE' },
   '/colors': { title: 'BRAND GUIDELINE', section: 'DESIGN GUIDE' },
   '/typography': { title: 'BRAND GUIDELINE', section: 'DESIGN GUIDE' },
-  '/gov/logo-fit': { title: 'BRAND VISIBILITY', section: 'BI / PI GOVERNANCE' },
-  '/gov/icon-generator': { title: 'BRAND VISIBILITY', section: 'BI / PI GOVERNANCE' },
-  '/gov/visual-dna': { title: 'BRAND VISIBILITY', section: 'BI / PI GOVERNANCE' },
-  '/gov/family-look': { title: '02 FAMILY LOOK', section: 'BI / PI GOVERNANCE' },
-  '/gov/localization': { title: '03 LOCALIZATION', section: 'BI / PI GOVERNANCE' },
-  '/gov/asset-library': { title: '04 ASSET LIBRARY', section: 'BI / PI GOVERNANCE' },
-  '/gov/package-front': { title: '04 ASSET LIBRARY', section: 'BI / PI GOVERNANCE' },
+  // 01. DESIGN CREATION
+  '/creation/layout-proposal': { title: 'LAYOUT PROPOSAL', section: '01 DESIGN CREATION' },
+  '/creation/icon-generator': { title: 'ICON GENERATOR', section: '01 DESIGN CREATION' },
+  '/creation/color-recommender': { title: 'COLOR RECOMMENDER', section: '01 DESIGN CREATION' },
+  // 02. DESIGN VALIDATION
+  '/validation/design-checker': { title: 'DESIGN CHECKER & AUTO FIX', section: '02 DESIGN VALIDATION' },
+  // 03. GLOBAL LOCALIZATION
+  '/localization/layout-simulator': { title: 'LAYOUT SIMULATOR', section: '03 GLOBAL LOCALIZATION' },
+  '/localization/packaging-production': { title: 'PACKAGING PRODUCTION', section: '03 GLOBAL LOCALIZATION' },
+  // Legacy aliases (backward compatibility)
+  '/gov/logo-fit': { title: 'LAYOUT PROPOSAL', section: '01 DESIGN CREATION' },
+  '/gov/icon-generator': { title: 'ICON GENERATOR', section: '01 DESIGN CREATION' },
+  '/gov/visual-dna': { title: 'ICON GENERATOR', section: '01 DESIGN CREATION' },
+  '/gov/family-look': { title: 'COLOR RECOMMENDER', section: '01 DESIGN CREATION' },
+  '/gov/design-checker': { title: 'DESIGN CHECKER & AUTO FIX', section: '02 DESIGN VALIDATION' },
+  '/gov/localization': { title: 'LAYOUT SIMULATOR', section: '03 GLOBAL LOCALIZATION' },
+  '/gov/packaging-production': { title: 'PACKAGING PRODUCTION', section: '03 GLOBAL LOCALIZATION' },
+  '/gov/asset-library': { title: 'ASSET LIBRARY', section: 'ARCHIVE' },
+  '/gov/package-front': { title: 'ASSET LIBRARY', section: 'ARCHIVE' },
+  // ARCHIVE
   '/assets': { title: 'ASSET LIBRARY', section: 'ARCHIVE' },
   '/versions': { title: 'VERSION HISTORY', section: 'ARCHIVE' }
 };

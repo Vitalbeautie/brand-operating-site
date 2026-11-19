@@ -515,7 +515,11 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
       $('bv-pane-icon').style.display = activeSubTab === 'icon' ? 'block' : 'none';
       const descEl = el.querySelector('#bv-desc-display');
       if (descEl) descEl.textContent = DESCRIPTIONS[activeSubTab];
-      const targetHash = activeSubTab === 'icon' ? '#/gov/icon-generator' : '#/gov/logo-fit';
+      const titleDisplay = document.getElementById('page-title-display');
+      if (titleDisplay) {
+        titleDisplay.textContent = activeSubTab === 'icon' ? 'ICON GENERATOR' : 'LAYOUT PROPOSAL';
+      }
+      const targetHash = activeSubTab === 'icon' ? '#/creation/icon-generator' : '#/creation/layout-proposal';
       if (window.location.hash !== targetHash) {
         history.replaceState(null, '', targetHash);
         updateSidebarActive();
@@ -1490,36 +1494,36 @@ export function renderLocalizationPage(el) {
   const LOC_DEFAULTS = {
     metagreen: {
       hff: {
-        w: 70.6,
-        h: 119.9,
+        w: 80.0,
+        h: 161.0,
         pantone: '348 C',
         lineName: '메타그린',
-        productName: '슬림업',
-        ingredient: '녹차추출물',
+        productName: '부스터샷 GL',
+        ingredient: 'APIC대두배아열수추출물등복합물, 녹차추출물, 바나바잎추출물, 비타민B1, 판토텐산',
         claim: '',
-        krCapText: '200g [20g X 10포]',
-        usCapText: '10 - 1.06 oz (30 g) Packet\nNet Wt. 10.58 oz (300 g)',
+        krCapText: '188.79 g [26.97 g x 7 EA]',
+        usCapText: '7 - 0.95 oz (26.97 g) Bottles\nNet Wt. 6.66 oz (188.79 g)',
         jpClass: '保健機能食品',
-        jpCapText: '75.6g (420mg × 180錠)',
-        krTitlePt: 22,
-        enTitlePt: 15.5,
+        jpCapText: '188.79g [26.97g × 7本]',
+        krTitlePt: 26,
+        enTitlePt: 21,
         jaTitlePt: 22,
         dietaryPt: 12,
       },
       food: {
         w: 80.0,
-        h: 141.0,
+        h: 161.0,
         pantone: '348 C',
         lineName: '메타그린',
         productName: '젤리 애사비',
-        ingredient: '사과초모식초 10%, 난소화성말토덱스트린 5%',
+        ingredient: '사과초모식초(애플사이다비니거) 35% 함유',
         claim: '',
-        krCapText: '200g [20g X 10포] (150 kcal)',
+        krCapText: '200 g [20 g × 10포 / 140 kcal]',
         usCapText: '10 - 0.71 oz (20 g) Stick\nNet Wt. 7.05 oz (200 g)',
         jpClass: '一般食品',
         jpCapText: '200g (20g × 10包)',
-        krTitlePt: 22,
-        enTitlePt: 15.5,
+        krTitlePt: 26,
+        enTitlePt: 21,
         jaTitlePt: 22,
         dietaryPt: 12,
       },
@@ -1659,38 +1663,44 @@ export function renderLocalizationPage(el) {
   const locState = {
     logic: 'metagreen', // 'metagreen' | 'innerbeauty'
     type: 'hff', // 'hff' | 'food'
-    w: 70.6,
-    h: 119.9,
+    w: 80.0,
+    h: 161.0,
     pantone: '348 C',
     pantoneHex: '#00843D',
     lineName: '메타그린',
-    productName: '슬림업',
+    productName: '부스터샷 GL',
     benefit: 'SHINE & YOUTHFUL',
     points: '3 TYPES 저분자 콜라겐 1,000mg*\n헤드투토, 트리플 뷰티 부스트\n매일 생기+윤기+광채 완성',
     footnote: '*1일 1포 기준',
-    ingredient: '녹차추출물',
+    ingredient: 'APIC대두배아열수추출물등복합물, 녹차추출물, 바나바잎추출물, 비타민B1, 판토텐산',
     claim: '',
     // 국가별 내용량 기본 포맷
     capTab: 'ALL', // 'ALL' | 'KR' | 'US' | 'JP'
-    krCapText: '200g [20g X 10포]',
+    krCapText: '188.79 g [26.97 g x 7 EA]',
     krCapPt: 10,
-    usCapText: '10 - 1.06 oz (30 g) Packet\nNet Wt. 10.58 oz (300 g)',
-    usCapPt: 10,
+    usCapText: '7 - 0.95 oz (26.97 g) Bottles\nNet Wt. 6.66 oz (188.79 g)',
+    usCapPt: 8,
     jpClass: '保健機能食品',
-    jpCapText: '75.6g (420mg × 180錠)',
+    jpCapText: '188.79g [26.97g × 7本]',
     jpCapPt: 10,
     // 라인명·제품명 크기
-    krTitlePt: 22,
-    enTitlePt: 15.5,
+    krTitlePt: 26,
+    enTitlePt: 21,
     jaTitlePt: 22,
     dietaryPt: 12,
   };
 
   el.innerHTML = `
-    <div style="margin-bottom:22px;">
+    <div style="margin-bottom:18px;">
       <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
         제품 라인과 패키지 규격을 선택하면 한국·미국·일본의 표시 형식에 맞춰 패키지 전면을 시뮬레이션합니다. 국가별 문안과 레이아웃 차이를 비교할 수 있습니다.
       </div>
+    </div>
+
+    <!-- GLOBAL LOCALIZATION 모드 스위치 (A. Layout Simulator | B. Packaging Production) -->
+    <div class="bv-subtabs" role="tablist" style="margin-bottom:16px;">
+      <button type="button" class="bv-subtab active">A. LAYOUT SIMULATOR (기획용 전면 시뮬레이션)</button>
+      <button type="button" class="bv-subtab" id="loc-go-production" onclick="location.hash='#/localization/packaging-production'">B. PACKAGING PRODUCTION (Excel → AI 전면·측면·후면 자동 조판)</button>
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0;margin-bottom:18px;border-bottom:1px solid #EAECEF;">
@@ -1701,6 +1711,9 @@ export function renderLocalizationPage(el) {
         </label>
         <span class="gov-sub" id="loc-file-status">국문 패키지 디자인 파일(.svg)을 업로드하면 규격과 문안을 자동 인식하여 글로벌 규격으로 시뮬레이션합니다.</span>
       </div>
+      <span style="font-size:11px; font-weight:700; color:#475467; background:#F2F4F7; padding:4px 8px; border-radius:3px;">
+        기획 단계 정보량·배치 사전 검토용 (실제 인허가 승인 엑셀 도면 반영은 Packaging Production 사용)
+      </span>
     </div>
 
     <div class="gov-layout" style="margin-bottom:28px; align-items:start; grid-template-columns: 360px 1fr; gap: 28px;">

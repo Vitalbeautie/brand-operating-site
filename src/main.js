@@ -13,6 +13,8 @@ import { renderColorPage } from './pages/colors.js';
 import { renderTypographyPage } from './pages/typography.js';
 import { renderVersionPage } from './pages/versions.js';
 import { renderLogoFitPage, renderVisualDnaPage, renderFamilyLookPage, renderLocalizationPage } from './pages/governance.js';
+import { renderDesignCheckerPage } from './pages/designChecker.js';
+import { renderPackagingProductionPage } from './pages/packagingProduction.js';
 
 function init() {
   // Load brand synchronously (0ms)
@@ -32,11 +34,27 @@ function init() {
   registerRoute('/colors', (el) => renderGuidelinePage(el, 'colors'));
   registerRoute('/typography', (el) => renderGuidelinePage(el, 'typography'));
   registerRoute('/versions', (el) => renderVersionPage(el));
+
+  // 01. DESIGN CREATION
+  registerRoute('/creation/layout-proposal', (el) => renderLogoFitPage(el, 'layout'));
+  registerRoute('/creation/icon-generator', (el) => renderLogoFitPage(el, 'icon'));
+  registerRoute('/creation/color-recommender', (el) => renderFamilyLookPage(el));
+
+  // 02. DESIGN VALIDATION
+  registerRoute('/validation/design-checker', (el) => renderDesignCheckerPage(el));
+
+  // 03. GLOBAL LOCALIZATION
+  registerRoute('/localization/layout-simulator', (el) => renderLocalizationPage(el));
+  registerRoute('/localization/packaging-production', (el) => renderPackagingProductionPage(el));
+
+  // Legacy route aliases (backward compatibility preserved)
   registerRoute('/gov/logo-fit', (el) => renderLogoFitPage(el, 'layout'));
   registerRoute('/gov/icon-generator', (el) => renderLogoFitPage(el, 'icon'));
   registerRoute('/gov/visual-dna', (el) => renderLogoFitPage(el, 'icon'));
   registerRoute('/gov/family-look', (el) => renderFamilyLookPage(el));
+  registerRoute('/gov/design-checker', (el) => renderDesignCheckerPage(el));
   registerRoute('/gov/localization', (el) => renderLocalizationPage(el));
+  registerRoute('/gov/packaging-production', (el) => renderPackagingProductionPage(el));
   registerRoute('/gov/asset-library', (el) => renderAssetLibraryPage(el));
   registerRoute('/gov/package-front', (el) => renderAssetLibraryPage(el));
 
