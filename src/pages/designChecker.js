@@ -845,10 +845,11 @@ function renderValidationSvg(scenario, spec, checks, activeTargetId, mode = 'bef
     `;
   }
 
-  // 단일 패널 뷰: 바깥 여백(좌우 50mm)을 확보하여 빨간색 지시선 콜아웃이 패키지 바깥에 겹치지 않고 표시되도록 설계
+  // 단일 패널 뷰: 바깥 여백(좌우 52mm)을 BEFORE와 AFTER 동일하게 확보하여
+  // 기존(BEFORE)과 원본/수정본(AFTER)의 패키지 크기가 1:1로 완벽히 동일하게 일치하도록 설계
   const curW = (panel === 'LEFT' || panel === 'RIGHT') ? sideW : W;
   const curH = (panel === 'TOP' || panel === 'BOTTOM') ? Math.max(38, sideW) : H;
-  const marginX = mode === 'before' ? 52 : 18;
+  const marginX = 52;
   const marginY = 12;
   const vbX = -marginX;
   const vbY = -marginY;
@@ -953,7 +954,7 @@ export function renderDesignCheckerPage(el) {
 
     el.innerHTML = `
       <!-- 헤더 설명 및 가이드 엑셀 다운로드 버튼 -->
-      <div style="margin-bottom:20px; border-left:2px solid #101820; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="margin-bottom:20px; border-left:2px solid #D5D8DE; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <p style="font-size:13.5px; color:#475467; margin:0; line-height:1.6; max-width:780px;">
           마스터가 승인한 브랜드 가이드 및 원화 실측 규칙을 기준으로 원본 AI/PDF/EPS 원고를 검수하고,
           규칙 기반 자동 수정안을 원본과 실시간 비교한 후 체크된 수정사항이 반영된 전체 원화 AI 파일로 저장합니다.

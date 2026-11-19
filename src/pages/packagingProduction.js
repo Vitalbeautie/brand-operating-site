@@ -784,7 +784,7 @@ export function renderPackagingProductionPage(el) {
 
     el.innerHTML = `
       <!-- 헤더 설명 및 가이드 엑셀 다운로드 버튼 -->
-      <div style="margin-bottom:20px; border-left:2px solid #101820; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="margin-bottom:20px; border-left:2px solid #D5D8DE; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <p style="font-size:13.5px; color:#475467; margin:0; line-height:1.6; max-width:780px;">
           인허가(RA) 승인 엑셀 문안과 패키지 도면(.eps / .ai)을 업로드하면 좌우 2mm 마진·본문 10pt·후면 제품명 15pt(판형별 13pt)·분류별 0.3mm 구분선(상하 1.5mm 간격)·소비기한 11mm 박스(하단 15mm 띄움 / 미국 12mm) 규칙으로 자동 조판합니다.
         </p>
