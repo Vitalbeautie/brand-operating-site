@@ -391,15 +391,25 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
     }
 
     if (isClaimBlock) {
-      // 제품 설명: 제목 라벨("제품 설명", "claim") 없이 설명 문안만 표기
-      const claimLines = wrapTextToWidthMm(rawTxt, availW, bodyPt, scaleX);
-      claimLines.forEach((cLine, lIdx) => {
+      // 제품 설명: 제목 라벨("제품 설명", "claim") 없이 설명 문안만 표기 (양끝 맞춤 적용)
+      const claimParas = rawTxt.split('\n').map(p => p.trim()).filter(Boolean);
+      const claimItems = [];
+      claimParas.forEach((cp) => {
+        const cLines = wrapTextToWidthMm(cp, availW, bodyPt, scaleX);
+        cLines.forEach((cl, idx) => {
+          claimItems.push({ text: cl, isLast: idx === cLines.length - 1 });
+        });
+      });
+      claimItems.forEach((cItem, lIdx) => {
         curY += lIdx === 0 ? (font10Mm * 0.86) : lineStep10Mm;
         totalLogicalHeight = Math.max(totalLogicalHeight, curY);
         if (curY <= limitY) {
+          const targetLen = +(availW / scaleX).toFixed(2);
+          const shouldJustify = !cItem.isLast && cItem.text.length > 5;
+          const justifyAttr = shouldJustify ? `textLength="${targetLen}" lengthAdjust="spacing"` : '';
           svgElements += `
             <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
-              <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${cLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
+              <text x="0" y="0" ${justifyAttr} fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${cItem.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
             </g>
           `;
         }
@@ -433,16 +443,31 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
       }
     }
 
-    const wrappedLines = wrapTextToWidthMm(fullBlockText, availW, bodyPt, scaleX);
-    wrappedLines.forEach((wLine, lIdx) => {
+    const paragraphs = fullBlockText.split('\n').map(p => p.trim()).filter(Boolean);
+    const wrappedItems = [];
+    paragraphs.forEach((pText) => {
+      const pLines = wrapTextToWidthMm(pText, availW, bodyPt, scaleX);
+      pLines.forEach((pl, idx) => {
+        wrappedItems.push({
+          text: pl,
+          isLast: idx === pLines.length - 1,
+        });
+      });
+    });
+
+    wrappedItems.forEach((wItem, lIdx) => {
       curY += lIdx === 0 ? (font10Mm * 0.86) : lineStep10Mm;
       totalLogicalHeight = Math.max(totalLogicalHeight, curY);
       // 흰색 날인 박스 영역을 침범하지 않도록 한계선 위에서만 그리기 (겹침 100% 방지)
       if (curY <= limitY) {
-        const formattedTspans = formatLineWithBoldKeywords(wLine, lIdx === 0, boldPrefix);
+        const formattedTspans = formatLineWithBoldKeywords(wItem.text, lIdx === 0, boldPrefix);
+        const targetLen = +(availW / scaleX).toFixed(2);
+        // 양끝 맞춤(Justify): 문단 마지막 줄이 아니면서 일정 길이 이상인 줄은 textLength로 자간을 자동 조절하여 양끝 맞춤
+        const shouldJustify = !wItem.isLast && wItem.text.length > 5;
+        const justifyAttr = shouldJustify ? `textLength="${targetLen}" lengthAdjust="spacing"` : '';
         svgElements += `
           <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
-            <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${formattedTspans}</text>
+            <text x="0" y="0" ${justifyAttr} fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${formattedTspans}</text>
           </g>
         `;
       }
@@ -487,13 +512,16 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
           fbText = `교환문의처  구입처 및 고객상담실\n${fbText}`;
         }
         const fLines = wrapTextToWidthMm(fbText, availW, bodyPt, scaleX);
-        fLines.slice(0, 4).forEach((fl) => {
+        fLines.slice(0, 4).forEach((fl, idx) => {
           footY = +(footY + footerStep).toFixed(2);
           if (footY <= py + ph - 0.5) {
             const tsp = formatLineWithBoldKeywords(fl, false, '');
+            const targetLen = +(availW / scaleX).toFixed(2);
+            const shouldJustify = idx < fLines.length - 1 && fl.length > 5;
+            const justifyAttr = shouldJustify ? `textLength="${targetLen}" lengthAdjust="spacing"` : '';
             svgElements += `
               <g transform="translate(${xLeft} ${footY}) scale(${scaleX} 1)">
-                <text x="0" y="0" fill="${txtCol}" font-size="${(font10Mm * 0.92).toFixed(3)}" font-weight="400" letter-spacing="-0.04em" font-family="${fontFam}">${tsp}</text>
+                <text x="0" y="0" ${justifyAttr} fill="${txtCol}" font-size="${(font10Mm * 0.92).toFixed(3)}" font-weight="400" letter-spacing="-0.04em" font-family="${fontFam}">${tsp}</text>
               </g>
             `;
           }
@@ -788,6 +816,7 @@ export function inferProductInfoFromTextAndName(allText = '', fileName = '', raw
       detectedLine: 'metagreen',
       lineName: '메타그린',
       productName: '부스터샷 GL',
+      backTitle: '메타그린 부스터샷',
       foodType: 'hff',
       foodCategoryLabel: '건강기능식품',
       wMm: 100.0,
@@ -798,27 +827,22 @@ export function inferProductInfoFromTextAndName(allText = '', fileName = '', raw
       topSubCopy: '체지방&혈당 듀얼 차단으로',
       topMainCopy: '정체기 종결',
       leftTitle: '메타그린 부스터샷',
-      leftPoints: ['하루 한 병 (1일 1회 1병)', '운동 전후 & 식사 후 집중 케어', 'LOW SUGAR 저당 · GLUTEN FREE'],
-      directions: '성인 1일 1회, 1병을 흔들어 섭취하세요. 상단 캡의 정제를 꺼내신 후 하단의 액상과 함께 섭취하세요.',
-      warnings: '어린이, 임산부 및 수유부는 섭취를 피해주시기 바랍니다. 식사후 섭취해주시기 바랍니다. 카페인이 함유되어 있어 초조감, 불면 등을 나타낼 수 있습니다.',
-      storage: '직사광선 및 고온 다습한 곳을 피하여 서늘한 장소에 보관하시고 개봉 후에는 바로 드시기 바랍니다.',
-      rawMaterials: 'APIC대두배아열수추출물등복합물, 녹차추출물, 바나바잎추출물, 판토텐산칼슘, 비타민B1염산염, 정제수, 난소화성말토덱스트린, 자몽농축액, 오렌지농축액 [대두 함유]',
-      packagingMaterial: '용기-PET/PP, 캡-PP/PE',
-      manufacturer: '㈜아모레퍼시픽 / 서울특별시 용산구 한강대로 100',
-      distributor: '㈜아모레퍼시픽 / 서울특별시 용산구 한강대로 100',
-      nutritionHeader: '1일 섭취량: 26.97 g (액상 25.05g + 정제 1.92g) / 15 kcal',
-      nutritionRows: [
-        ['탄수화물', '4 g', '1%'],
-        ['당류', '0 g', '0%'],
-        ['단백질', '0 g', '0%'],
-        ['지방', '0 g', '0%'],
-        ['나트륨', '5 mg', '0%'],
-        ['비타민B1', '48 mg', '4,000%'],
-        ['판토텐산', '50 mg', '1,000%'],
-        ['카테킨', '360 mg', '-'],
-        ['코로솔산', '0.45 mg', '-'],
-      ],
-      barcode: '8 800283 713178',
+      leftPoints: ['하루 한 병 (1DAY)', '운동 전후', '식사 후', 'LOW SUGAR 저당', 'GLUTEN FREE 글루텐 무첨가'],
+      subCopy: '다이어트 정체기, 흡수 빠른 앰플로 집중 공략 다이어트 체지방 감소 2중 기능성으로 달라지는 눈바디를 도와주는 슬리밍 앰플',
+      directions: '성인 1일 1회, 1 앰플을 흔들어 섭취하세요. 상단 실링지를 제거하여 정제를 꺼내신 후, 하단의 액상과 함께 섭취하세요.',
+      warnings: '어린이, 임산부 및 수유부는 섭취를 피해주시기 바랍니다. 식사후 섭취해주시기 바랍니다. 카페인이 함유되어있어 초조감, 불면 등을 나타낼 수 있습니다. 카페인을 함유한 식품의 섭취에 주의해주시기 바랍니다. 간질환이 있거나 의약품 복용 시 전문가와 상담하시기 바랍니다. 이상사례 발생 시 섭취를 중단하고 전문가와 상담하시기 바랍니다. 질병으로 치료 중이시거나 알레르기, 특이체질이신 분은 본제품의 원료를 확인하시고 섭취 전에 전문가와 상담하시기 바랍니다. 알레르기성 비염, 천식, 우유, 대두 알레르기 반응을 나타내는 사람은 섭취에 주의, 에스트로겐 호르몬에 민감한 사람은 섭취에 주의 바랍니다. [대두함유]',
+      cautions: '보관 방법에 따라 식물성 침전물이 생길 수 있으나, 이는 APIC대두배아열수추출물등 복합물 원료특성상 생길 수 있는 현상으로 안심하고 드셔도 됩니다.',
+      storage: '직사광선 및 고온 다습한 곳을 피하여 서늘한 장소에 보관 하시고 개봉 후에는 바로 드시기 바랍니다. (살균제품)',
+      insertNotice: '원료명 및 기타 사항은 설명서에 표기되어있습니다.',
+      exchangeInfo: '교환문의처  구입처 및 고객상담실\n고객상담전화  080-023-5454\n제조원 : (주)아모레퍼시픽\n반품교환소재지 : 서울특별시 용산구 한강대로 100',
+      manufacturer: '(주)아모레퍼시픽',
+      distributor: '(주)아모레퍼시픽',
+      nutritionHeader: '1일 섭취량 : 26.97 g (액상 26.05 g + 정제 0.92 g)',
+      nutritionContent: '1일 섭취량 당 함량 : 열량 15 kcal, 탄수화물 4 g (1%), 당류 0 g, 단백질 0 g (0%), 지방 0 g (0%), 나트륨 5 mg (0%), 비타민B1 48 mg (4,000%), 판토텐산 50 mg (1,000%), 카테킨 360 mg, Daidzin, Glycitin, Genistin의 합 36 mg, L-카르니틴 300 mg\n※ ( )안의 수치는 1일 영양성분 기준치에 대한 비율임',
+      functionalIngredients: '녹차추출물 항산화·체지방 감소·혈중 콜레스테롤 개선에 도움을 줄 수 있음  APIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 수 있음  비타민B1 탄수화물과 에너지 대사에 필요  APIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 수 있음  판토텐산 지방, 탄수화물, 단백질 대사와 에너지 생성에 필요',
+      allergenNotice: '본 제품은 난류(가금류), 우유, 메밀, 땅콩, 밀, 고등어, 게, 새우, 돼지고기, 복숭아, 토마토, 아황산류, 호두, 닭고기, 쇠고기, 오징어, 조개류, 잣을 사용한 제품과 같은 제조시설에서 제조하고 있습니다.',
+      expiryPanel: 'BACK',
+      barcode: '8 800283 636307',
       itemCode: '11077-1519',
     };
   } else if (lower.includes('애사비') || lower.includes('1442')) {

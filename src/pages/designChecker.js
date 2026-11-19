@@ -641,50 +641,38 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
   // ── 2. 좌측면 (LEFT) ──
   else if (panelId === 'LEFT') {
     const headPx = +(spec.leftSubHeadPt * PT_TO_MM * 0.78).toFixed(2);
-    const pts = Array.isArray(spec.leftPoints) ? spec.leftPoints : ['프리미엄 포뮬러 설계', '1일 권장 섭취 루틴'];
-    const dirLines = wrapTextToLines(spec.directions, Math.max(12, Math.floor((pw - 6) / 2.0)), 3);
+    // 부스터샷 및 메타그린 실물 도면에 맞춘 좌측 포인트 아이콘 블록
+    const pts = (Array.isArray(spec.leftPoints) && spec.leftPoints.length > 0)
+      ? spec.leftPoints
+      : ['하루 한 병 (1DAY)', '운동 전후', '식사 후', 'LOW SUGAR 저당', 'GLUTEN FREE 글루텐 무첨가'];
 
     inner = `
       <rect x="${px.toFixed(2)}" y="${py.toFixed(2)}" width="${pw.toFixed(2)}" height="1.5" fill="${tagHex}"/>
       <text x="${(px + pw / 2).toFixed(2)}" y="${(py + 14).toFixed(2)}" text-anchor="middle" fill="${textColor}" font-size="${headPx}" font-weight="700" font-family="${fontFam}">${spec.leftTitle || `${spec.lineName} ${spec.productName}`}</text>
 
       ${pts.map((pt, idx) => {
-        const cy = py + 28 + idx * 18;
+        const cy = py + 26 + idx * 16;
         return `
-          <rect x="${(px + 3.5).toFixed(2)}" y="${cy.toFixed(2)}" width="${(pw - 7).toFixed(2)}" height="13" rx="1.2" fill="${subBoxFill}" stroke="${subBoxStroke}" stroke-width="0.25"/>
-          <text x="${(px + pw / 2).toFixed(2)}" y="${(cy + 7.8).toFixed(2)}" text-anchor="middle" fill="${textColor}" font-size="2.3" font-weight="600" font-family="${fontFam}">${pt.slice(0, 20)}</text>
+          <rect x="${(px + 4).toFixed(2)}" y="${cy.toFixed(2)}" width="${(pw - 8).toFixed(2)}" height="12" rx="1.5" fill="${subBoxFill}" stroke="${subBoxStroke}" stroke-width="0.25"/>
+          <text x="${(px + pw / 2).toFixed(2)}" y="${(cy + 7.4).toFixed(2)}" text-anchor="middle" fill="${textColor}" font-size="2.4" font-weight="600" font-family="${fontFam}">${pt.slice(0, 24)}</text>
         `;
       }).join('')}
-
-      <text x="${(px + 4).toFixed(2)}" y="${(py + ph - 32).toFixed(2)}" fill="${textColor}" font-size="2.3" font-weight="700" font-family="${fontFam}">[섭취량 및 섭취방법]</text>
-      ${dirLines.map((ln, idx) => `
-        <text x="${(px + 4).toFixed(2)}" y="${(py + ph - 27 + idx * 3.4).toFixed(2)}" fill="${textColor}" opacity="0.9" font-size="2.05" font-family="${fontFam}">${ln}</text>
-      `).join('')}
-
-      <rect x="${(px + 4).toFixed(2)}" y="${(py + ph - 14).toFixed(2)}" width="${(pw - 8).toFixed(2)}" height="9" fill="#FFFFFF" stroke="${subBoxStroke}" stroke-width="0.25"/>
-      <text x="${(px + pw / 2).toFixed(2)}" y="${(py + ph - 8.5).toFixed(2)}" text-anchor="middle" fill="#101820" font-size="2.0" font-weight="600" font-family="${fontFam}">소비기한 별도표기일 (30×10mm)</text>
     `;
     addCallout('obj-left-subhead', 'left', 3, 9, pw - 6, 8);
   }
 
-  // ── 3. 우측면 (RIGHT · 영양·기능정보 10pt · 좌우 2mm 마진 · 0.3mm 구분선 상하 1mm · 하단 15mm 위치 11mm 소비기한 흰박스) ──
+  // ── 3. 우측면 (RIGHT · 38mm 폭 · 영양·기능정보 10pt · 알레르기 안내 · 좌우 2mm 마진 · 0.3mm 구분선 상하 1.5mm) ──
   else if (panelId === 'RIGHT') {
-    const rows = Array.isArray(spec.nutritionRows) ? spec.nutritionRows : [];
     const nutLineText = [
       '영양·기능 정보',
-      spec.nutritionHeader || '1일 섭취량 : 27.19 g (액상 26.35 g+정제 0.84 g)',
-      `1일 섭취량 당 함량 : ${rows.map(r => `${r[0]} ${r[1]}(${r[2]})`).join(', ')}`,
-      '※ ( )안의 수치는 1일 영양성분 기준치에 대한 비율임',
-      spec.functionalIngredients || '',
+      spec.nutritionHeader || '1일 섭취량 : 26.97 g (액상 26.05 g + 정제 0.92 g)',
+      spec.nutritionContent || '1일 섭취량 당 함량 : 열량 15 kcal, 탄수화물 4 g (1%), 당류 0 g, 단백질 0 g (0%), 지방 0 g (0%), 나트륨 5 mg (0%), 비타민B1 48 mg (4,000%), 판토텐산 50 mg (1,000%), 카테킨 360 mg, Daidzin, Glycitin, Genistin의 합 36 mg, L-카르니틴 300 mg\n※ ( )안의 수치는 1일 영양성분 기준치에 대한 비율임',
+      spec.functionalIngredients || '녹차추출물 항산화·체지방 감소·혈중 콜레스테롤 개선에 도움을 줄 수 있음  APIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 수 있음  비타민B1 탄수화물과 에너지 대사에 필요  APIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 수 있음  판토텐산 지방, 탄수화물, 단백질 대사와 에너지 생성에 필요',
     ].filter(Boolean).join('\n');
 
     const rightBlocks = [
       { fieldKey: '영양기능정보', textContent: nutLineText },
       { fieldKey: '정보', textContent: spec.allergenNotice || '본 제품은 난류(가금류), 우유, 메밀, 땅콩, 밀, 고등어, 게, 새우, 돼지고기, 복숭아, 토마토, 아황산류, 호두, 닭고기, 쇠고기, 오징어, 조개류, 잣을 사용한 제품과 같은 제조시설에서 제조하고 있습니다.' },
-      {
-        fieldKey: '교환문의 구입처 및 고객상담실',
-        textContent: `고객상담전화 080-023-5454\n제조원 : ${spec.manufacturer || '(주)아모레퍼시픽'}\n반품교환소재지 : 서울특별시 용산구 한강대로 100`,
-      },
     ];
 
     const res = renderSideOrBackPanel10ptSvg(
@@ -694,14 +682,12 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
         textColor,
         dividerColor: isIb ? '#1D1D1B' : '#FFFFFF',
         fontFam,
-        showExpiryBox: true,
-        hasExpiryBox: true,
+        showExpiryBox: false,
+        hasExpiryBox: false,
         bodyPt: spec.rightNutritionPt || 10.0,
         marginMm: 2.0,
         dividerStrokeMm: 0.3,
         dividerGapMm: 1.5,
-        expiryBottomMarginMm: 15.0,
-        expiryBoxHeightMm: 11.0,
       }
     );
 
@@ -712,15 +698,20 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
     addCallout('obj-right-nutrition', 'right', 2.0, 5.0, pw - 4.0, ph - 10.0);
   }
 
-  // ── 4. 후면 (BACK · 제품명 15pt · 본문 10pt · 좌우 2mm 마진 · 분류마다 0.3mm 구분선 위아래 1.5mm 간격) ──
+  // ── 4. 후면 (BACK · 100mm 폭 · 제품명 15pt · 본문 10pt · 좌우 2mm 마진 · 분류마다 0.3mm 구분선 위아래 1.5mm 간격 · 하단 15mm 위치 11mm 소비기한 흰박스) ──
   else if (panelId === 'BACK') {
     const backBlocks = [
-      { fieldKey: '제품명', textContent: `${spec.lineName} ${spec.productName}`.trim() },
-      { fieldKey: '제품 설명', textContent: spec.subCopy || `${spec.lineName} ${spec.productName} 프리미엄 포뮬러` },
-      { fieldKey: '섭취량 및 섭취방법', textContent: spec.directions || '1일 1회, 1회 1포(병)를 섭취하십시오.' },
-      { fieldKey: '섭취 시 주의사항', textContent: spec.warnings || '특이체질, 알레르기 체질의 경우 성분을 확인하신 후 섭취하십시오.' },
-      { fieldKey: '원재료명 및 함량', textContent: spec.rawMaterials || '' },
-      { fieldKey: '보관상 주의사항', textContent: spec.storage || '직사광선 및 고온다습한 곳을 피해 서늘한 곳에 보관하십시오.' },
+      { fieldKey: '제품명', textContent: spec.backTitle || `${spec.lineName} ${spec.productName.includes('부스터샷') ? '부스터샷' : spec.productName}`.trim() },
+      { fieldKey: '제품 설명', textContent: spec.subCopy || '다이어트 정체기, 흡수 빠른 앰플로 집중 공략 다이어트 체지방 감소 2중 기능성으로 달라지는 눈바디를 도와주는 슬리밍 앰플' },
+      { fieldKey: '섭취량 및 섭취방법', textContent: spec.directions || '성인 1일 1회, 1 앰플을 흔들어 섭취하세요. 상단 실링지를 제거하여 정제를 꺼내신 후, 하단의 액상과 함께 섭취하세요.' },
+      { fieldKey: '섭취 시 주의사항', textContent: spec.warnings || '어린이, 임산부 및 수유부는 섭취를 피해주시기 바랍니다. 식사후 섭취해주시기 바랍니다. 카페인이 함유되어있어 초조감, 불면 등을 나타낼 수 있습니다. 카페인을 함유한 식품의 섭취에 주의해주시기 바랍니다. 간질환이 있거나 의약품 복용 시 전문가와 상담하시기 바랍니다. 이상사례 발생 시 섭취를 중단하고 전문가와 상담하시기 바랍니다. 질병으로 치료 중이시거나 알레르기, 특이체질이신 분은 본제품의 원료를 확인하시고 섭취 전에 전문가와 상담하시기 바랍니다. 알레르기성 비염, 천식, 우유, 대두 알레르기 반응을 나타내는 사람은 섭취에 주의, 에스트로겐 호르몬에 민감한 사람은 섭취에 주의 바랍니다. [대두함유]' },
+      { fieldKey: '주의사항', textContent: spec.cautions || '보관 방법에 따라 식물성 침전물이 생길 수 있으나, 이는 APIC대두배아열수추출물등 복합물 원료특성상 생길 수 있는 현상으로 안심하고 드셔도 됩니다.' },
+      { fieldKey: '보관상 주의사항', textContent: spec.storage || '직사광선 및 고온 다습한 곳을 피하여 서늘한 장소에 보관 하시고 개봉 후에는 바로 드시기 바랍니다. (살균제품)' },
+      { fieldKey: '원료명 및 기타 사항', textContent: spec.insertNotice || '원료명 및 기타 사항은 설명서에 표기되어있습니다.' },
+      {
+        fieldKey: '교환문의 구입처 및 고객상담실',
+        textContent: spec.exchangeInfo || '교환문의처  구입처 및 고객상담실\n고객상담전화  080-023-5454\n제조원 : (주)아모레퍼시픽\n반품교환소재지 : 서울특별시 용산구 한강대로 100',
+      },
     ];
 
     const res = renderSideOrBackPanel10ptSvg(
@@ -730,13 +721,15 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
         textColor,
         dividerColor: isIb ? '#1D1D1B' : '#FFFFFF',
         fontFam,
-        showExpiryBox: false,
-        hasExpiryBox: false,
+        showExpiryBox: true,
+        hasExpiryBox: true,
         titlePt: spec.backHeaderPt || 15.0,
         bodyPt: spec.backLegalBodyPt || 10.0,
         marginMm: 2.0,
         dividerStrokeMm: 0.3,
         dividerGapMm: 1.5,
+        expiryBottomMarginMm: 15.0,
+        expiryBoxHeightMm: 11.0,
       }
     );
 
