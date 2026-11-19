@@ -679,11 +679,11 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
     ].filter(Boolean).join('\n');
 
     const rightBlocks = [
-      { key: '영양기능정보', text: nutLineText },
-      { key: '정보', text: '본 제품은 난류(가금류), 우유, 메밀, 땅콩, 밀, 고등어, 게, 새우, 돼지고기, 복숭아, 토마토, 아황산류, 호두, 닭고기, 쇠고기, 오징어, 조개류, 잣을 사용한 제품과 같은 제조시설에서 제조하고 있습니다.' },
+      { fieldKey: '영양기능정보', textContent: nutLineText },
+      { fieldKey: '정보', textContent: spec.allergenNotice || '본 제품은 난류(가금류), 우유, 메밀, 땅콩, 밀, 고등어, 게, 새우, 돼지고기, 복숭아, 토마토, 아황산류, 호두, 닭고기, 쇠고기, 오징어, 조개류, 잣을 사용한 제품과 같은 제조시설에서 제조하고 있습니다.' },
       {
-        key: '교환문의 구입처 및 고객상담실',
-        text: `교환문의처 구입처 및 고객상담실\n고객상담전화 080-023-5454\n제조원 : ${spec.manufacturer || '(주)아모레퍼시픽'}\n반품교환소재지 : 서울특별시 용산구 한강대로 100`,
+        fieldKey: '교환문의 구입처 및 고객상담실',
+        textContent: `고객상담전화 080-023-5454\n제조원 : ${spec.manufacturer || '(주)아모레퍼시픽'}\n반품교환소재지 : 서울특별시 용산구 한강대로 100`,
       },
     ];
 
@@ -694,11 +694,12 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
         textColor,
         dividerColor: isIb ? '#1D1D1B' : '#FFFFFF',
         fontFam,
+        showExpiryBox: true,
         hasExpiryBox: true,
         bodyPt: spec.rightNutritionPt || 10.0,
         marginMm: 2.0,
         dividerStrokeMm: 0.3,
-        dividerGapMm: 1.0,
+        dividerGapMm: 1.5,
         expiryBottomMarginMm: 15.0,
         expiryBoxHeightMm: 11.0,
       }
@@ -711,15 +712,15 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
     addCallout('obj-right-nutrition', 'right', 2.0, 5.0, pw - 4.0, ph - 10.0);
   }
 
-  // ── 4. 후면 (BACK · 제품명 15pt · 본문 10pt · 좌우 2mm 마진 · 분류마다 0.3mm 구분선 위아래 1mm 간격) ──
+  // ── 4. 후면 (BACK · 제품명 15pt · 본문 10pt · 좌우 2mm 마진 · 분류마다 0.3mm 구분선 위아래 1.5mm 간격) ──
   else if (panelId === 'BACK') {
     const backBlocks = [
-      { key: '제품명', text: `${spec.lineName} ${spec.productName}`.trim() },
-      { key: '제품 설명', text: spec.subCopy || `${spec.lineName} ${spec.productName} 프리미엄 포뮬러` },
-      { key: '섭취량 및 섭취방법', text: `섭취량 및 섭취방법 ${spec.directions || '1일 1회, 1회 1포(병)를 섭취하십시오.'}` },
-      { key: '섭취 시 주의사항', text: `섭취 시 주의사항 ${spec.warnings || '특이체질, 알레르기 체질의 경우 성분을 확인하신 후 섭취하십시오.'}` },
-      { key: '원재료명 및 함량', text: `원재료명 및 함량 ${spec.rawMaterials || ''}` },
-      { key: '보관상 주의사항', text: `보관상 주의사항 ${spec.storage || '직사광선 및 고온다습한 곳을 피해 서늘한 곳에 보관하십시오.'}` },
+      { fieldKey: '제품명', textContent: `${spec.lineName} ${spec.productName}`.trim() },
+      { fieldKey: '제품 설명', textContent: spec.subCopy || `${spec.lineName} ${spec.productName} 프리미엄 포뮬러` },
+      { fieldKey: '섭취량 및 섭취방법', textContent: spec.directions || '1일 1회, 1회 1포(병)를 섭취하십시오.' },
+      { fieldKey: '섭취 시 주의사항', textContent: spec.warnings || '특이체질, 알레르기 체질의 경우 성분을 확인하신 후 섭취하십시오.' },
+      { fieldKey: '원재료명 및 함량', textContent: spec.rawMaterials || '' },
+      { fieldKey: '보관상 주의사항', textContent: spec.storage || '직사광선 및 고온다습한 곳을 피해 서늘한 곳에 보관하십시오.' },
     ];
 
     const res = renderSideOrBackPanel10ptSvg(
@@ -729,12 +730,13 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
         textColor,
         dividerColor: isIb ? '#1D1D1B' : '#FFFFFF',
         fontFam,
+        showExpiryBox: false,
         hasExpiryBox: false,
         titlePt: spec.backHeaderPt || 15.0,
         bodyPt: spec.backLegalBodyPt || 10.0,
         marginMm: 2.0,
         dividerStrokeMm: 0.3,
-        dividerGapMm: 1.0,
+        dividerGapMm: 1.5,
       }
     );
 
@@ -961,8 +963,8 @@ export function renderDesignCheckerPage(el) {
         </button>
       </div>
 
-      <!-- 상단 컨트롤: STEP 1 · 제품 라인, STEP 2 · 패키지 종류, STEP 3 · 전면/측면/후면/상하단 선택 (화살표 드롭다운) -->
-      <div style="background:#FFFFFF; border:1px solid #EAECF0; padding:18px 20px; margin-bottom:18px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; align-items:end;">
+      <!-- 상단 컨트롤: STEP 1 · 제품 라인, STEP 2 · 패키지 종류 (화살표 드롭다운) -->
+      <div style="background:#FFFFFF; border:1px solid #EAECF0; padding:18px 20px; margin-bottom:18px; display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:end;">
         <div>
           <label style="display:block; font-size:11px; font-weight:700; color:#101820; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">STEP 1 · 제품 라인</label>
           <select id="dc-sel-line" class="gov-select">
@@ -981,42 +983,36 @@ export function renderDesignCheckerPage(el) {
             <option value="label" ${currentPkg === 'label' ? 'selected' : ''}>라벨 (Label · 라)</option>
           </select>
         </div>
-
-        <div>
-          <label style="display:block; font-size:11px; font-weight:700; color:#101820; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">STEP 3 · 면(패널) 선택</label>
-          <select id="dc-sel-panel" class="gov-select">
-            ${panelTabs.map(([k, lbl]) => `
-              <option value="${k}" ${currentPanel === k ? 'selected' : ''}>${lbl}</option>
-            `).join('')}
-          </select>
-        </div>
       </div>
 
-      <!-- AI / EPS / PDF 원고 드래그 앤 드롭 영역 -->
-      <div id="dc-dropzone" style="background:#FFFFFF; border:1.5px dashed #101820; padding:${hasUploadedFile ? '14px 20px' : '36px 20px'}; margin-bottom:22px; text-align:center; cursor:pointer;">
-        <input type="file" id="dc-file-upload" accept=".ai,.pdf,.eps,.svg" style="display:none;" />
-        ${hasUploadedFile ? `
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <div style="font-size:12.5px; color:#101820; font-weight:700;">
-              ✓ 인식된 원고: <span style="font-weight:800;">${customUploadedFileName}</span>
-              <span style="font-size:11.5px; color:#475467; font-weight:500; margin-left:10px;">
-                [${scenario.measured.foodCategoryLabel || (scenario.foodType === 'food' ? '일반식품' : '건강기능식품')}]
-                ${scenario.measured.lineName} ${scenario.measured.productName} · 전면 ${scenario.frontPanelMm.w}×${scenario.frontPanelMm.h}mm / 측면 ${scenario.sideWidthMm}mm
-              </span>
+      <!-- STEP 3. AI / EPS / PDF 원고 업로드 드래그 앤 드롭 영역 -->
+      <div style="background:#FFFFFF; border:1px solid #EAECF0; padding:18px 20px; margin-bottom:22px;">
+        <label style="display:block; font-size:11px; font-weight:700; color:#101820; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">STEP 3 · AI / EPS / PDF 원고 업로드</label>
+        <div id="dc-dropzone" style="border:1.5px dashed #101820; padding:${hasUploadedFile ? '14px 20px' : '32px 20px'}; text-align:center; cursor:pointer; background:#FFFFFF;">
+          <input type="file" id="dc-file-upload" accept=".ai,.pdf,.eps,.svg" style="display:none;" />
+          ${hasUploadedFile ? `
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div style="font-size:12.5px; color:#101820; font-weight:700;">
+                ✓ 인식된 원고: <span style="font-weight:800;">${customUploadedFileName}</span>
+                <span style="font-size:11.5px; color:#475467; font-weight:500; margin-left:10px;">
+                  [${scenario.measured.foodCategoryLabel || (scenario.foodType === 'food' ? '일반식품' : '건강기능식품')}]
+                  ${scenario.measured.lineName} ${scenario.measured.productName} · 전면 ${scenario.frontPanelMm.w}×${scenario.frontPanelMm.h}mm / 측면 ${scenario.sideWidthMm}mm
+                </span>
+              </div>
+              <span style="padding:6px 12px; background:#101820; color:#FFFFFF; font-size:11px; font-weight:600;">다른 AI / EPS / PDF 원고 업로드</span>
             </div>
-            <span style="padding:6px 12px; background:#101820; color:#FFFFFF; font-size:11px; font-weight:600;">다른 AI / EPS / PDF 원고 업로드</span>
-          </div>
-        ` : `
-          <div style="font-size:13.5px; font-weight:700; color:#101820; margin-bottom:6px;">
-            📂 검수할 Illustrator 원고(.AI / .EPS / .PDF) 파일을 이곳에 드롭하거나 클릭하여 업로드하세요
-          </div>
-          <div style="font-size:11.5px; color:#667085; margin-bottom:14px;">
-            원고 파일을 업로드하면 전면·측면·후면·상단·하단 6면을 자동 인식하여 실시간 비교 시뮬레이션과 검수 결과를 표시합니다.
-          </div>
-          <span style="display:inline-block; padding:8px 18px; background:#101820; color:#FFFFFF; font-size:11.5px; font-weight:600;">
-            AI / EPS / PDF 파일 선택
-          </span>
-        `}
+          ` : `
+            <div style="font-size:13.5px; font-weight:700; color:#101820; margin-bottom:6px;">
+              📂 검수할 Illustrator 원고(.AI / .EPS / .PDF) 파일을 이곳에 드롭하거나 클릭하여 업로드하세요
+            </div>
+            <div style="font-size:11.5px; color:#667085; margin-bottom:14px;">
+              원고 파일을 업로드하면 전면·측면·후면·상단·하단 6면을 자동 인식하여 실시간 비교 시뮬레이션과 검수 결과를 표시합니다.
+            </div>
+            <span style="display:inline-block; padding:8px 18px; background:#101820; color:#FFFFFF; font-size:11.5px; font-weight:600;">
+              AI / EPS / PDF 파일 선택
+            </span>
+          `}
+        </div>
       </div>
 
       ${hasUploadedFile ? `
@@ -1025,7 +1021,6 @@ export function renderDesignCheckerPage(el) {
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
             <div>
               <span style="font-size:15px; font-weight:800; color:#101820; letter-spacing:0.3px;">STEP 4. 원본 vs 수정안 실시간 비교</span>
-              <span style="font-size:12px; color:#667085; margin-left:10px;">수정 필요 항목은 패키지와 겹치지 않게 바깥 여백에 지시선으로 표기됩니다.</span>
             </div>
             <div style="font-size:12px; font-weight:700; color:#101820;">
               ● ${customUploadedFileName}
@@ -1191,15 +1186,7 @@ export function renderDesignCheckerPage(el) {
       };
     }
 
-    // 3. STEP 3 패널 드롭다운 & STEP 4 상단 패널 탭 연동
-    const selPanel = el.querySelector('#dc-sel-panel');
-    if (selPanel) {
-      selPanel.onchange = (e) => {
-        currentPanel = e.target.value;
-        render();
-      };
-    }
-
+    // 3. STEP 4 상단 패널 탭 연동
     el.querySelectorAll('.dc-panel-tab').forEach(tabBtn => {
       tabBtn.onclick = () => {
         currentPanel = tabBtn.dataset.panel;

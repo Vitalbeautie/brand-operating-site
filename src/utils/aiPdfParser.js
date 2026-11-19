@@ -297,17 +297,17 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
   const ph = panel.h;
   const txtCol = opts.textColor || '#FFFFFF';
   const fontFam = opts.fontFamily || "'RixSinGoSE_Pro','RIX-신고딕se-pro','VB-ShinGothic',sans-serif";
-  const showExpiryBox = Boolean(opts.showExpiryBox);
+  const showExpiryBox = Boolean(opts.showExpiryBox || opts.hasExpiryBox);
   const isUs = Boolean(opts.isUs || opts.country === 'US' || opts.locale === 'US');
   const lang = isUs ? 'US' : 'KR';
   const isNarrowJellyCarton = pw <= 82 && ph >= 155; // 젤리 더블컷(80x161) 등 세로형 판형
   const defaultHeaderPt = isNarrowJellyCarton ? 13.0 : 15.0; // 판형에 따른 13pt / 15pt 분기
   const bodyPt = +(opts.bodyPt || 10.0); // 반드시 10pt 기본
-  const headerPt = +(opts.headerPt || defaultHeaderPt);
+  const headerPt = +(opts.headerPt || opts.titlePt || defaultHeaderPt);
   const scaleX = 0.90;
 
   // 양옆 2mm 마진
-  const marginX = 2.0;
+  const marginX = +(opts.marginMm || 2.0);
   const xLeft = +(px + marginX).toFixed(2);
   const xRight = +(px + pw - marginX).toFixed(2);
   const availW = Math.max(14, pw - marginX * 2);
@@ -337,8 +337,8 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
   const bottomFooterBlocks = [];
 
   for (const b of rawBlocks) {
-    const rawFk = String(b.fieldKey || '').trim();
-    const txt = String(b.textContent || '').trim();
+    const rawFk = String(b.fieldKey ?? b.key ?? '').trim();
+    const txt = String(b.textContent ?? b.text ?? '').trim();
     if (!rawFk && !txt) continue;
     const cleanFk = cleanFieldKeyForLanguage(rawFk, lang);
     if (showExpiryBox && isFooter(cleanFk, txt)) {

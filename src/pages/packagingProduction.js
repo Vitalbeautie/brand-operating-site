@@ -746,7 +746,7 @@ export function renderPackagingProductionPage(el) {
     const preset = LINE_PRESETS[selectedLine] || LINE_PRESETS.metagreen;
     const country = COUNTRY_CONFIG[selectedCountry] || COUNTRY_CONFIG.KR;
     const { meta, panelBlocks } = getActiveData();
-    const canShowSimulation = hasExcelUploaded && hasDielineUploaded;
+    const canShowSimulation = true;
 
     // 항상 전체 6면 전개도 기준으로 넘침 여부(overflowDetails)와 다운로드용 전체 원화 생성
     const fullRender = canShowSimulation
@@ -951,7 +951,7 @@ export function renderPackagingProductionPage(el) {
       if (hasDielineUploaded) {
         showToast(`✓ ${file.name} 승인 문안(10pt·2mm 마진·0.3mm 구분선)이 도면에 자동 조판되었습니다.`);
       } else {
-        showToast(`✓ ${file.name} 엑셀 로드 완료. 도면(.eps/.ai) 파일을 업로드하면 시뮬레이션이 표시됩니다.`);
+        showToast(`✓ ${file.name} 엑셀 승인 문안이 시뮬레이션에 자동 반영되었습니다.`);
       }
       render();
     } catch (err) {
@@ -972,11 +972,11 @@ export function renderPackagingProductionPage(el) {
       uploadedDielineInfo = parsedDieline;
       hasDielineUploaded = true;
 
-      if (hasExcelUploaded) {
-        showToast(`✓ ${file.name} 도면(전면·측면·후면·상하단) 인식 및 엑셀 문안 조판 완료`);
-      } else {
-        showToast(`✓ ${file.name} 도면 인식 완료. 승인 엑셀 파일을 업로드하면 시뮬레이션이 표시됩니다.`);
+      if (parsedDieline.detectedLine) {
+        selectedLine = parsedDieline.detectedLine;
       }
+
+      showToast(`✓ ${file.name} 도면 6면 구조 인식 및 자동 조판 완료`);
       render();
     } catch (err) {
       console.error('Dieline parse error:', err);
