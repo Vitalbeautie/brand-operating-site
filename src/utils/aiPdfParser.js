@@ -163,22 +163,22 @@ export function estimateTextWidthMmForPt(str, pt = 10, scaleX = 0.90) {
   for (let i = 0; i < str.length; i++) {
     const code = str.charCodeAt(i);
     if (code === 32) {
-      total += fontMm * 0.28;
+      total += fontMm * 0.30;
     } else if (code >= 0xAC00 && code <= 0xD7A3) {
-      total += fontMm * 0.85;
+      total += fontMm * 1.00; // 한글 음절 완성형은 1.0em 정방형
     } else if (code >= 0x3131 && code <= 0x318E) {
-      total += fontMm * 0.75;
+      total += fontMm * 0.85;
     } else if (code > 0x7F) {
-      total += fontMm * 0.80;
+      total += fontMm * 0.90;
     } else {
-      total += fontMm * 0.48;
+      total += fontMm * 0.52;
     }
   }
   return total * scaleX;
 }
 
 /**
- * Wrap paragraph text into lines fitting within availWidthMm at given pt and scaleX
+ * Wrap paragraph text into lines fitting strictly within availWidthMm at given pt and scaleX
  */
 export function wrapTextToWidthMm(text, availWidthMm, pt = 10, scaleX = 0.90) {
   const raw = String(text || '').replace(/\r\n/g, '\n').trim();
@@ -204,6 +204,53 @@ export function wrapTextToWidthMm(text, availWidthMm, pt = 10, scaleX = 0.90) {
 }
 
 /**
+ * Clean Field Key according to selected country/language:
+ * E.g. "Other Ingredients (영양기능정보)" -> KR: "영양·기능 정보", US: "Other Ingredients"
+ * E.g. "Suggested Use (섭취량 및 섭취방법)" -> KR: "섭취량 및 섭취방법", US: "Suggested Use"
+ * E.g. "product_name (제품명)" -> KR: "제품명", US: "Product name"
+ */
+export function cleanFieldKeyForLanguage(rawFk, lang = 'KR') {
+  if (!rawFk) return '';
+  const s = String(rawFk).trim();
+  const isKr = !lang || lang === 'KR' || /kr|ko/i.test(lang);
+
+  // 1. Format: "English (Korean)"
+  const mEnKr = s.match(/^([A-Za-z0-9_\s/-]+)\s*\(([^)]+)\)$/);
+  if (mEnKr) {
+    return isKr ? mEnKr[2].trim() : mEnKr[1].trim();
+  }
+
+  // 2. Format: "Korean (English)"
+  const mKrEn = s.match(/^([가-힣0-9_\s·/-]+)\s*\(([^)]+)\)$/);
+  if (mKrEn) {
+    return isKr ? mKrEn[1].trim() : mKrEn[2].trim();
+  }
+
+  // 3. Known keywords translation
+  const lower = s.toLowerCase();
+  if (isKr) {
+    if (lower === 'other ingredients' || lower === 'nutrition facts' || lower === 'supplement facts') return '영양·기능 정보';
+    if (lower === 'suggested use' || lower === 'directions') return '섭취량 및 섭취방법';
+    if (lower === 'warning' || lower === 'warnings' || lower === 'caution') return '주의사항';
+    if (lower === 'storage instructions' || lower === 'storage') return '보관상 주의사항';
+    if (lower === 'product_name' || lower === 'product name') return '제품명';
+    if (lower === 'claim' || lower === 'description') return '제품 설명';
+    if (lower === 'manufacturer') return '제조원';
+  } else {
+    if (s.includes('영양기능정보') || s.includes('영양·기능정보') || s.includes('영양정보')) return 'Other Ingredients';
+    if (s.includes('섭취량 및 섭취방법') || s.includes('섭취방법')) return 'Suggested Use';
+    if (s.includes('섭취 시 주의사항')) return 'Suggested Use';
+    if (s.includes('주의사항')) return 'Warning';
+    if (s.includes('보관상 주의사항') || s.includes('보관방법')) return 'Storage Instructions';
+    if (s.includes('제품명')) return 'Product Name';
+    if (s.includes('제품 설명') || s.includes('제품설명')) return 'Claim';
+    if (s.includes('제조원') || s.includes('제조관련')) return 'Manufacturer';
+  }
+
+  return s;
+}
+
+/**
  * Highlight bold prefix or nutritional keywords inside a 10pt wrapped line
  */
 function formatLineWithBoldKeywords(lineText, isFirstLineOfBlock, boldPrefix = '') {
@@ -215,8 +262,8 @@ function formatLineWithBoldKeywords(lineText, isFirstLineOfBlock, boldPrefix = '
 
   // Highlight known bold keywords in nutrition / customer service blocks
   const boldKeywords = [
-    '영양·기능 정보', '영양·기능정보', '영양정보',
-    '섭취량 및 섭취방법', '섭취 시 주의사항', '보관상 주의사항', '주의사항',
+    '영양·기능 정보', '영양·기능정보', '영양정보', 'Other Ingredients', 'Supplement Facts', 'Nutrition Facts',
+    '섭취량 및 섭취방법', '섭취 시 주의사항', '보관상 주의사항', '주의사항', 'Suggested Use', 'Warning', 'Warnings', 'Storage Instructions',
     '원료명 및 함량', '원재료명 및 함량', '원재료명',
     '교환문의처', '고객상담전화', '제조원 : (주)아모레퍼시픽', '제조원', '유통전문판매원', '반품교환소재지',
     '내포장재질', '포장재질', '식품유형', '품목보고번호',
@@ -234,11 +281,14 @@ function formatLineWithBoldKeywords(lineText, isFirstLineOfBlock, boldPrefix = '
 /**
  * Render Side (LEFT / RIGHT) or Back (BACK) Panel according to exact VITALBEAUTIE rules:
  * - Left & Right margin: 2.0mm (availW = panel.w - 4.0mm)
- * - Back Product Name (제품명): 15pt Bold (scaleX 0.90)
+ * - Back Product Name (제품명): 15pt Bold (scaleX 0.90) - 제목 라벨 없이 오직 제품명만 표시
+ * - Product Claim (제품 설명): 제목 라벨 없이 설명 문안만 표시
  * - All body/category text: strictly 10pt (3.528mm, scaleX 0.90)
- * - Automatic 0.3mm horizontal line between categories with 1.0mm gap above and 1.0mm gap below
- * - Expiry white box (제조번호 / 소비기한 ~까지): height strictly 11.0mm, placed 15.0mm above bottom edge, width matched to carton panel width
- * - Overflow detection: highlights in RED (#E52421) if text overflows the panel or collides with the expiry box
+ * - Automatic 0.3mm horizontal line between categories with 1.5mm gap above and 1.5mm gap below
+ * - Expiry white box (제조번호 / 소비기한 ~까지): height strictly 11.0mm (US 12.0mm), placed 15.0mm above bottom edge, width matched to carton panel width
+ * - Customer Service / Manufacturer footer placed strictly in the 15mm space below expiry box
+ * - Zero overlap between text and expiry box
+ * - Overflow detection: highlights in RED (#E52421) if text overflows the panel
  */
 export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
   const px = panel.x;
@@ -246,16 +296,17 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
   const pw = panel.w;
   const ph = panel.h;
   const txtCol = opts.textColor || '#FFFFFF';
-  const fontFam = opts.fontFamily || "'VB-ShinGothic','RIX-신고딕se-pro','210 OmniGothic','Noto Sans KR',sans-serif";
+  const fontFam = opts.fontFamily || "'RixSinGoSE_Pro','RIX-신고딕se-pro','VB-ShinGothic',sans-serif";
   const showExpiryBox = Boolean(opts.showExpiryBox);
   const isUs = Boolean(opts.isUs || opts.country === 'US' || opts.locale === 'US');
+  const lang = isUs ? 'US' : 'KR';
   const isNarrowJellyCarton = pw <= 82 && ph >= 155; // 젤리 더블컷(80x161) 등 세로형 판형
   const defaultHeaderPt = isNarrowJellyCarton ? 13.0 : 15.0; // 판형에 따른 13pt / 15pt 분기
   const bodyPt = +(opts.bodyPt || 10.0); // 반드시 10pt 기본
   const headerPt = +(opts.headerPt || defaultHeaderPt);
   const scaleX = 0.90;
 
-  // 좌우 2mm 마진
+  // 양옆 2mm 마진
   const marginX = 2.0;
   const xLeft = +(px + marginX).toFixed(2);
   const xRight = +(px + pw - marginX).toFixed(2);
@@ -267,62 +318,113 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
   const lineStepHeaderMm = +(fontHeaderMm * 1.15).toFixed(3);
 
   // 하단 배치 블록(교환문의처/제조원/반품교환소재지)과 상단 일반 분류 블록 분리
+  const isFooter = (fk, txt) => {
+    const combined = `${fk} ${txt}`.toLowerCase();
+    return (
+      combined.includes('교환문의') ||
+      combined.includes('고객상담') ||
+      combined.includes('080-023-5454') ||
+      combined.includes('반품교환') ||
+      combined.includes('제조원') ||
+      combined.includes('제조관련') ||
+      combined.includes('manufacturer') ||
+      combined.includes('용산구 한강대로') ||
+      combined.includes('아모레퍼시픽')
+    );
+  };
+
   const upperBlocks = [];
   const bottomFooterBlocks = [];
 
   for (const b of rawBlocks) {
-    const fk = String(b.fieldKey || '').trim();
+    const rawFk = String(b.fieldKey || '').trim();
     const txt = String(b.textContent || '').trim();
-    if (!fk && !txt) continue;
-    if (showExpiryBox && (fk.includes('교환문의') || fk.includes('고객상담') || fk.includes('반품교환') || (fk.includes('제조원') && upperBlocks.length >= 2))) {
-      bottomFooterBlocks.push({ fieldKey: fk, textContent: txt });
+    if (!rawFk && !txt) continue;
+    const cleanFk = cleanFieldKeyForLanguage(rawFk, lang);
+    if (showExpiryBox && isFooter(cleanFk, txt)) {
+      bottomFooterBlocks.push({ fieldKey: cleanFk, textContent: txt });
     } else {
-      upperBlocks.push({ fieldKey: fk, textContent: txt });
+      upperBlocks.push({ fieldKey: cleanFk, textContent: txt });
     }
   }
+
+  // 상단 문안이 침범하면 안 되는 한계 Y좌표 (소비기한 박스 상단 구분선 위)
+  const boxH = isUs ? 12.0 : 11.0;
+  const bottomOffset = 15.0; // 하단에서 15mm 띄움
+  const boxBottomY = +(py + ph - bottomOffset).toFixed(2);
+  const boxTopY = +(boxBottomY - boxH).toFixed(2);
+  const sobiY = +(boxTopY - 1.3).toFixed(2);
+  const jejoY = +(sobiY - lineStep10Mm).toFixed(2);
+  const dividerAboveJejoY = +(jejoY - font10Mm * 0.86 - 1.5).toFixed(2);
+  const limitY = showExpiryBox ? +(dividerAboveJejoY - 1.5).toFixed(2) : +(py + ph - 2.0).toFixed(2);
 
   let svgElements = '';
   let curY = py + 2.5; // 상단 시작점 (top margin)
   let hasRenderedFirstBodyBlock = false;
+  let totalLogicalHeight = curY;
 
   for (let bIdx = 0; bIdx < upperBlocks.length; bIdx++) {
     const blk = upperBlocks[bIdx];
     const fk = blk.fieldKey;
     const rawTxt = blk.textContent;
-    const isTitleBlock = (fk === '제품명' || fk.toLowerCase() === 'product_name') && bIdx === 0;
+
+    const lowerFk = fk.toLowerCase();
+    const isTitleBlock = lowerFk === '제품명' || lowerFk === 'product name' || lowerFk === 'product_name';
+    const isClaimBlock = lowerFk === '제품 설명' || lowerFk === '제품설명' || lowerFk === 'claim' || lowerFk === 'description';
 
     if (isTitleBlock) {
-      // 후면(또는 측면) 상단 제품명: 판형에 따라 15pt 또는 13pt Bold
+      // 후면 상단 제품명: 제목 라벨("제품명", "product_name") 없이 오직 제품명만 15pt(또는 13pt)로 표기
       const titleLines = wrapTextToWidthMm(rawTxt, availW, headerPt, scaleX);
       titleLines.forEach((tLine) => {
         curY += lineStepHeaderMm * 0.88;
-        svgElements += `
-          <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
-            <text x="0" y="0" fill="${txtCol}" font-size="${fontHeaderMm}" font-weight="700" letter-spacing="-0.03em" font-family="${fontFam}">${tLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
-          </g>
-        `;
+        totalLogicalHeight = Math.max(totalLogicalHeight, curY);
+        if (curY <= limitY) {
+          svgElements += `
+            <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
+              <text x="0" y="0" fill="${txtCol}" font-size="${fontHeaderMm}" font-weight="700" letter-spacing="-0.03em" font-family="${fontFam}">${tLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
+            </g>
+          `;
+        }
       });
       curY += 0.8;
       continue;
     }
 
+    if (isClaimBlock) {
+      // 제품 설명: 제목 라벨("제품 설명", "claim") 없이 설명 문안만 표기
+      const claimLines = wrapTextToWidthMm(rawTxt, availW, bodyPt, scaleX);
+      claimLines.forEach((cLine, lIdx) => {
+        curY += lIdx === 0 ? (font10Mm * 0.86) : lineStep10Mm;
+        totalLogicalHeight = Math.max(totalLogicalHeight, curY);
+        if (curY <= limitY) {
+          svgElements += `
+            <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
+              <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${cLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
+            </g>
+          `;
+        }
+      });
+      hasRenderedFirstBodyBlock = true;
+      continue;
+    }
+
     // 분류마다 위 1.5mm 간격 + 0.3mm 구분선 + 아래 1.5mm 간격 자동 삽입 (가이드 1.5mm 확정)
-    // (단, 첫 번째 본문 블록이 제품 설명이거나 맨 위일 때는 선 없이 시작하고, 그 다음 분류부터 0.3mm 선 삽입)
     if (hasRenderedFirstBodyBlock) {
-      // 이전 텍스트 하단(descender 약 0.65mm) 기준 1.5mm 아래에 0.3mm 선 배치
       const lineY = +(curY + 0.65 + 1.5).toFixed(2);
-      svgElements += `
-        <line x1="${xLeft}" y1="${lineY}" x2="${xRight}" y2="${lineY}" stroke="${txtCol}" stroke-width="0.3"/>
-      `;
-      // 선 아래 1.5mm 간격 띄운 후 다음 텍스트 시작
+      if (lineY <= limitY) {
+        svgElements += `
+          <line x1="${xLeft}" y1="${lineY}" x2="${xRight}" y2="${lineY}" stroke="${txtCol}" stroke-width="0.3"/>
+        `;
+      }
       curY = lineY + 0.15 + 1.5;
     }
 
-    // 텍스트 앞에 분류명(Field Key) 자동 볼드 결합 처리
+    // 분류명(Field Key) 자동 볼드 결합: 언어 선택한 대로 하나만 볼드체 기입
     let fullBlockText = rawTxt;
     let boldPrefix = '';
-    const skipPrefixKeys = ['제품 설명', '제품설명', '정보', '영양기능정보', '영양·기능정보', 'description', 'info', 'claim'];
-    if (fk && !skipPrefixKeys.includes(fk.toLowerCase())) {
+    const skipPrefixKeys = ['정보', 'info'];
+
+    if (fk && !skipPrefixKeys.includes(lowerFk)) {
       if (rawTxt.startsWith(fk)) {
         boldPrefix = fk;
       } else {
@@ -334,46 +436,36 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
     const wrappedLines = wrapTextToWidthMm(fullBlockText, availW, bodyPt, scaleX);
     wrappedLines.forEach((wLine, lIdx) => {
       curY += lIdx === 0 ? (font10Mm * 0.86) : lineStep10Mm;
-      const formattedTspans = formatLineWithBoldKeywords(wLine, lIdx === 0, boldPrefix);
-      svgElements += `
-        <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
-          <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${formattedTspans}</text>
-        </g>
-      `;
+      totalLogicalHeight = Math.max(totalLogicalHeight, curY);
+      // 흰색 날인 박스 영역을 침범하지 않도록 한계선 위에서만 그리기 (겹침 100% 방지)
+      if (curY <= limitY) {
+        const formattedTspans = formatLineWithBoldKeywords(wLine, lIdx === 0, boldPrefix);
+        svgElements += `
+          <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
+            <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${formattedTspans}</text>
+          </g>
+        `;
+      }
     });
 
     hasRenderedFirstBodyBlock = true;
   }
 
   // 제조번호 / 소비기한 ~까지 흰색 박스 배치 (한국 11mm, 미국 12mm 고정, 하단에서 15mm 띄움, 길이는 단상자 폭에 맞춤)
-  let limitY = +(py + ph - 2.0).toFixed(2);
-
   if (showExpiryBox) {
-    const boxH = isUs ? 12.0 : 11.0; // 한국 11mm, 미국 12mm 고정
-    const bottomOffset = 15.0; // 하단에서 15mm 띄움
-    const boxBottomY = +(py + ph - bottomOffset).toFixed(2);
-    const boxTopY = +(boxBottomY - boxH).toFixed(2);
-    const kkajiReserveMm = isUs ? 0 : 6.8; // 우측 '까지' 글자 공간 (US는 로트번호/Best by)
+    const kkajiReserveMm = isUs ? 0 : 6.8;
     const boxW = Math.max(12, +(availW - kkajiReserveMm).toFixed(2));
-
-    // 제조번호 / 소비기한 라벨 위치 (흰색 박스 바로 위)
-    const sobiY = +(boxTopY - 1.3).toFixed(2);
-    const jejoY = +(sobiY - lineStep10Mm).toFixed(2);
-    const dividerAboveJejoY = +(jejoY - font10Mm * 0.86 - 1.5).toFixed(2);
-
-    // 상단 문안이 침범하면 안 되는 한계 Y좌표
-    limitY = +(dividerAboveJejoY - 1.5).toFixed(2);
 
     svgElements += `
       <!-- 제조번호/소비기한 상단 0.3mm 구분선 (위아래 1.5mm 간격) -->
       <line x1="${xLeft}" y1="${dividerAboveJejoY}" x2="${xRight}" y2="${dividerAboveJejoY}" stroke="${txtCol}" stroke-width="0.3"/>
 
-      <!-- 제조번호 / 소비기한 (10pt) -->
+      <!-- 제조번호 / 소비기한 (10pt 볼드) -->
       <g transform="translate(${xLeft} ${jejoY}) scale(${scaleX} 1)">
-        <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="600" letter-spacing="-0.03em" font-family="${fontFam}">${isUs ? 'Lot number' : '제조번호'}</text>
+        <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="700" letter-spacing="-0.03em" font-family="${fontFam}">${isUs ? 'Lot number' : '제조번호'}</text>
       </g>
       <g transform="translate(${xLeft} ${sobiY}) scale(${scaleX} 1)">
-        <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="600" letter-spacing="-0.03em" font-family="${fontFam}">${isUs ? 'Best by (MM/DD/YYYY)' : '소비기한'}</text>
+        <text x="0" y="0" fill="${txtCol}" font-size="${font10Mm}" font-weight="700" letter-spacing="-0.03em" font-family="${fontFam}">${isUs ? 'Best by (MM/DD/YYYY)' : '소비기한'}</text>
       </g>
 
       <!-- 흰색 날인 박스 (한국 11mm / 미국 12mm 고정, 폭 단상자 맞춤, 하단에서 15mm 띄움) -->
@@ -387,8 +479,8 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
 
     // 하단 15mm 여유 공간 내 교환문의처 / 고객상담실 / 제조원 / 반품교환소재지 배치 (Image 3 동일)
     if (bottomFooterBlocks.length > 0) {
-      let footY = +(boxBottomY + 0.5).toFixed(2);
-      const footerStep = +(font10Mm * 0.96).toFixed(3);
+      let footY = +(boxBottomY + 0.8).toFixed(2);
+      const footerStep = +(font10Mm * 0.94).toFixed(3);
       for (const fb of bottomFooterBlocks) {
         let fbText = fb.textContent;
         if (fb.fieldKey && fb.fieldKey.includes('교환문의') && !fbText.includes('교환문의')) {
@@ -397,24 +489,26 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
         const fLines = wrapTextToWidthMm(fbText, availW, bodyPt, scaleX);
         fLines.slice(0, 4).forEach((fl) => {
           footY = +(footY + footerStep).toFixed(2);
-          const tsp = formatLineWithBoldKeywords(fl, false, '');
-          svgElements += `
-            <g transform="translate(${xLeft} ${footY}) scale(${scaleX} 1)">
-              <text x="0" y="0" fill="${txtCol}" font-size="${(font10Mm * 0.94).toFixed(3)}" font-weight="400" letter-spacing="-0.04em" font-family="${fontFam}">${tsp}</text>
-            </g>
-          `;
+          if (footY <= py + ph - 0.5) {
+            const tsp = formatLineWithBoldKeywords(fl, false, '');
+            svgElements += `
+              <g transform="translate(${xLeft} ${footY}) scale(${scaleX} 1)">
+                <text x="0" y="0" fill="${txtCol}" font-size="${(font10Mm * 0.92).toFixed(3)}" font-weight="400" letter-spacing="-0.04em" font-family="${fontFam}">${tsp}</text>
+              </g>
+            `;
+          }
         });
       }
     }
   }
 
   // 문안 넘침(Overflow) 여부 판정 및 빨간색 표시
-  const isOverflow = curY > limitY + 0.5;
-  const overflowMm = isOverflow ? +(curY - limitY).toFixed(1) : 0;
+  const isOverflow = totalLogicalHeight > limitY + 0.5;
+  const overflowMm = isOverflow ? +(totalLogicalHeight - limitY).toFixed(1) : 0;
 
   if (isOverflow) {
     const overTopY = Math.max(py, limitY);
-    const overH = Math.max(6, curY - overTopY + 2);
+    const overH = Math.max(6, Math.min(ph, totalLogicalHeight - overTopY + 2));
     svgElements += `
       <!-- 문안 넘침 빨간색 경고 표시 -->
       <rect x="${px.toFixed(2)}" y="${py.toFixed(2)}" width="${pw.toFixed(2)}" height="${ph.toFixed(2)}"
@@ -432,7 +526,7 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
     svg: svgElements,
     isOverflow,
     overflowMm,
-    usedHeightMm: +(curY - py).toFixed(1),
+    usedHeightMm: +(totalLogicalHeight - py).toFixed(1),
   };
 }
 

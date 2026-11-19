@@ -23,6 +23,7 @@ import {
   renderStandaloneVitalbeautieWordmarkSvg,
   renderSideOrBackPanel10ptSvg,
   wrapTextToWidthMm,
+  cleanFieldKeyForLanguage,
   buildStandardDownloadFileName,
   parseUploadedArtworkOrDieline,
 } from '../utils/aiPdfParser.js';
@@ -33,7 +34,7 @@ const COUNTRY_CONFIG = {
   KR: {
     code: 'KR',
     label: '한국',
-    fontFamily: "'VB-ShinGothic','RIX-신고딕se-pro','210 OmniGothic','Noto Sans KR',sans-serif",
+    fontFamily: "'RixSinGoSE_Pro','RIX-신고딕se-pro','VB-ShinGothic',sans-serif",
   },
   JP: {
     code: 'JP',
@@ -43,7 +44,7 @@ const COUNTRY_CONFIG = {
   US: {
     code: 'US',
     label: '미국',
-    fontFamily: "'Raleway','Noto Sans KR',sans-serif",
+    fontFamily: "'Raleway','RixSinGoSE_Pro','Noto Sans KR',sans-serif",
   },
 };
 
@@ -315,7 +316,8 @@ function parseUploadedExcelWorkbook(workbook, selectedLine) {
         if (!fk && !txt) continue;
         if (txt.startsWith('[') && txt.endsWith('입력]')) continue;
 
-        panelBlocks[rawPanel].push({ fieldKey: fk, textContent: txt });
+        const cleanFk = cleanFieldKeyForLanguage(fk, meta.language || 'KR');
+        panelBlocks[rawPanel].push({ fieldKey: cleanFk, textContent: txt });
         rowCount++;
       }
 
@@ -518,6 +520,11 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
     let contentSvg = '';
     const blocks = panelBlocks[p.id] || [];
 
+    // 메타그린 상단(TOP)은 가이드에 따라 Pantone 389 C (#CEDC00) 및 블랙(#000000) 로고 적용
+    const isTopMetagreen = p.id === 'TOP' && selectedLine === 'metagreen';
+    const panelBg = isTopMetagreen ? '#CEDC00' : bgCol;
+    const panelTxtCol = isTopMetagreen ? '#000000' : txtCol;
+
     // ── 1. 전면 (FRONT) ──
     if (p.id === 'FRONT') {
       const logoTagSvg = renderVitalbeautieLogoTagSvg(p.x, p.y, p.w, tagHex, {
@@ -527,8 +534,30 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
         tagOffsetX: 0,
       });
 
-      const titleBlock = blocks.find(b => b.fieldKey.includes('제품명') || b.fieldKey.toLowerCase().includes('product'));
-      const otherBlocks = blocks.filter(b => b !== titleBlock);
+      // 블록 분리: 제품명, 내용량, 원료명(성분)
+      const isTitle = (b) => {
+        const k = (b.fieldKey || '').toLowerCase();
+        return k.includes('제품명') || k.includes('product');
+      };
+      const isCap = (b) => {
+        const k = (b.fieldKey || '').toLowerCase();
+        const t = (b.textContent || '').toLowerCase();
+        return (
+          k.includes('내용량') ||
+          k.includes('용량') ||
+          k.includes('포장단위') ||
+          k.includes('capacity') ||
+          t.includes('건강기능식품') ||
+          /\d+\s*g\b/i.test(t) ||
+          /\d+\s*ml\b/i.test(t) ||
+          /정\b/.test(t)
+        );
+      };
+
+      const titleBlock = blocks.find(isTitle);
+      const capBlock = blocks.find(isCap);
+      const ingBlocks = blocks.filter(b => b !== titleBlock && b !== capBlock);
+
       const rawTitle = titleBlock?.textContent || `${meta.productLine || preset.defaultLineName} ${meta.productName || ''}`.trim();
 
       let linePart = meta.productLine || preset.defaultLineName;
@@ -543,33 +572,39 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
 
       const tagBottomY = p.y + 1.17 + 6.47;
       const titlePx = Math.min(8.2, Math.max(5.5, p.w * 0.1));
-      const titleY = +(tagBottomY + 6.0 + titlePx * 0.84).toFixed(2);
+      const titleY = +(tagBottomY + 5.0 + titlePx * 0.84).toFixed(2);
       const line2Y = +(titleY + titlePx * 1.15).toFixed(2);
       const lastTitleY = prodPart ? parseFloat(line2Y) : parseFloat(titleY);
 
-      // 전면 두 번째 행(성분 또는 내용량)
-      const subText = otherBlocks.map(b => b.textContent).join('\n');
-      const ingLines = wrapTextToWidthMm(subText, p.w - 6.0, 11.0, 0.92);
-      const ingPx = +(11.0 * PT_TO_MM).toFixed(2);
-      const ingStep = +(parseFloat(ingPx) * 1.22).toFixed(2);
+      // 원료명(성분): 전면 양옆 2mm 마진 strictly 적용, 제품명(26pt)의 1/2인 13pt Light, 간격 3.5mm
+      const availFrontW = Math.max(14, p.w - 4.0); // 양옆 2mm 마진
+      const ingText = ingBlocks.map(b => b.textContent).join('\n');
+      const ingLines = wrapTextToWidthMm(ingText, availFrontW, 13.0, 0.90);
+      const ingPx = +(13.0 * PT_TO_MM).toFixed(2);
+      const ingStep = +(parseFloat(ingPx) * 1.18).toFixed(2);
       const ingStartY = +(lastTitleY + 3.5 + parseFloat(ingPx) * 0.85).toFixed(2);
 
+      // 내용량: 가이드에 따라 하단에서 정확히 3.0mm 띄움
       const capPx = +(10.0 * PT_TO_MM).toFixed(2);
-      const capY = +(p.y + p.h - 3.5).toFixed(2);
-      const markSize = Math.min(14.5, p.w * 0.21);
-      const markX = +(p.x + p.w - 3.0 - markSize).toFixed(2);
+      const capY = +(p.y + p.h - 3.0).toFixed(2); // 하단에서 3mm 띄움
+      const capText = capBlock?.textContent || '';
+
+      // 건기식 마크: 내용량 바로 위 우측에 배치
+      const markSize = Math.min(14.0, p.w * 0.20);
+      const markX = +(p.x + p.w - 2.5 - markSize).toFixed(2);
       const markY = +(parseFloat(capY) - parseFloat(capPx) - 2.0 - markSize).toFixed(2);
 
       if (isIb) {
-        const leftX = +(p.x + 4.0).toFixed(2);
+        const leftX = +(p.x + 2.0).toFixed(2); // 2mm 마진 시작점
         contentSvg = `
           ${logoTagSvg}
           <text x="${leftX}" y="${titleY}" text-anchor="start" fill="${txtCol}" font-size="${titlePx.toFixed(2)}" font-weight="700" font-family="${fontFam}">${linePart}</text>
           ${prodPart ? `<text x="${leftX}" y="${line2Y}" text-anchor="start" fill="${txtCol}" font-size="${titlePx.toFixed(2)}" font-weight="500" font-family="${fontFam}">${prodPart}</text>` : ''}
           ${ingLines.map((ln, idx) => `
-            <text x="${leftX}" y="${(parseFloat(ingStartY) + idx * parseFloat(ingStep)).toFixed(2)}" text-anchor="start" fill="${txtCol}" font-size="${ingPx}" font-weight="300" font-family="${fontFam}">${ln}</text>
+            <text x="${leftX}" y="${(parseFloat(ingStartY) + idx * parseFloat(ingStep)).toFixed(2)}" text-anchor="start" fill="${txtCol}" font-size="${ingPx}" font-weight="300" font-family="${fontFam}">${ln.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
           `).join('')}
           ${country.code === 'KR' ? getHffMarkSvg(markX, markY, markSize, 0.78, txtCol) : ''}
+          ${capText ? `<text x="${leftX}" y="${capY}" text-anchor="start" fill="${txtCol}" font-size="${capPx}" font-weight="300" font-family="${fontFam}">${capText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>` : ''}
         `;
       } else {
         const cx = +(p.x + p.w / 2).toFixed(2);
@@ -578,15 +613,15 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
           <text x="${cx}" y="${titleY}" text-anchor="middle" fill="${txtCol}" font-size="${titlePx.toFixed(2)}" font-weight="700" font-family="${fontFam}">${linePart}</text>
           ${prodPart ? `<text x="${cx}" y="${line2Y}" text-anchor="middle" fill="${txtCol}" font-size="${titlePx.toFixed(2)}" font-weight="300" font-family="${fontFam}">${prodPart}</text>` : ''}
           ${ingLines.map((ln, idx) => `
-            <text x="${cx}" y="${(parseFloat(ingStartY) + idx * parseFloat(ingStep)).toFixed(2)}" text-anchor="middle" fill="${txtCol}" font-size="${ingPx}" font-weight="300" font-family="${fontFam}">${ln}</text>
+            <text x="${cx}" y="${(parseFloat(ingStartY) + idx * parseFloat(ingStep)).toFixed(2)}" text-anchor="middle" fill="${txtCol}" font-size="${ingPx}" font-weight="300" font-family="${fontFam}">${ln.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
           `).join('')}
           ${country.code === 'KR' ? getHffMarkSvg(markX, markY, markSize, 0.68, txtCol) : ''}
+          ${capText ? `<text x="${cx}" y="${capY}" text-anchor="middle" fill="${txtCol}" font-size="${capPx}" font-weight="300" font-family="${fontFam}">${capText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>` : ''}
         `;
       }
     }
 
     // ── 2. 후면 (BACK) & 우측면 (RIGHT) & 좌측면 (LEFT) ──
-    // 양옆 2mm 마진, 본문 반드시 10pt, 후면 제품명 15pt, 분류마다 위아래 1mm 간격 + 0.3mm 구분선, 제조번호/소비기한 11mm 흰색 박스(하단 15mm 띄움)
     else if (p.id === 'BACK' || p.id === 'RIGHT' || p.id === 'LEFT') {
       const hasExplicitExpiry = blocks.some(b => b.fieldKey.includes('소비기한') || b.fieldKey.includes('제조번호'));
       const showExpiry = hasExplicitExpiry || (p.id === expiryHostPanel);
@@ -595,6 +630,7 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
         textColor: txtCol,
         fontFamily: fontFam,
         showExpiryBox: showExpiry,
+        country: country.code,
         bodyPt: 10.0,
         headerPt: 15.0,
       });
@@ -609,7 +645,7 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
       }
     }
 
-    // ── 3. 상단 (TOP · 로고 또는 상단 문안) ──
+    // ── 3. 상단 (TOP · 메타그린 389C 및 블랙 로고 적용) ──
     else if (p.id === 'TOP') {
       const hasLogoKey = blocks.some(b => b.fieldKey.includes('로고') || b.fieldKey.toLowerCase().includes('logo') || !b.textContent);
       const topTextBlock = blocks.find(b => b.textContent && b.textContent.trim().length > 0);
@@ -618,12 +654,12 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
           p.x + p.w / 2,
           p.y + p.h / 2,
           Math.min(40, p.w * 0.56),
-          txtCol
+          panelTxtCol
         );
       } else {
         const txt = topTextBlock?.textContent || `${meta.productLine || 'VITALBEAUTIE'} ${meta.productName || ''}`;
         contentSvg = `
-          <text x="${(p.x + p.w / 2).toFixed(2)}" y="${(p.y + p.h / 2 + 1).toFixed(2)}" text-anchor="middle" fill="${txtCol}" font-size="3.528" font-weight="700" font-family="${fontFam}">${txt}</text>
+          <text x="${(p.x + p.w / 2).toFixed(2)}" y="${(p.y + p.h / 2 + 1).toFixed(2)}" text-anchor="middle" fill="${panelTxtCol}" font-size="3.528" font-weight="700" font-family="${fontFam}">${txt}</text>
         `;
       }
     }
@@ -647,7 +683,7 @@ function renderProductionDielineSvg(preset, country, rawPanelBlocks, meta, dieli
 
     return `
       <g id="pp-panel-${p.id}">
-        <rect x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" width="${p.w.toFixed(2)}" height="${p.h.toFixed(2)}" fill="${bgCol}" stroke="${creaseStroke}" stroke-width="0.35"/>
+        <rect x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" width="${p.w.toFixed(2)}" height="${p.h.toFixed(2)}" fill="${panelBg}" stroke="${creaseStroke}" stroke-width="0.35"/>
         <!-- 양옆 2mm 마진 가이드 점선 -->
         <line x1="${(p.x + 2.0).toFixed(2)}" y1="${p.y.toFixed(2)}" x2="${(p.x + 2.0).toFixed(2)}" y2="${(p.y + p.h).toFixed(2)}" stroke="${creaseStroke}" stroke-width="0.14" stroke-dasharray="0.8 0.8"/>
         <line x1="${(p.x + p.w - 2.0).toFixed(2)}" y1="${p.y.toFixed(2)}" x2="${(p.x + p.w - 2.0).toFixed(2)}" y2="${(p.y + p.h).toFixed(2)}" stroke="${creaseStroke}" stroke-width="0.14" stroke-dasharray="0.8 0.8"/>
@@ -847,9 +883,6 @@ export function renderPackagingProductionPage(el) {
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
             <div>
               <strong style="font-size:15px; font-weight:800; color:#101820;">STEP 5. 시뮬레이션 화면</strong>
-              <span style="font-size:12px; color:#667085; margin-left:10px;">
-                양옆 2mm 마진 · 본문 10pt · 후면 제품명 15pt · 분류별 0.3mm 선(상하 1mm 간격) · 소비기한 박스 11mm(하단 15mm 띄움) 적용
-              </span>
             </div>
             <div style="font-size:11.5px; font-weight:700; color:#101820;">
               저장 파일명: <span style="font-family:monospace;">${aiDownloadFileName}</span>

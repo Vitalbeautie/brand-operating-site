@@ -57,6 +57,30 @@
 }
 
 @font-face {
+  font-family: 'RixSinGoSE_Pro';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Light.otf') format('opentype');
+  font-weight: 100 399;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RixSinGoSE_Pro';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Medium.otf') format('opentype');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RixSinGoSE_Pro';
+  src: url('/assets/fonts/RixSinGoSE_Pro-Bold.otf') format('opentype');
+  font-weight: 601 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'VB-OmniGothic';
   src: url('/assets/fonts/210OmniGothic-010.ttf') format('truetype');
   font-weight: 100 249;

@@ -129,3 +129,4 @@ export function downloadIntegratedGuideExcelFile(filename = 'VITALBEAUTIE_Integr
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+

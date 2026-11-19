@@ -456,7 +456,7 @@ function renderPanelArtworkSvg(panelId, px, py, pw, ph, scenario, spec, checks, 
   const subBoxFill = isIb ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)';
   const subBoxStroke = isIb ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.32)';
   const safeStroke = isIb ? 'rgba(0,0,0,0.20)' : 'rgba(255,255,255,0.26)';
-  const fontFam = "'VB-ShinGothic','RIX-신고딕se-pro','210 OmniGothic','Noto Sans KR',sans-serif";
+  const fontFam = "'RixSinGoSE_Pro','RIX-신고딕se-pro','VB-ShinGothic',sans-serif";
 
   const issueByTarget = {};
   if (mode === 'before') {

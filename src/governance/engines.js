@@ -1109,7 +1109,10 @@ if (typeof window !== 'undefined') {
 
 function selectTtfFontForChar(ch, weight = 500, fontFamily = '') {
   const w = Number(weight) || (/bold/i.test(String(weight)) ? 700 : /light/i.test(String(weight)) ? 300 : 500);
-  if (/omni|옴니/i.test(fontFamily)) {
+
+  // If pure OmniGothic is explicitly requested (not as a fallback in a list)
+  const isExplicitOmni = (/^['"]?(?:210\s*)?omni/i.test(fontFamily.trim()) || /옴니/i.test(fontFamily)) && !/rix|shingothic|신고딕|singose/i.test(fontFamily);
+  if (isExplicitOmni) {
     const of = w >= 800
       ? TTF_FONT_CACHE.omniHeavy
       : w >= 650
@@ -1121,18 +1124,24 @@ function selectTtfFontForChar(ch, weight = 500, fontFamily = '') {
       : TTF_FONT_CACHE.omniThin;
     if (of && of.codeToGid(ch.charCodeAt(0)) > 0) return of;
   }
+
   const preferRaleway = /raleway/i.test(fontFamily) && /^[\x20-\x7E]$/.test(ch) && !/[0-9]/.test(ch);
   if (preferRaleway) {
     const rf = w >= 600 ? TTF_FONT_CACHE.enBold : TTF_FONT_CACHE.enLight;
     if (rf && rf.codeToGid(ch.charCodeAt(0)) > 0) return rf;
   }
-  if (/noto|jp|ja|sc|cjk|gothic/i.test(fontFamily) || /[\u3040-\u30ff\u30fc\u30fb\u4e00-\u9fff]/.test(ch)) {
+  if (/noto|jp|ja|sc|cjk/i.test(fontFamily) || /[\u3040-\u30ff\u30fc\u30fb\u4e00-\u9fff]/.test(ch)) {
     const nf = w >= 600 ? TTF_FONT_CACHE.notoBold : TTF_FONT_CACHE.notoRegular;
     if (nf && nf.codeToGid(ch.charCodeAt(0)) > 0) return nf;
   }
-  if (w >= 650) return TTF_FONT_CACHE.koBold;
-  if (w >= 450) return TTF_FONT_CACHE.koMedium || TTF_FONT_CACHE.koBold;
-  return TTF_FONT_CACHE.koLight || TTF_FONT_CACHE.koMedium || TTF_FONT_CACHE.koBold;
+
+  // VITALBEAUTIE 표준 가이드 기본 한글 폰트: RixSinGoSE_Pro (Bold / Medium / Light)
+  if (w >= 650 && TTF_FONT_CACHE.koBold && TTF_FONT_CACHE.koBold.codeToGid(ch.charCodeAt(0)) > 0) return TTF_FONT_CACHE.koBold;
+  if (w >= 450 && TTF_FONT_CACHE.koMedium && TTF_FONT_CACHE.koMedium.codeToGid(ch.charCodeAt(0)) > 0) return TTF_FONT_CACHE.koMedium;
+  if (TTF_FONT_CACHE.koLight && TTF_FONT_CACHE.koLight.codeToGid(ch.charCodeAt(0)) > 0) return TTF_FONT_CACHE.koLight;
+  if (TTF_FONT_CACHE.koBold && TTF_FONT_CACHE.koBold.codeToGid(ch.charCodeAt(0)) > 0) return TTF_FONT_CACHE.koBold;
+
+  return TTF_FONT_CACHE.koMedium || TTF_FONT_CACHE.koBold;
 }
 
 function encodePdfTextCmd(str, fontSize, isBold = false) {
