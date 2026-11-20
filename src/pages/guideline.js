@@ -106,7 +106,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           </div>
         </div>
 
-        <div class="block-visual-column">
+        <div class="block-visual-column" style="padding:36px 32px;">
           <div style="display:flex; flex-direction:column; gap:32px; align-items:center;">
             <img src="./assets/guidelines/pdf_p5_grid.png" alt="Wordmark Grid System" style="max-width:680px; width:100%; height:auto; display:block;" />
             <img src="./assets/guidelines/pdf_p5_clearspace.png" alt="Wordmark Clear Space 1X & 20mm" style="max-width:680px; width:100%; height:auto; display:block;" />
@@ -159,7 +159,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           </div>
         </div>
 
-        <div class="block-visual-column">
+        <div class="block-visual-column" style="padding:28px 24px;">
           <div style="display:flex; flex-direction:column; gap:28px;">
             <img src="./assets/guidelines/pdf_p8_wm_bg_usage.png" alt="Background Usage Rules" style="width:100%; height:auto; display:block;" />
 
@@ -196,7 +196,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           </div>
         </div>
 
-        <div class="block-visual-column">
+        <div class="block-visual-column" style="padding:28px 24px;">
           <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px 16px;">
             ${incItems.map(item => `
               <div>
@@ -244,11 +244,11 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
         <div class="block-visual-column">
           <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center;">
-            <div style="padding:44px 24px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-              <img src="./assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN Black" style="width:176px; height:176px; display:block;" />
+            <div style="padding:32px 24px; display:flex; align-items:center; justify-content:center; background:#ffffff; min-height:160px;">
+              <img src="./assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN Black" style="width:72px; height:72px; display:block;" />
             </div>
-            <div style="padding:44px 24px; display:flex; align-items:center; justify-content:center; background:#101820; min-height:264px;">
-              <img src="./assets/logos/vitalbeautie_monogram_lab_proven_white.png" alt="LAB PROVEN White" style="width:176px; height:176px; display:block;" />
+            <div style="padding:32px 24px; display:flex; align-items:center; justify-content:center; background:#101820; min-height:160px;">
+              <img src="./assets/logos/vitalbeautie_monogram_lab_proven_white.png" alt="LAB PROVEN White" style="width:72px; height:72px; display:block;" />
             </div>
           </div>
         </div>
@@ -286,7 +286,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           </div>
         </div>
 
-        <div class="block-visual-column">
+        <div class="block-visual-column" style="padding:24px;">
           <img src="./assets/guidelines/pdf_p17_sym_exception.png" alt="Symbol Placement Guide" style="width:100%; height:auto; display:block;" />
         </div>
       </div>
@@ -303,8 +303,8 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           </div>
         </div>
 
-        <div class="block-visual-column">
-          <img src="./assets/guidelines/pdf_p13_sym_exclusion.png" alt="Symbol Exclusion Zone" style="width:100%; height:auto; display:block;" />
+        <div class="block-visual-column" style="padding:32px 24px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+          <img src="./assets/guidelines/pdf_p13_sym_exclusion.png" alt="Symbol Exclusion Zone" style="max-width:240px; width:33.3%; height:auto; display:block; margin:0 auto;" />
         </div>
       </div>
 
@@ -341,7 +341,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           </div>
         </div>
 
-        <div class="block-visual-column">
+        <div class="block-visual-column" style="padding:24px;">
           <img src="./assets/guidelines/pdf_p14_sym_incorrect.png" alt="Symbol Incorrect Usage" style="width:100%; height:auto; display:block;" />
         </div>
       </div>
@@ -358,7 +358,7 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
           </div>
         </div>
 
-        <div class="block-visual-column">
+        <div class="block-visual-column" style="padding:24px;">
           <div style="display:flex; flex-direction:column; gap:36px;">
             <img src="./assets/guidelines/pdf_p15_sym_color.png" alt="Symbol Color" style="width:100%; height:auto; display:block;" />
             <img src="./assets/guidelines/pdf_p16_sym_bg_usage.png" alt="Symbol Background Usage" style="width:100%; height:auto; display:block;" />

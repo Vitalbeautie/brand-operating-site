@@ -2065,22 +2065,23 @@ export function suggestFamilyLook(options = {}) {
 
   const CHIP_FAMILY_MAP = {
     purple: ['purple'],
-    lavender: ['purple'],
+    lavender: ['lavender'],
     blue: ['blue'],
     navy: ['navy'],
-    teal: ['mint', 'blue'],
+    teal: ['teal'],
     mint: ['mint'],
-    green: ['green', 'lime'],
+    green: ['green'],
+    lime: ['lime'],
     yellow: ['yellow'],
-    gold: ['yellow', 'brown'],
+    gold: ['gold'],
     orange: ['orange'],
-    coral: ['pink', 'orange'],
+    coral: ['coral'],
     red: ['red'],
-    wine: ['red'],
+    wine: ['wine'],
     pink: ['pink'],
     brown: ['brown'],
     beige: ['beige'],
-    gray: ['navy', 'beige'],
+    gray: ['gray'],
   };
 
   const targetFamilies = selectedToneId !== 'auto'
@@ -2208,9 +2209,18 @@ export function suggestFamilyLook(options = {}) {
     };
 
     const pickShadeCards = (pool) => {
-      // 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩만 엄격하게 필터링
-      return pool
-        .filter(c => !usedCodes.has(c.normCode) && c.minD >= minDeltaE)
+      // 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩만 우선 필터링
+      let filtered = pool.filter(c => !usedCodes.has(c.normCode) && c.minD >= minDeltaE);
+
+      // 최소 색차 기준이 엄격(예: ΔE 20)하여 후보가 부족한 경우, 해당 음영 풀에서 색차가 가장 큰(최대 차별성) 상위 칩들로 자동 보강하여 항상 제안을 제공
+      if (filtered.length < 3) {
+        const sortedByDist = pool
+          .filter(c => !usedCodes.has(c.normCode))
+          .sort((a, b) => b.minD - a.minD);
+        filtered = sortedByDist.slice(0, 6);
+      }
+
+      return filtered
         .sort((a, b) => {
           const aScore = a.minD * 1.8 + (a.C || 0) * 0.6;
           const bScore = b.minD * 1.8 + (b.C || 0) * 0.6;
@@ -2260,22 +2270,23 @@ export function suggestChips(options = {}, count = 8) {
 
   const CHIP_FAMILY_MAP = {
     purple: ['purple'],
-    lavender: ['purple'],
+    lavender: ['lavender'],
     blue: ['blue'],
     navy: ['navy'],
-    teal: ['mint', 'blue'],
+    teal: ['teal'],
     mint: ['mint'],
-    green: ['green', 'lime'],
+    green: ['green'],
+    lime: ['lime'],
     yellow: ['yellow'],
-    gold: ['yellow', 'brown'],
+    gold: ['gold'],
     orange: ['orange'],
-    coral: ['pink', 'orange'],
+    coral: ['coral'],
     red: ['red'],
-    wine: ['red'],
+    wine: ['wine'],
     pink: ['pink'],
     brown: ['brown'],
     beige: ['beige'],
-    gray: ['navy', 'beige'],
+    gray: ['gray'],
   };
 
   // 대상 컬러 패밀리 결정: 대표 컬러칩을 직접 선택한 경우 해당 패밀리 우선, 'auto'인 경우 키워드 기반 글로벌 추천 패밀리 적용
@@ -2319,6 +2330,36 @@ export function suggestChips(options = {}, count = 8) {
         minD,
         hue: Math.round(pms.hue),
         score,
+        nearestName: nearest.name,
+        nearestPantone: nearest.pantone,
+        nearestHex: nearest.hex,
+      });
+    }
+  }
+
+  // ΔE 20 등 엄격한 기준에서 후보가 0개일 경우, 해당 계열의 최대 색차 상위 칩들로 자동 보강
+  if (candidates.length === 0) {
+    for (const pms of PANTONE_COATED_WITH_LAB) {
+      if (!targetFamilies.includes(pms.family)) continue;
+      const normPms = pms.code.toUpperCase().replace(/^PANTONE\s*/i, '').replace(/\s+/g, '');
+      if (usedCodes.has(normPms)) continue;
+      let nearest = usedList[0];
+      let minD = Infinity;
+      for (const u of usedList) {
+        const d = deltaE2000(u.lab, pms.lab);
+        if (d < minD) {
+          minD = d;
+          nearest = u;
+        }
+      }
+      candidates.push({
+        pantoneCode: pms.code,
+        hex: pms.hex,
+        family: pms.family,
+        lab: pms.lab,
+        minD,
+        hue: Math.round(pms.hue),
+        score: minD * 2,
         nearestName: nearest.name,
         nearestPantone: nearest.pantone,
         nearestHex: nearest.hex,

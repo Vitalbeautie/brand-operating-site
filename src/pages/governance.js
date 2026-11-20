@@ -957,9 +957,9 @@ function setupIconGenerator(el) {
         </ul>
 
         <div class="ig-insp-actions">
-          <button type="button" id="ig-dl-single-pdf" class="ig-btn-outline">↓ .pdf (30×30mm)</button>
-          <button type="button" id="ig-dl-single-ai" class="ig-btn-black">↓ .ai (30×30mm)</button>
-          <button type="button" id="ig-dl-single-svg" class="ig-btn-outline">↓ .svg</button>
+          <button type="button" id="ig-dl-single-pdf" class="ig-btn-outline">↓ .PDF (30×30)</button>
+          <button type="button" id="ig-dl-single-ai" class="ig-btn-black">↓ .AI (30×30)</button>
+          <button type="button" id="ig-dl-single-svg" class="ig-btn-outline">↓ .SVG</button>
         </div>
 
         <p class="ig-insp-foot">
@@ -1108,15 +1108,57 @@ function setupIconGenerator(el) {
         </div>`;
     }).join('');
 
-    // 이벤트 바인딩: 각 모티프별 복잡도 조절 슬라이더
+    // 이벤트 바인딩: 각 모티프별 복잡도 조절 슬라이더 (부드러운 마우스 드래그 및 실시간 인플레이스 갱신)
     kwListEl.querySelectorAll('.ig-complexity-range').forEach(slider => {
       slider.oninput = e => {
         const kw = e.target.getAttribute('data-kw');
         const motifId = e.target.getAttribute('data-motif-id');
-        motifLevels[`${kw}:${motifId}`] = +e.target.value;
+        const newLevel = Math.round(+e.target.value);
+        motifLevels[`${kw}:${motifId}`] = newLevel;
         selectedKw = kw;
         selectedMotifId = motifId;
-        renderAllKeywordBlocks();
+
+        const card = slider.closest('.ig-motif-card');
+        if (card) {
+          const block = currentBlocks.find(b => b.keyword === kw);
+          const motif = block?.motifs.find(m => m.id === motifId);
+          if (motif) {
+            const levelObj = motif.levels[newLevel - 1] || motif.levels[0];
+            const descEl = card.querySelector('.ig-slider-desc');
+            if (descEl) descEl.textContent = `특징: ${levelObj.desc}`;
+
+            const ticks = card.querySelectorAll('.ig-slider-ticks span');
+            ticks.forEach((tick, idx) => {
+              if (idx + 1 === newLevel) tick.classList.add('active');
+              else tick.classList.remove('active');
+            });
+
+            const cand = {
+              keyword: block.keyword,
+              enCopy: block.enCopy,
+              motif,
+              level: newLevel,
+              levelObj,
+            };
+            const customArc = el.querySelector('#ig-arc-input')?.value.trim();
+            const customKo = el.querySelector('#ig-ko-input')?.value.trim();
+            const activeKo = customKo || block.keyword;
+            const activeEn = customArc || block.enCopy;
+
+            card.querySelectorAll('.ig-motif-var-item').forEach(item => {
+              const vId = item.getAttribute('data-variant-id');
+              const vSvgEl = item.querySelector('.ig-motif-var-svg');
+              if (vSvgEl && vId) {
+                vSvgEl.innerHTML = renderBadgeVariantSvg(cand, vId, {
+                  size: 82,
+                  koText: activeKo,
+                  enText: activeEn,
+                });
+              }
+            });
+          }
+        }
+        renderInspector();
       };
     });
 
@@ -1333,10 +1375,10 @@ export function renderFamilyLookPage(el) {
 
     const familySectionsHtml = res.families.map(fam => {
       const pillsHtml = fam.existingProducts.map(p => `
-        <div class="fl-exist-pill" data-copy-hex="${p.hex}" data-copy-label="${p.pantone}" style="cursor:pointer;" title="클릭하여 HEX (${p.hex}) 복사">
+        <div class="fl-exist-pill" data-copy-hex="${p.hex}" data-copy-label="${p.pantone}" style="cursor:pointer;" title="클릭하여 PANTONE (${p.pantone}) 복사">
           <span class="fl-exist-sq" style="background:${p.hex}"></span>
           <span class="fl-exist-name">${p.name}</span>
-          <span class="fl-exist-code">${p.pantone} · ${p.hex}</span>
+          <span class="fl-exist-code">${p.pantone}</span>
         </div>
       `).join('');
 
@@ -1386,7 +1428,6 @@ export function renderFamilyLookPage(el) {
           <div class="fl-fam-head">
             <div class="fl-fam-title-group">
               <span class="fl-fam-title">${fam.familyKo} 계열</span>
-              <span class="fl-fam-badge">키워드·기능</span>
             </div>
             <span class="fl-fam-stats">이 계열 기존 제품 ${fam.existingProducts.length}개 · 겹쳐서 제외한 칩 ${fam.excludedCount}개</span>
           </div>
@@ -1423,9 +1464,8 @@ export function renderFamilyLookPage(el) {
 
     $('fl-results-container').innerHTML = `
       <div class="fl-kw-header-box">
-        <div class="fl-kw-header-title">${res.keyword || '수면'} <span style="font-size:12px;font-weight:500;color:#667085;margin-left:6px;">${cleanCategoryTitle}</span></div>
+        <div class="fl-kw-header-title">${res.keyword || '수면'}</div>
         <div class="fl-kw-header-desc">${cleanGlobalReason}</div>
-        <div class="fl-kw-header-tags">${tagList}</div>
       </div>
       ${familySectionsHtml}
     `;
@@ -1698,22 +1738,9 @@ export function renderLocalizationPage(el) {
     </div>
 
     <!-- GLOBAL LOCALIZATION 모드 스위치 (A. Layout Simulator | B. Packaging Production) -->
-    <div class="bv-subtabs" role="tablist" style="margin-bottom:16px;">
+    <div class="bv-subtabs" role="tablist" style="margin-bottom:24px;">
       <button type="button" class="bv-subtab active">A. LAYOUT SIMULATOR (기획용 전면 시뮬레이션)</button>
       <button type="button" class="bv-subtab" id="loc-go-production" onclick="location.hash='#/localization/packaging-production'">B. PACKAGING PRODUCTION (Excel → AI 전면·측면·후면 자동 조판)</button>
-    </div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0;margin-bottom:18px;border-bottom:1px solid #EAECEF;">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <label class="btn btn-outline btn-sm" style="cursor:pointer;margin:0">
-          국문 기준 파일(.svg) 업로드
-          <input type="file" id="loc-upload" accept=".svg,.txt,.json" style="display:none">
-        </label>
-        <span class="gov-sub" id="loc-file-status">국문 패키지 디자인 파일(.svg)을 업로드하면 규격과 문안을 자동 인식하여 글로벌 규격으로 시뮬레이션합니다.</span>
-      </div>
-      <span style="font-size:11px; font-weight:700; color:#475467; background:#F2F4F7; padding:4px 8px; border-radius:3px;">
-        기획 단계 정보량·배치 사전 검토용 (실제 인허가 승인 엑셀 도면 반영은 Packaging Production 사용)
-      </span>
     </div>
 
     <div class="gov-layout" style="margin-bottom:28px; align-items:start; grid-template-columns: 360px 1fr; gap: 28px;">
@@ -2161,34 +2188,36 @@ export function renderLocalizationPage(el) {
     };
   });
 
-  $('loc-upload').onchange = async e => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const raw = await f.text();
-    const res = parseKoreanPackageFile(raw, f.name);
-    if (res && res.nodes.length) {
-      locState.w = res.wMm;
-      locState.h = res.hMm;
-      $('loc-w').value = res.wMm;
-      $('loc-h').value = res.hMm;
-      const titleNode = res.nodes.find(n => n.role === 'title');
-      if (titleNode) {
-        const parts = titleNode.text.split(' ');
-        locState.lineName = parts[0] || '메타그린';
-        locState.productName = parts.slice(1).join(' ') || '슬림업';
-        $('loc-lname').value = locState.lineName;
-        $('loc-pname').value = locState.productName;
+  if ($('loc-upload')) {
+    $('loc-upload').onchange = async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const raw = await f.text();
+      const res = parseKoreanPackageFile(raw, f.name);
+      if (res && res.nodes.length) {
+        locState.w = res.wMm;
+        locState.h = res.hMm;
+        $('loc-w').value = res.wMm;
+        $('loc-h').value = res.hMm;
+        const titleNode = res.nodes.find(n => n.role === 'title');
+        if (titleNode) {
+          const parts = titleNode.text.split(' ');
+          locState.lineName = parts[0] || '메타그린';
+          locState.productName = parts.slice(1).join(' ') || '슬림업';
+          $('loc-lname').value = locState.lineName;
+          $('loc-pname').value = locState.productName;
+        }
+        const ingNode = res.nodes.find(n => n.role === 'ingredient');
+        if (ingNode) {
+          locState.ingredient = ingNode.text;
+          $('loc-ing').value = ingNode.text;
+        }
+        if ($('loc-file-status')) $('loc-file-status').innerHTML = `인식 완료: <b>${f.name}</b> (폭 ${res.wMm}mm × 높이 ${res.hMm}mm)`;
+        renderSimulations();
+        showToast(`「${f.name}」 규격 및 문안 인식 완료`);
       }
-      const ingNode = res.nodes.find(n => n.role === 'ingredient');
-      if (ingNode) {
-        locState.ingredient = ingNode.text;
-        $('loc-ing').value = ingNode.text;
-      }
-      $('loc-file-status').innerHTML = `인식 완료: <b>${f.name}</b> (폭 ${res.wMm}mm × 높이 ${res.hMm}mm)`;
-      renderSimulations();
-      showToast(`「${f.name}」 규격 및 문안 인식 완료`);
-    }
-  };
+    };
+  }
 
   renderSimulations();
 }

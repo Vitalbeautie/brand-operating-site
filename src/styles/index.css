@@ -832,16 +832,20 @@ html {
 
 .block-visual-column {
   background-color: #ffffff;
-  border: none;
+  border: 1px solid #ECEEF2;
+  border-radius: 6px;
+  overflow: hidden;
   padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .block-visual-column:hover {
-  border-color: transparent;
+  border-color: #ECEEF2;
 }
 
 .guide-block.block-full-width {
@@ -3024,10 +3028,21 @@ input[type="range"].vb-range::-moz-range-thumb,
 }
 
 .ig-insp-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
   margin-top: 16px;
+  box-sizing: border-box;
+}
+
+.ig-insp-actions button {
+  width: 100%;
+  padding: 8px 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .ig-insp-foot {
@@ -3675,11 +3690,11 @@ input[type="range"].vb-range::-moz-range-thumb,
 
 .ig-motif-variants-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(130px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
   margin-top: 14px;
-  overflow-x: auto;
-  padding-bottom: 8px;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .ig-motif-var-item {
@@ -3689,9 +3704,11 @@ input[type="range"].vb-range::-moz-range-thumb,
   border: 1.5px solid #E5E7EB;
   background: #FFFFFF;
   border-radius: 8px;
-  padding: 14px 10px;
+  padding: 8px 4px;
   cursor: pointer;
-  min-width: 120px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   transition: all 0.15s ease;
 }
 
@@ -3709,18 +3726,25 @@ input[type="range"].vb-range::-moz-range-thumb,
 
 .ig-motif-var-svg {
   width: 100%;
-  max-width: 124px;
+  max-width: 82px;
   aspect-ratio: 1/1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.ig-motif-var-svg svg {
+  width: 100%;
+  height: 100%;
+  max-width: 82px;
+  max-height: 82px;
+}
+
 .ig-motif-var-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: #333842;
-  margin-top: 8px;
+  margin-top: 6px;
   text-align: center;
   white-space: nowrap;
 }
