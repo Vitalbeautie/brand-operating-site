@@ -17,8 +17,8 @@ export function renderVoiceTonePage(container) {
   let glossaryRows = (vt?.glossary || []).map(g => `
     <tr>
       <td style="font-weight:700;">${g.term}</td>
-      <td><span style="color:var(--success); font-weight:600;">✓ ${g.correct}</span></td>
-      <td><span style="color:var(--error); font-weight:600;">✕ ${g.incorrect}</span></td>
+      <td><span style="color:var(--success); font-weight:600;">[권장] ${g.correct}</span></td>
+      <td><span style="color:var(--error); font-weight:600;">[금지] ${g.incorrect}</span></td>
     </tr>
   `).join('');
 
@@ -39,14 +39,14 @@ export function renderVoiceTonePage(container) {
     </div>
 
     <!-- DO / DON'T -->
-    <div class="section-subtitle">✦ 톤 DO / DON'T</div>
+    <div class="section-subtitle">톤 DO / DON'T</div>
     <div class="do-dont-grid" style="margin-bottom:28px;">
       <div class="do-card">
-        <div class="dd-label">✓ DO — 이런 표현을 사용합니다</div>
+        <div class="dd-label">DO — 이런 표현을 사용합니다</div>
         ${doExamples}
       </div>
       <div class="dont-card">
-        <div class="dd-label">✕ DON'T — 이런 표현은 피합니다</div>
+        <div class="dd-label">DON'T — 이런 표현은 피합니다</div>
         ${dontExamples}
       </div>
     </div>
@@ -54,7 +54,7 @@ export function renderVoiceTonePage(container) {
     <div class="section-divider"></div>
 
     <!-- Glossary -->
-    <div class="section-subtitle">📖 용어 사전 (표기 규칙)</div>
+    <div class="section-subtitle">용어 사전 (표기 규칙)</div>
     <div class="card">
       <table class="glossary-table">
         <thead>

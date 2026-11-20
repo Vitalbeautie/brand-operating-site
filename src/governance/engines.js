@@ -2542,7 +2542,7 @@ export function autoLayout(lang, text, boxMm, basePt, minPt) {
   while (r.h > maxH && s.pt - 0.25 >= minPt - 1e-6) { s.pt = +(s.pt - 0.25).toFixed(2); r = fit(s); }
   if (s.pt !== basePt) log.push(`폰트 ${basePt}pt → ${s.pt}pt (규정 최소 ${minPt}pt)`);
   const overflow = r.h > maxH;
-  if (overflow) log.push(`⚠ 최소 규정 내 수용 불가 — 정보영역 ${Math.ceil((r.h / MM_TO_PX) - boxMm.h)}mm 확장 또는 측면 패널 분할 제안`);
+  if (overflow) log.push(`[주의] 최소 규정 내 수용 불가 — 정보영역 ${Math.ceil((r.h / MM_TO_PX) - boxMm.h)}mm 확장 또는 측면 패널 분할 제안`);
   if (!log.length) log.push('조정 불필요 — 기본 룰 그대로 적용');
   return { ...s, ...r, overflow, log, font: t.font, fillRatio: r.h / maxH, scale: MM_TO_PX };
 }

@@ -949,11 +949,10 @@ export function renderDesignCheckerPage(el) {
       <!-- 헤더 설명 및 가이드 엑셀 다운로드 버튼 -->
       <div style="margin-bottom:20px; border-left:2px solid #D5D8DE; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <p style="font-size:13.5px; color:#475467; margin:0; line-height:1.6; max-width:780px;">
-          마스터가 승인한 브랜드 가이드 및 원화 실측 규칙을 기준으로 원본 AI/PDF/EPS 원고를 검수하고,
-          규칙 기반 자동 수정안을 원본과 실시간 비교한 후 체크된 수정사항이 반영된 전체 원화 AI 파일로 저장합니다.
+          마스터가 승인한 브랜드 가이드 및 원화 실측 규칙을 기준으로 원본 AI/PDF/EPS 원고를 검수하고,<br>규칙 기반 자동 수정안을 원본과 실시간 비교한 후 체크된 수정사항이 반영된 전체 원화 AI 파일로 저장합니다.
         </p>
         <button type="button" id="dc-btn-download-guide-excel" class="btn btn-outline btn-sm" style="font-size:12px; font-weight:700; border-color:#101820; color:#101820; padding:8px 14px; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;">
-          📊 통합 디자인 가이드 엑셀 다운로드 (.xlsx)
+          통합 디자인 가이드 엑셀 다운로드 (.xlsx)
         </button>
       </div>
 
@@ -987,7 +986,7 @@ export function renderDesignCheckerPage(el) {
           ${hasUploadedFile ? `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div style="font-size:12.5px; color:#101820; font-weight:700;">
-                ✓ 인식된 원고: <span style="font-weight:800;">${customUploadedFileName}</span>
+                인식된 원고: <span style="font-weight:800;">${customUploadedFileName}</span>
                 <span style="font-size:11.5px; color:#475467; font-weight:500; margin-left:10px;">
                   [${scenario.measured.foodCategoryLabel || (scenario.foodType === 'food' ? '일반식품' : '건강기능식품')}]
                   ${scenario.measured.lineName} ${scenario.measured.productName} · 전면 ${scenario.frontPanelMm.w}×${scenario.frontPanelMm.h}mm / 측면 ${scenario.sideWidthMm}mm
@@ -997,7 +996,7 @@ export function renderDesignCheckerPage(el) {
             </div>
           ` : `
             <div style="font-size:13.5px; font-weight:700; color:#101820; margin-bottom:6px;">
-              📂 검수할 Illustrator 원고(.AI / .EPS / .PDF) 파일을 이곳에 드롭하거나 클릭하여 업로드하세요
+              검수할 Illustrator 원고(.AI / .EPS / .PDF) 파일을 이곳에 드롭하거나 클릭하여 업로드하세요
             </div>
             <div style="font-size:11.5px; color:#667085; margin-bottom:14px;">
               원고 파일을 업로드하면 전면·측면·후면·상단·하단 6면을 자동 인식하여 실시간 비교 시뮬레이션과 검수 결과를 표시합니다.
@@ -1112,7 +1111,7 @@ export function renderDesignCheckerPage(el) {
                       <span style="color:#475467; font-size:11.5px;">— ${c.action}</span>
                     </span>
                     <span style="font-size:11px; font-weight:700; color:${isChecked ? '#101820' : '#98A2B3'}; white-space:nowrap; margin-left:8px;">
-                      ${isChecked ? '✓ 적용' : '해제'}
+                      ${isChecked ? '적용' : '해제'}
                     </span>
                   </label>
                 `;
@@ -1122,7 +1121,7 @@ export function renderDesignCheckerPage(el) {
             <!-- 전체 원화 다운로드 버튼 바 -->
             <div style="display:flex; gap:8px;">
               <button type="button" id="dc-btn-download-ai" style="flex:1; height:42px; background:#101820; color:#FFFFFF; font-size:12px; font-weight:700; border:1px solid #101820; cursor:pointer;">
-                📥 체크된 수정안 적용 전체 원화(.AI) 다운로드
+                체크된 수정안 적용 전체 원화(.AI) 다운로드
               </button>
               <button type="button" id="dc-btn-download-pdf" style="height:42px; padding:0 16px; background:#FFFFFF; color:#101820; font-size:12px; font-weight:600; border:1px solid #101820; cursor:pointer;">
                 전체 원화(.PDF)
@@ -1148,14 +1147,14 @@ export function renderDesignCheckerPage(el) {
         currentLine = parsed.detectedLine;
       }
       hasUploadedFile = true;
-      showToast(`✓ ${file.name} 원고(${parsed.lineName} ${parsed.productName}) 6면 인식 완료`);
+      showToast(`${file.name} 원고(${parsed.lineName} ${parsed.productName}) 6면 인식 완료`);
       render();
     } catch (err) {
       console.error('File parse error:', err);
       customParsedInfo = inferProductInfoFromTextAndName('', file.name);
       currentLine = customParsedInfo.detectedLine || 'metagreen';
       hasUploadedFile = true;
-      showToast(`✓ ${file.name} 원고 로드 완료`);
+      showToast(`${file.name} 원고 로드 완료`);
       render();
     }
   };
@@ -1287,7 +1286,7 @@ export function renderDesignCheckerPage(el) {
         a.download = fileName;
         a.click();
         URL.revokeObjectURL(url);
-        showToast(`✓ ${fileName} (6면 전체 원화)가 다운로드되었습니다.`);
+        showToast(`${fileName} (6면 전체 원화)가 다운로드되었습니다.`);
       };
     }
 
@@ -1310,7 +1309,7 @@ export function renderDesignCheckerPage(el) {
         a.download = fileName;
         a.click();
         URL.revokeObjectURL(url);
-        showToast(`✓ ${fileName} (6면 전체 원화)가 다운로드되었습니다.`);
+        showToast(`${fileName} (6면 전체 원화)가 다운로드되었습니다.`);
       };
     }
 
@@ -1318,7 +1317,7 @@ export function renderDesignCheckerPage(el) {
     if (dlGuideExcelBtn) {
       dlGuideExcelBtn.onclick = () => {
         downloadIntegratedGuideExcelFile('VITALBEAUTIE_Integrated_Design_Guide_2026.xlsx');
-        showToast('✓ VITALBEAUTIE 통합 디자인 가이드 엑셀 파일이 다운로드되었습니다.');
+        showToast('VITALBEAUTIE 통합 디자인 가이드 엑셀 파일이 다운로드되었습니다.');
       };
     }
   };

@@ -306,7 +306,7 @@ export function renderSidebar(container) {
             <circle cx="10" cy="10" r="6.5"></circle>
             <line x1="21" y1="21" x2="14.6" y2="14.6"></line>
           </svg>
-          <button id="search-clear-btn" class="search-clear-btn" title="${t('검색 지우기', 'Clear search')}">✕</button>
+          <button id="search-clear-btn" class="search-clear-btn" title="${t('검색 지우기', 'Clear search')}">&times;</button>
         </div>
         <!-- Language Toggle Button (EN / KR) -->
         <button id="lang-toggle-btn" class="btn-lang btn-lang-square" title="${t('영문으로 전환 (Switch to English)', '국문으로 전환 (Switch to Korean)')}">${langBtnLabel}</button>

@@ -197,8 +197,8 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
   };
 
   const DESCRIPTIONS = {
-    layout: '제품 라인과 패키지 크기(가로·세로)를 입력하면, 라인별 디자인 규칙에 맞춰 단상자 전면 레이아웃을 실시간으로 생성합니다. 규격에 따른 로고와 제품 정보의 배치를 미리 확인할 수 있습니다.',
-    icon: '성분이나 기능 키워드를 입력하면, 바이탈뷰티의 디자인 스타일에 맞는 픽토그램을 생성합니다. 생성된 아이콘은 벡터 파일로 다운로드해 디자인에 활용할 수 있습니다.',
+    layout: '제품 라인과 패키지 크기(가로·세로)를 입력하면, 라인별 디자인 규칙에 맞춰 단상자 전면 레이아웃을 실시간으로 생성합니다.<br>규격에 따른 로고와 제품 정보의 배치를 미리 확인할 수 있습니다.',
+    icon: '성분이나 기능 키워드를 입력하면, 바이탈뷰티의 디자인 스타일이 적용된 픽토그램을 생성합니다.<br>생성된 아이콘은 벡터 파일로 다운로드해 디자인에 활용할 수 있습니다.',
   };
 
   el.innerHTML = `
@@ -514,7 +514,7 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
       $('bv-pane-layout').style.display = activeSubTab === 'layout' ? 'block' : 'none';
       $('bv-pane-icon').style.display = activeSubTab === 'icon' ? 'block' : 'none';
       const descEl = el.querySelector('#bv-desc-display');
-      if (descEl) descEl.textContent = DESCRIPTIONS[activeSubTab];
+      if (descEl) descEl.innerHTML = DESCRIPTIONS[activeSubTab];
       const titleDisplay = document.getElementById('page-title-display');
       if (titleDisplay) {
         titleDisplay.textContent = activeSubTab === 'icon' ? 'ICON GENERATOR' : 'LAYOUT PROPOSAL';
@@ -644,7 +644,7 @@ export function renderLogoFitPage(el, initialTab = 'layout') {
       inp.style.borderColor = '#E52421';
       inp.style.background = '#FFF5F5';
       warn.style.display = 'block';
-      warn.innerHTML = `⚠ 줄당 글자수가 너무 많습니다 (권장 최대 8자 · 현재 ${maxLineLen}자)`;
+      warn.innerHTML = `줄당 글자수가 너무 많습니다 (권장 최대 8자 · 현재 ${maxLineLen}자)`;
     } else {
       inp.style.borderColor = '';
       inp.style.background = '';
@@ -1161,6 +1161,19 @@ function setupIconGenerator(el) {
       slider.onchange = e => {
         updateSliderLevel(+e.target.value, true);
       };
+
+      // Ticks click event: clicking ①, ②, ③, ④ immediately jumps slider & updates complexity
+      const card = slider.closest('.ig-motif-card');
+      if (card) {
+        card.querySelectorAll('.ig-slider-ticks span').forEach((tick, idx) => {
+          tick.style.cursor = 'pointer';
+          tick.onclick = () => {
+            const targetLv = idx + 1;
+            slider.value = targetLv;
+            updateSliderLevel(targetLv, true);
+          };
+        });
+      }
     });
 
     // 이벤트 바인딩: 6가지 배지 변형 클릭 시 선택 및 인스펙터 실시간 동기화
@@ -1331,7 +1344,7 @@ export function renderFamilyLookPage(el) {
   el.innerHTML = `${head(
     'Module 02 · Global Functional Color & Pantone Recommender',
     'Family Look · 성분·기능 기반 글로벌 팬톤 컬러 제안',
-    '제품의 성분이나 기능을 입력하면 관련 컬러와 선정 이유를 제안합니다. 기존 바이탈뷰티 제품 41종의 컬러와 비교해 차별화된 PANTONE 컬러 후보를 추천합니다.'
+    '제품의 성분이나 기능을 입력하면 관련 컬러와 선정 이유를 제안합니다.<br>기존 바이탈뷰티 제품 41종의 컬러와 비교해 차별화된 PANTONE 컬러 후보를 추천합니다.'
   )}
     <div class="gov-layout">
       <!-- 좌측: 성분 또는 기능 & 대표 컬러(17개) & 최소 색차 (ΔE2000) -->
@@ -1478,7 +1491,7 @@ export function renderFamilyLookPage(el) {
         copyToClipboard(hex);
         const badge = node.querySelector('.fl-copy-badge');
         if (badge) {
-          badge.textContent = '✓ COPIED';
+          badge.textContent = 'COPIED';
           badge.style.color = '#101820';
           setTimeout(() => {
             badge.textContent = 'COPY';
@@ -1734,7 +1747,7 @@ export function renderLocalizationPage(el) {
   el.innerHTML = `
     <div style="margin-bottom:18px;">
       <div style="border-left:2px solid #D5D8DE; padding-left:16px; font-size:13.5px; color:#4A505C; line-height:1.7; max-width:860px;">
-        제품 라인과 패키지 규격을 선택하면 한국·미국·일본의 표시 형식에 맞춰 패키지 전면을 시뮬레이션합니다. 국가별 문안과 레이아웃 차이를 비교할 수 있습니다.
+        제품 라인과 패키지 크기(가로·세로)를 입력하면, 라인별 디자인 규칙에 맞춰 단상자 전면 레이아웃을 실시간으로 생성합니다.<br>규격에 따른 로고와 제품 정보의 배치를 미리 확인할 수 있습니다.
       </div>
     </div>
 

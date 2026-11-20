@@ -219,7 +219,7 @@ export function renderColorPage(container) {
         copyToClipboard(hex);
         const badge = card.querySelector('.hex-copy-badge');
         if (badge) {
-          badge.textContent = '✓ COPIED';
+          badge.textContent = 'COPIED';
           badge.style.color = '#101820';
           setTimeout(() => {
             badge.textContent = 'COPY';

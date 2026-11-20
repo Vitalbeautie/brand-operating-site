@@ -257,12 +257,12 @@ export const DEFAULT_BRAND = {
 
   "assets": {
     "categories": [
-      { "id": "wordmark-en", "name": "영문 로고 (VITALBEAUTIE)", "icon": "🔤", "formats": ["SVG", "PNG", "AI"], "count": 4 },
-      { "id": "wordmark-ko", "name": "국문 로고 (바이탈뷰티)", "icon": "🇰🇷", "formats": ["SVG", "PNG", "AI"], "count": 2 },
-      { "id": "symbol-lab", "name": "공식 심볼 (LAB PROVEN)", "icon": "🔬", "formats": ["SVG", "PNG", "AI"], "count": 4 },
-      { "id": "pdf-guideline", "name": "브랜드 아이덴티티 가이드라인 PDF", "icon": "📄", "formats": ["PDF"], "count": 1 },
-      { "id": "product-map", "name": "전체 제품맵 (이커머스/뉴커머스)", "icon": "🗺️", "formats": ["PNG", "PDF"], "count": 1 },
-      { "id": "pantone-palette", "name": "채널별 팬톤 컬러 칩 (30종)", "icon": "🎨", "formats": ["ASE", "JSON"], "count": 30 }
+      { "id": "wordmark-en", "name": "영문 로고 (VITALBEAUTIE)", "icon": "", "formats": ["SVG", "PNG", "AI"], "count": 4 },
+      { "id": "wordmark-ko", "name": "국문 로고 (바이탈뷰티)", "icon": "", "formats": ["SVG", "PNG", "AI"], "count": 2 },
+      { "id": "symbol-lab", "name": "공식 심볼 (LAB PROVEN)", "icon": "", "formats": ["SVG", "PNG", "AI"], "count": 4 },
+      { "id": "pdf-guideline", "name": "브랜드 아이덴티티 가이드라인 PDF", "icon": "", "formats": ["PDF"], "count": 1 },
+      { "id": "product-map", "name": "전체 제품맵 (이커머스/뉴커머스)", "icon": "", "formats": ["PNG", "PDF"], "count": 1 },
+      { "id": "pantone-palette", "name": "채널별 팬톤 컬러 칩 (30종)", "icon": "", "formats": ["ASE", "JSON"], "count": 30 }
     ]
   },
 

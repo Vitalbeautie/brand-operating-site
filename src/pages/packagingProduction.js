@@ -784,7 +784,7 @@ export function renderPackagingProductionPage(el) {
       <!-- 헤더 설명 및 가이드 엑셀 다운로드 버튼 -->
       <div style="margin-bottom:20px; border-left:2px solid #D5D8DE; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <p style="font-size:13.5px; color:#475467; margin:0; line-height:1.6; max-width:780px;">
-          인허가(RA) 승인 엑셀 문안과 패키지 도면(.eps / .ai)을 기반으로 브랜드 가이드 조판 규칙(좌우 2mm 마진, 본문 10pt, 후면 제품명 15pt/13pt, 문안별 0.3mm 구분선, 소비기한 11mm 박스 등)을 자동 적용하여 인쇄용 6면 패키지 원화를 실시간으로 자동 조판하고 AI/PDF 파일로 다운로드하는 기능입니다.
+          인허가(RA)승인 엑셀 문안과 패키지 도면 (.eps / .ai)을 기반으로 브랜드 가이드 규칙을 자동 적용하여<br>원화를 실시간으로 자동 조판하고 파일로 다운로드하는 기능입니다.
         </p>
         <button type="button" id="pp-btn-download-guide-excel" class="btn btn-outline btn-sm" style="font-size:12px; font-weight:700; border-color:#101820; color:#101820; padding:8px 14px; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;">
           통합 디자인 가이드 엑셀 다운로드 (.xlsx)
@@ -821,7 +821,7 @@ export function renderPackagingProductionPage(el) {
             <input type="file" id="pp-excel-file" accept=".xlsx,.xls,.csv" style="display:none;" />
             ${hasExcelUploaded ? `
               <div style="font-size:13.5px; font-weight:800; color:#059669; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                <span style="font-size:16px; color:#10B981; font-weight:900;">✓</span> 엑셀 업로드 완료: ${uploadedExcelName}
+                엑셀 업로드 완료: ${uploadedExcelName}
               </div>
               <div style="font-size:11.5px; color:#065F46; margin-bottom:12px;">
                 코드: <strong>${meta.code || '-'}</strong> · 제품명: <strong>${meta.productLine || ''} ${meta.productName || ''}</strong> · 분류: <strong>${meta.packageType || 'Carton'}</strong>
@@ -850,7 +850,7 @@ export function renderPackagingProductionPage(el) {
             <input type="file" id="pp-dieline-file" accept=".eps,.ai,.pdf,.svg" style="display:none;" />
             ${hasDielineUploaded ? `
               <div style="font-size:13.5px; font-weight:800; color:#059669; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                <span style="font-size:16px; color:#10B981; font-weight:900;">✓</span> 도면 업로드 완료: ${uploadedDielineName}
+                도면 업로드 완료: ${uploadedDielineName}
               </div>
               <div style="font-size:11.5px; color:#065F46; margin-bottom:12px;">
                 ${uploadedDielineInfo?.panels
@@ -954,15 +954,15 @@ export function renderPackagingProductionPage(el) {
       hasExcelUploaded = true;
 
       if (hasDielineUploaded) {
-        showToast(`✓ ${file.name} 승인 문안(10pt·2mm 마진·0.3mm 구분선)이 도면에 자동 조판되었습니다.`);
+        showToast(`${file.name} 승인 문안(10pt·2mm 마진·0.3mm 구분선)이 도면에 자동 조판되었습니다.`);
       } else {
-        showToast(`✓ ${file.name} 엑셀 승인 문안이 시뮬레이션에 자동 반영되었습니다.`);
+        showToast(`${file.name} 엑셀 승인 문안이 시뮬레이션에 자동 반영되었습니다.`);
       }
       render();
     } catch (err) {
       console.error('Excel parse error:', err);
       hasExcelUploaded = true;
-      showToast(`✓ ${file.name} 엑셀 로드 완료`);
+      showToast(`${file.name} 엑셀 로드 완료`);
       render();
     }
   };
@@ -981,12 +981,12 @@ export function renderPackagingProductionPage(el) {
         selectedLine = parsedDieline.detectedLine;
       }
 
-      showToast(`✓ ${file.name} 도면 6면 구조 인식 및 자동 조판 완료`);
+      showToast(`${file.name} 도면 6면 구조 인식 및 자동 조판 완료`);
       render();
     } catch (err) {
       console.error('Dieline parse error:', err);
       hasDielineUploaded = true;
-      showToast(`✓ ${file.name} 도면 로드 완료`);
+      showToast(`${file.name} 도면 로드 완료`);
       render();
     }
   };
@@ -1078,7 +1078,7 @@ export function renderPackagingProductionPage(el) {
     if (dlGuideExcelBtn) {
       dlGuideExcelBtn.onclick = () => {
         downloadIntegratedGuideExcelFile('VITALBEAUTIE_Integrated_Design_Guide_2026.xlsx');
-        showToast('✓ VITALBEAUTIE 통합 디자인 가이드 엑셀 파일이 다운로드되었습니다.');
+        showToast('VITALBEAUTIE 통합 디자인 가이드 엑셀 파일이 다운로드되었습니다.');
       };
     }
 
@@ -1102,7 +1102,7 @@ export function renderPackagingProductionPage(el) {
         a.download = fileName;
         a.click();
         URL.revokeObjectURL(url);
-        showToast(`✓ ${fileName} 전체 원화가 다운로드되었습니다.`);
+        showToast(`${fileName} 전체 원화가 다운로드되었습니다.`);
       };
     }
 
@@ -1125,7 +1125,7 @@ export function renderPackagingProductionPage(el) {
         a.download = fileName;
         a.click();
         URL.revokeObjectURL(url);
-        showToast(`✓ ${fileName} 전체 원화가 다운로드되었습니다.`);
+        showToast(`${fileName} 전체 원화가 다운로드되었습니다.`);
       };
     }
   };
