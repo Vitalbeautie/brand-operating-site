@@ -408,13 +408,14 @@ input[type="number"], .gov-input, .pf-input, .fl-rec-hex, .fl-rec-pms, .fl-rec-c
   overflow-y: auto;
   overflow-x: hidden !important;
   box-sizing: border-box;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 2px;
-}
-.sidebar::-webkit-scrollbar-thumb {
-  background: var(--ap-border);
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .sidebar-header {
@@ -465,6 +466,14 @@ input[type="number"], .gov-input, .pf-input, .fl-rec-hex, .fl-rec-pms, .fl-rec-c
   overflow-y: auto;
   overflow-x: hidden !important;
   box-sizing: border-box;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.nav-menu::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .sidebar-section-label {
@@ -528,8 +537,7 @@ input[type="number"], .gov-input, .pf-input, .fl-rec-hex, .fl-rec-pms, .fl-rec-c
   transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, padding 0.22s ease;
 }
 
-.nav-group:hover > .nav-sub-list,
-.nav-group.active > .nav-sub-list {
+.nav-group:hover > .nav-sub-list {
   max-height: 280px;
   opacity: 1;
   padding-top: 4px;
@@ -777,6 +785,24 @@ html {
   flex: 1;
   padding: 110px 48px 60px 48px;
   overflow-y: auto;
+  overflow-x: hidden !important;
+}
+
+.content::-webkit-scrollbar,
+.sections-container::-webkit-scrollbar {
+  width: 4px;
+}
+.content::-webkit-scrollbar-track,
+.sections-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.content::-webkit-scrollbar-thumb,
+.sections-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+.content::-webkit-scrollbar-thumb:hover,
+.sections-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
 }
 
 /* ─── AP Beauty Editorial 2-Column Guide Block ─── */
@@ -1964,7 +1990,7 @@ html {
 
 .pf-grid {
   display: grid;
-  grid-template-columns: 370px minmax(360px, 1fr) 390px;
+  grid-template-columns: minmax(300px, 370px) minmax(320px, 1fr) minmax(300px, 390px);
   gap: 20px;
   align-items: start;
 }
@@ -1999,10 +2025,10 @@ html {
 }
 
 #lf-canvas.pf-canvas-wrap {
-  min-height: 740px;
+  min-height: 440px;
   height: calc(100vh - 210px);
   max-height: 940px;
-  padding: 28px 16px;
+  padding: 24px 16px;
   background: #ffffff;
   border: none;
   box-shadow: none;
@@ -2710,7 +2736,7 @@ input[type="range"].vb-range::-moz-range-thumb,
 /* ─── ICON GENERATOR 3-Column Layout ─── */
 .ig-layout {
   display: grid;
-  grid-template-columns: 196px minmax(0, 1fr) 248px;
+  grid-template-columns: minmax(160px, 196px) minmax(0, 1fr) minmax(200px, 248px);
   gap: 20px;
   align-items: start;
 }
@@ -3909,5 +3935,44 @@ input[type="range"].vb-range::-moz-range-thumb,
   }
   .fl-chip-grid-17 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ─── Laptop Responsive Media Queries (1025px ~ 1440px) ─── */
+@media (max-width: 1440px) {
+  :root {
+    --sidebar-width: 260px;
+    --header-height: 64px;
+  }
+
+  .sidebar {
+    padding: 28px 18px 24px 18px;
+  }
+
+  .brand-logo img {
+    max-width: 148px !important;
+  }
+
+  .sidebar-section-label {
+    padding: 12px 0 4px 0;
+    font-size: 9.5px;
+  }
+
+  .nav-link {
+    font-size: 11.5px;
+    padding: 5px 0;
+  }
+
+  .main-page-title-container {
+    padding: 22px 32px 14px 32px;
+  }
+
+  .main-page-title {
+    font-size: 28px;
+  }
+
+  .content,
+  .sections-container {
+    padding: 88px 32px 48px 32px;
   }
 }

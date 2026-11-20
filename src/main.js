@@ -81,6 +81,31 @@ function init() {
   if (content) {
     content.style.opacity = '1';
   }
+
+  // Auto-fit screen scale to match proportions across all monitors without scrollbars
+  initResponsiveScale();
+}
+
+/**
+ * Auto-fit screen scaling for laptops & desktop monitors
+ * Automatically adjusts zoom to match screen proportion perfectly without scrollbars
+ */
+function initResponsiveScale() {
+  const updateScale = () => {
+    const w = window.innerWidth;
+    // On laptop & desktop monitors (1025px ~ 1680px)
+    // Proportionally scale to 1680px design reference so no bars appear
+    if (w >= 1025 && w < 1680) {
+      const scale = Math.min(1, Math.max(0.65, +(w / 1680).toFixed(3)));
+      document.documentElement.style.zoom = String(scale);
+    } else {
+      document.documentElement.style.zoom = '1';
+    }
+  };
+
+  window.addEventListener('resize', updateScale);
+  window.addEventListener('orientationchange', updateScale);
+  updateScale();
 }
 
 // Execute immediately
