@@ -1100,7 +1100,7 @@ function setupIconGenerator(el) {
         </div>`;
     }).join('');
 
-    // 이벤트 바인딩: 각 모티프별 복잡도 조절 슬라이더 (부드러운 마우스 드래그 및 실시간 인플레이스 갱신)
+    // 이벤트 바인딩: 각 모티프별 복잡도 조절 슬라이더 (부드러운 마우스 드래그 및 1/2/3/4단계 실시간 복잡도 갱신)
     kwListEl.querySelectorAll('.ig-complexity-range').forEach(slider => {
       const updateSliderLevel = (val, snap = false) => {
         const kw = slider.getAttribute('data-kw');
@@ -1121,6 +1121,8 @@ function setupIconGenerator(el) {
           const motif = block?.motifs.find(m => m.id === motifId);
           if (motif) {
             const levelObj = motif.levels[newLevel - 1] || motif.levels[0];
+            const activeIcon = levelObj.icon;
+
             const descEl = card.querySelector('.ig-slider-desc');
             if (descEl) descEl.textContent = `특징: ${levelObj.desc}`;
 
@@ -1130,36 +1132,27 @@ function setupIconGenerator(el) {
               else tick.classList.remove('active');
             });
 
-            if (prevLevel !== newLevel || snap) {
-              const cand = {
-                keyword: block.keyword,
-                enCopy: block.enCopy,
-                motif,
-                level: newLevel,
-                levelObj,
-              };
-              const customArc = el.querySelector('#ig-arc-input')?.value.trim();
-              const customKo = el.querySelector('#ig-ko-input')?.value.trim();
-              const activeKo = customKo || block.keyword;
-              const activeEn = customArc || block.enCopy;
+            const customArc = el.querySelector('#ig-arc-input')?.value.trim();
+            const customKo = el.querySelector('#ig-ko-input')?.value.trim();
+            const activeKo = customKo || block.keyword;
+            const activeEn = customArc || block.enCopy;
 
-              card.querySelectorAll('.ig-motif-var-item').forEach(item => {
-                const vId = item.getAttribute('data-variant-id');
-                const vSvgEl = item.querySelector('.ig-motif-var-svg');
-                if (vSvgEl && vId) {
-                  vSvgEl.innerHTML = renderBadgeVariantSvg(cand, vId, {
-                    size: 82,
-                    koText: activeKo,
-                    enText: activeEn,
-                  });
-                }
-              });
-            }
+            // 6가지 배지 아이콘의 SVG를 새 복잡도 단계(activeIcon)로 실시간 갱신
+            card.querySelectorAll('.ig-motif-var-item').forEach((item, vIdx) => {
+              const vId = item.getAttribute('data-variant-id');
+              const vSvgEl = item.querySelector('.ig-motif-var-svg');
+              if (vSvgEl && vId && activeIcon) {
+                vSvgEl.innerHTML = renderVbStyledIconSvg(activeIcon, vId, {
+                  koText: activeKo,
+                  enText: activeEn,
+                  uid: `kw-${kw}-m-${motifId}-v-${vIdx}-lv${newLevel}`,
+                });
+              }
+            });
           }
         }
-        if (prevLevel !== newLevel || snap) {
-          renderInspector();
-        }
+        // 우측 인스펙터 패널도 새 복잡도 단계로 실시간 갱신
+        renderInspector();
       };
 
       slider.oninput = e => {
