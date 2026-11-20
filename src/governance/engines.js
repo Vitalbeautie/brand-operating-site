@@ -4450,14 +4450,19 @@ function renderPopHeaderSvg(W, pop, showGuides = false, dimLine = null, calloutL
     totalTextH += capH;
     if (i < rows.length - 1) {
       const next = rows[i + 1];
-      // 기본 타이포그래피 행간(line-height ~1.2) 적용: 과도하게 벌어지지 않는 기본 간격
-      const gap = Math.max(1.0, (r.px + next.px) * 0.10);
+      // 아래 제품명 행간과 동일한 수준의 편안한 행간 적용:
+      // 글자 자소(받침/초성) 간섭을 방지하고 아래 제품명(메타그린 슬림업 등)과 동일하게 편안한 여백 형성
+      const isGroupBoundary = r.groupIdx !== next.groupIdx;
+      const gap = isGroupBoundary
+        ? Math.max(3.2, (r.px + next.px) * 0.35)
+        : Math.max(2.4, (r.px + next.px) * 0.28);
       rowGaps.push(gap);
       totalTextH += gap;
     }
   });
 
-  let curTopY = -popH / 2 - totalTextH / 2;
+  const lastDescender = rows.length ? (rows[rows.length - 1].px * 0.18) : 0;
+  let curTopY = -popH / 2 - (totalTextH + lastDescender) / 2;
   const textEls = [];
   const calloutEls = [];
 
