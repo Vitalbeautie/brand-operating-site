@@ -362,14 +362,14 @@ var XF=Object.defineProperty;var kA=i=>{throw TypeError(i)};var KF=(i,e,t)=>e in
 
         <div class="block-visual-column">
           <div>
-            <!-- Top Row: English & Korean side by side (Clean alignment without box borders) -->
+            <!-- Top Row: English & Korean side by side (Clean center alignment) -->
             <div style="display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:32px; padding:20px 0 36px;">
-              <div style="display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end;">
-                <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE English" style="max-width:280px; width:100%; height:auto; display:block;" />
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:flex-end; text-align:center;">
+                <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE English" style="max-width:280px; width:100%; height:auto; display:block; margin:0 auto;" />
                 <span style="font-family:var(--font-en); font-size:10px; letter-spacing:2px; color:#8C929E; margin-top:16px;">ENGLISH</span>
               </div>
-              <div style="display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end;">
-                <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="바이탈뷰티 Korean" style="max-width:180px; width:70%; height:auto; display:block;" />
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:flex-end; text-align:center;">
+                <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="바이탈뷰티 Korean" style="max-width:180px; width:70%; height:auto; display:block; margin:0 auto;" />
                 <span style="font-family:var(--font-en); font-size:10px; letter-spacing:2px; color:#8C929E; margin-top:16px;">KOREAN</span>
               </div>
             </div>
@@ -417,13 +417,13 @@ var XF=Object.defineProperty;var kA=i=>{throw TypeError(i)};var KF=(i,e,t)=>e in
         </div>
 
         <div class="block-visual-column">
-          <div style="display:flex; align-items:flex-end; gap:48px; padding:20px 0;">
-            <div style="display:flex; flex-direction:column; align-items:flex-start;">
-              <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="English 20mm" style="height:16px; width:auto; display:block;" />
+          <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; padding:32px 20px;">
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+              <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="English 20mm" style="height:16px; width:auto; display:block; margin:0 auto;" />
               <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">English · 20mm</span>
             </div>
-            <div style="display:flex; flex-direction:column; align-items:flex-start;">
-              <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="Korean 30mm" style="height:18px; width:auto; display:block;" />
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+              <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="Korean 30mm" style="height:18px; width:auto; display:block; margin:0 auto;" />
               <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">Korean · 30mm</span>
             </div>
           </div>
@@ -580,7 +580,7 @@ var XF=Object.defineProperty;var kA=i=>{throw TypeError(i)};var KF=(i,e,t)=>e in
         </div>
 
         <div class="block-visual-column">
-          <div style="display:flex; align-items:center; gap:22px; padding:18px 0 18px 40px;">
+          <div style="display:flex; align-items:center; justify-content:center; gap:22px; padding:32px 24px;">
             <img src="./assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="Printed 15mm" style="width:58px; height:58px; display:block;" />
             <div style="width:1px; height:22px; background:#ECEEF2;"></div>
             <span style="font-family:var(--font-en); font-size:12px; color:#101820;">Printed: 15mm</span>
