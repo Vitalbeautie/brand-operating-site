@@ -187,15 +187,50 @@ export function wrapTextToWidthMm(text, availWidthMm, pt = 10, scaleX = 0.90) {
   const lines = [];
 
   for (const para of paragraphs) {
+    // 단어(어절) 및 공백 토큰으로 분할하여 중간 글자 끊김(예: 단백/질, 판/토텐산, Daidz/in) 방지
+    const tokens = para.split(/(\s+)/).filter(Boolean);
     let curLine = '';
-    for (let i = 0; i < para.length; i++) {
-      const ch = para[i];
-      const candidate = curLine + ch;
-      if (curLine.length > 0 && estimateTextWidthMmForPt(candidate, pt, scaleX) > availWidthMm) {
-        lines.push(curLine.trimEnd());
-        curLine = ch.trimStart();
-      } else {
+
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      if (/^\s+$/.test(tok)) {
+        if (curLine.length > 0) curLine += tok;
+        continue;
+      }
+
+      const candidate = curLine ? (curLine.endsWith(' ') ? curLine + tok : curLine + ' ' + tok) : tok;
+      if (estimateTextWidthMmForPt(candidate, pt, scaleX) <= availWidthMm) {
         curLine = candidate;
+      } else {
+        if (curLine.trim().length > 0) {
+          lines.push(curLine.trim());
+          if (estimateTextWidthMmForPt(tok, pt, scaleX) <= availWidthMm) {
+            curLine = tok;
+          } else {
+            // 단어 자체가 한 줄 전체 폭보다 긴 경우에만 음절 단위로 분할
+            let sub = '';
+            for (const ch of tok) {
+              if (estimateTextWidthMmForPt(sub + ch, pt, scaleX) > availWidthMm) {
+                if (sub) lines.push(sub.trim());
+                sub = ch;
+              } else {
+                sub += ch;
+              }
+            }
+            curLine = sub;
+          }
+        } else {
+          let sub = '';
+          for (const ch of tok) {
+            if (estimateTextWidthMmForPt(sub + ch, pt, scaleX) > availWidthMm) {
+              if (sub) lines.push(sub.trim());
+              sub = ch;
+            } else {
+              sub += ch;
+            }
+          }
+          curLine = sub;
+        }
       }
     }
     if (curLine.trim()) lines.push(curLine.trim());
@@ -373,25 +408,31 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
     const isClaimBlock = lowerFk === '제품 설명' || lowerFk === '제품설명' || lowerFk === 'claim' || lowerFk === 'description';
 
     if (isTitleBlock) {
-      // 후면 상단 제품명: 제목 라벨("제품명", "product_name") 없이 오직 제품명만 15pt(또는 13pt)로 표기
+      // 후면 상단 제품명: 제목 라벨("제품명", "product_name") 없이 오직 제품명만 15pt(또는 13pt)로 표기 (전체 글 단일 텍스트 프레임)
       const titleLines = wrapTextToWidthMm(rawTxt, availW, headerPt, scaleX);
+      const tLinesData = [];
       titleLines.forEach((tLine) => {
         curY += lineStepHeaderMm * 0.88;
         totalLogicalHeight = Math.max(totalLogicalHeight, curY);
         if (curY <= limitY) {
-          svgElements += `
-            <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
-              <text x="0" y="0" fill="${txtCol}" font-size="${fontHeaderMm}" font-weight="700" letter-spacing="-0.03em" font-family="${fontFam}">${tLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
-            </g>
-          `;
+          tLinesData.push({ y: curY, text: tLine });
         }
       });
+      if (tLinesData.length > 0) {
+        svgElements += `
+          <g transform="translate(${xLeft} 0) scale(${scaleX} 1)">
+            <text fill="${txtCol}" font-size="${fontHeaderMm}" font-weight="700" letter-spacing="-0.03em" font-family="${fontFam}">
+              ${tLinesData.map(tl => `<tspan x="0" y="${tl.y.toFixed(2)}">${tl.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</tspan>`).join('')}
+            </text>
+          </g>
+        `;
+      }
       curY += 0.8;
       continue;
     }
 
     if (isClaimBlock) {
-      // 제품 설명: 제목 라벨("제품 설명", "claim") 없이 설명 문안만 표기 (양끝 맞춤 적용)
+      // 제품 설명: 제목 라벨("제품 설명", "claim") 없이 설명 문안만 표기 (양끝 맞춤 적용 & 전체 글 단일 텍스트 프레임)
       const claimParas = rawTxt.split('\n').map(p => p.trim()).filter(Boolean);
       const claimItems = [];
       claimParas.forEach((cp) => {
@@ -400,6 +441,7 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
           claimItems.push({ text: cl, isLast: idx === cLines.length - 1 });
         });
       });
+      const cLinesData = [];
       claimItems.forEach((cItem, lIdx) => {
         curY += lIdx === 0 ? (font10Mm * 0.86) : lineStep10Mm;
         totalLogicalHeight = Math.max(totalLogicalHeight, curY);
@@ -407,13 +449,18 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
           const targetLen = +(availW / scaleX).toFixed(2);
           const shouldJustify = !cItem.isLast && cItem.text.length > 5;
           const justifyAttr = shouldJustify ? `textLength="${targetLen}" lengthAdjust="spacing"` : '';
-          svgElements += `
-            <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
-              <text x="0" y="0" ${justifyAttr} fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${cItem.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
-            </g>
-          `;
+          cLinesData.push({ y: curY, justifyAttr, text: cItem.text });
         }
       });
+      if (cLinesData.length > 0) {
+        svgElements += `
+          <g transform="translate(${xLeft} 0) scale(${scaleX} 1)">
+            <text fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">
+              ${cLinesData.map(cl => `<tspan x="0" y="${cl.y.toFixed(2)}" ${cl.justifyAttr}>${cl.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</tspan>`).join('')}
+            </text>
+          </g>
+        `;
+      }
       hasRenderedFirstBodyBlock = true;
       continue;
     }
@@ -429,18 +476,21 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
       curY = lineY + 0.15 + 1.5;
     }
 
-    // 분류명(Field Key) 자동 볼드 결합: 언어 선택한 대로 하나만 볼드체 기입
+    // 분류명(Field Key) 자동 볼드 결합: 문안 내 중복 타이틀 제거 및 언어 선택한 대로 하나만 볼드체 기입
     let fullBlockText = rawTxt;
     let boldPrefix = '';
     const skipPrefixKeys = ['정보', 'info'];
 
-    if (fk && !skipPrefixKeys.includes(lowerFk)) {
-      if (rawTxt.startsWith(fk)) {
-        boldPrefix = fk;
-      } else {
-        boldPrefix = fk;
-        fullBlockText = `${fk}  ${rawTxt}`;
-      }
+    const normFk = fk.replace(/[\s·•\-:()_]/g, '').toLowerCase();
+    const firstLine = (rawTxt.split('\n')[0] || '').trim();
+    const normFirstLine = firstLine.replace(/[\s·•\-:()_]/g, '').toLowerCase();
+
+    if (normFirstLine.includes(normFk) || normFk.includes(normFirstLine)) {
+      boldPrefix = firstLine;
+      fullBlockText = rawTxt;
+    } else if (fk && !skipPrefixKeys.includes(lowerFk)) {
+      boldPrefix = fk;
+      fullBlockText = `${fk}\n${rawTxt}`;
     }
 
     const paragraphs = fullBlockText.split('\n').map(p => p.trim()).filter(Boolean);
@@ -455,6 +505,7 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
       });
     });
 
+    const blockLines = [];
     wrappedItems.forEach((wItem, lIdx) => {
       curY += lIdx === 0 ? (font10Mm * 0.86) : lineStep10Mm;
       totalLogicalHeight = Math.max(totalLogicalHeight, curY);
@@ -465,13 +516,23 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
         // 양끝 맞춤(Justify): 문단 마지막 줄이 아니면서 일정 길이 이상인 줄은 textLength로 자간을 자동 조절하여 양끝 맞춤
         const shouldJustify = !wItem.isLast && wItem.text.length > 5;
         const justifyAttr = shouldJustify ? `textLength="${targetLen}" lengthAdjust="spacing"` : '';
-        svgElements += `
-          <g transform="translate(${xLeft} ${curY.toFixed(2)}) scale(${scaleX} 1)">
-            <text x="0" y="0" ${justifyAttr} fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">${formattedTspans}</text>
-          </g>
-        `;
+        blockLines.push({
+          y: curY,
+          justifyAttr,
+          html: formattedTspans,
+        });
       }
     });
+
+    if (blockLines.length > 0) {
+      svgElements += `
+        <g transform="translate(${xLeft} 0) scale(${scaleX} 1)">
+          <text fill="${txtCol}" font-size="${font10Mm}" font-weight="400" letter-spacing="-0.03em" font-family="${fontFam}">
+            ${blockLines.map(bl => `<tspan x="0" y="${bl.y.toFixed(2)}" ${bl.justifyAttr}>${bl.html}</tspan>`).join('')}
+          </text>
+        </g>
+      `;
+    }
 
     hasRenderedFirstBodyBlock = true;
   }
@@ -502,10 +563,11 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
       </g>` : ''}
     `;
 
-    // 하단 15mm 여유 공간 내 교환문의처 / 고객상담실 / 제조원 / 반품교환소재지 배치 (Image 3 동일)
+    // 하단 15mm 여유 공간 내 교환문의처 / 고객상담실 / 제조원 / 반품교환소재지 배치 (Image 3 동일 & 전체 글 단일 텍스트 프레임)
     if (bottomFooterBlocks.length > 0) {
       let footY = +(boxBottomY + 0.8).toFixed(2);
       const footerStep = +(font10Mm * 0.94).toFixed(3);
+      const footLinesData = [];
       for (const fb of bottomFooterBlocks) {
         let fbText = fb.textContent;
         if (fb.fieldKey && fb.fieldKey.includes('교환문의') && !fbText.includes('교환문의')) {
@@ -519,13 +581,18 @@ export function renderSideOrBackPanel10ptSvg(panel, rawBlocks = [], opts = {}) {
             const targetLen = +(availW / scaleX).toFixed(2);
             const shouldJustify = idx < fLines.length - 1 && fl.length > 5;
             const justifyAttr = shouldJustify ? `textLength="${targetLen}" lengthAdjust="spacing"` : '';
-            svgElements += `
-              <g transform="translate(${xLeft} ${footY}) scale(${scaleX} 1)">
-                <text x="0" y="0" ${justifyAttr} fill="${txtCol}" font-size="${(font10Mm * 0.92).toFixed(3)}" font-weight="400" letter-spacing="-0.04em" font-family="${fontFam}">${tsp}</text>
-              </g>
-            `;
+            footLinesData.push({ y: footY, justifyAttr, html: tsp });
           }
         });
+      }
+      if (footLinesData.length > 0) {
+        svgElements += `
+          <g transform="translate(${xLeft} 0) scale(${scaleX} 1)">
+            <text fill="${txtCol}" font-size="${(font10Mm * 0.92).toFixed(3)}" font-weight="400" letter-spacing="-0.04em" font-family="${fontFam}">
+              ${footLinesData.map(fl => `<tspan x="0" y="${fl.y.toFixed(2)}" ${fl.justifyAttr}>${fl.html}</tspan>`).join('')}
+            </text>
+          </g>
+        `;
       }
     }
   }

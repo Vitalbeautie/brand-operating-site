@@ -1509,124 +1509,141 @@ export function buildIllustratorAiBlob(svgText, title = 'VITALBEAUTIE_Asset') {
             }
           }
         } else {
-          // Parse <tspan> runs or plain text
-          const runs = [];
+          // Parse <tspan> runs or plain text (support multi-line Area Text / single Story in Illustrator)
+          const linesRuns = [];
           const tspanRe = /<tspan([^>]*)>([\s\S]*?)<\/tspan>/gi;
           let tsm;
+          let currentLineRuns = [];
+          let lastY = null;
+
           while ((tsm = tspanRe.exec(innerHtml)) !== null) {
             const tsAttrs = parseAttrs(tsm[1] || '');
             const tsText = tsm[2].replace(/<[^>]+>/g, '');
             if (tsText) {
-              runs.push({
+              const runY = tsAttrs.y !== undefined ? parseFloat(tsAttrs.y) : parseFloat(attrs.y || 0);
+              const runX = tsAttrs.x !== undefined ? parseFloat(tsAttrs.x) : parseFloat(attrs.x || 0);
+              if (lastY !== null && Math.abs(runY - lastY) > 0.05) {
+                if (currentLineRuns.length) linesRuns.push(currentLineRuns);
+                currentLineRuns = [];
+              }
+              lastY = runY;
+              currentLineRuns.push({
                 text: tsText,
                 weight: tsAttrs['font-weight'] || parentWeight,
                 fill: tsAttrs.fill || curState.fill,
                 fontFamily: tsAttrs['font-family'] || parentFam,
+                x: runX,
+                y: runY,
               });
             }
           }
-          if (!runs.length) {
+          if (currentLineRuns.length) linesRuns.push(currentLineRuns);
+
+          if (!linesRuns.length) {
             const plainTxt = innerHtml.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
             if (plainTxt) {
-              runs.push({
+              linesRuns.push([{
                 text: plainTxt,
                 weight: parentWeight,
                 fill: curState.fill,
                 fontFamily: parentFam,
-              });
+                x: parseFloat(attrs.x || 0),
+                y: parseFloat(attrs.y || 0),
+              }]);
             }
           }
 
-          if (runs.length) {
+          if (linesRuns.length) {
             const tx = parseFloat(attrs.x || 0);
-            const ty = parseFloat(attrs.y || 0);
             const anchor = (attrs['text-anchor'] || 'start').toLowerCase();
 
-            // Pre-measure exact width of all runs using TrueType advance widths
-            const measuredGlyphs = [];
-            let totalWidth = 0;
-            for (const run of runs) {
-              for (const ch of run.text) {
-                const ttf = selectTtfFontForChar(ch, run.weight, run.fontFamily);
-                let gid = 0;
-                let advMm = fontSize * (ch === ' ' ? 0.3 : /[\u3131-\uD79D\u3040-\u30FF\u4E00-\u9FAF]/.test(ch) ? 0.92 : 0.56);
-                if (ttf) {
-                  gid = ttf.codeToGid(ch.charCodeAt(0));
-                  if (gid > 0 || ch === ' ') {
-                    advMm = (ttf.getAdvanceWidth(gid) / ttf.unitsPerEm) * fontSize;
-                  }
-                }
-                const gidHex = recordGlyphForLiveFont(ttf, ch);
-                measuredGlyphs.push({ ch, gid, gidHex, ttf, advMm, run });
-                totalWidth += advMm + lsMm;
-              }
+            // Render all lines of this block into a SINGLE PDF Text Story (BT ... ET) so Illustrator sees one paragraph
+            const fillRgb = blendWithBg(parseHexOrNamedColor(curState.fill, defsGradMap) || [0.063, 0.094, 0.125], curState.opacity ?? 1);
+            pdfLines.push('q');
+            pdfLines.push(`${f(fillRgb[0])} ${f(fillRgb[1])} ${f(fillRgb[2])} rg`);
+            pdfLines.push('BT');
+            if (Math.abs(lsMm) > 0.0005) {
+              pdfLines.push(`${f(lsMm)} Tc`);
             }
-            if (measuredGlyphs.length > 0) totalWidth -= lsMm;
 
-            let curX = tx;
-            if (anchor === 'middle') curX = tx - totalWidth / 2;
-            else if (anchor === 'end') curX = tx - totalWidth;
+            for (const lineRuns of linesRuns) {
+              const lineY = lineRuns[0]?.y ?? parseFloat(attrs.y || 0);
+              const lineX = lineRuns[0]?.x ?? tx;
 
-            // Group contiguous live-font glyphs sharing the same fontKey and fill into single editable text strings
-            let segs = [];
-            for (const item of measuredGlyphs) {
-              const itemX = curX;
-              curX += item.advMm + lsMm;
-              const fillStr = item.run.fill || curState.fill;
-              if (item.gidHex && item.ttf) {
-                const last = segs[segs.length - 1];
-                if (last && last.type === 'live' && last.fontKey === item.ttf.fontKey && last.fill === fillStr) {
-                  last.hex += item.gidHex;
-                } else {
+              const measuredGlyphs = [];
+              let totalWidth = 0;
+              for (const run of lineRuns) {
+                for (const ch of run.text) {
+                  const ttf = selectTtfFontForChar(ch, run.weight, run.fontFamily);
+                  let gid = 0;
+                  let advMm = fontSize * (ch === ' ' ? 0.3 : /[\u3131-\uD79D\u3040-\u30FF\u4E00-\u9FAF]/.test(ch) ? 0.92 : 0.56);
+                  if (ttf) {
+                    gid = ttf.codeToGid(ch.charCodeAt(0));
+                    if (gid > 0 || ch === ' ') {
+                      advMm = (ttf.getAdvanceWidth(gid) / ttf.unitsPerEm) * fontSize;
+                    }
+                  }
+                  const gidHex = recordGlyphForLiveFont(ttf, ch);
+                  measuredGlyphs.push({ ch, gid, gidHex, ttf, advMm, run });
+                  totalWidth += advMm + lsMm;
+                }
+              }
+              if (measuredGlyphs.length > 0) totalWidth -= lsMm;
+
+              let curX = lineX;
+              if (anchor === 'middle') curX = lineX - totalWidth / 2;
+              else if (anchor === 'end') curX = lineX - totalWidth;
+
+              let segs = [];
+              for (const item of measuredGlyphs) {
+                const itemX = curX;
+                curX += item.advMm + lsMm;
+                const fillStr = item.run.fill || curState.fill;
+                if (item.gidHex && item.ttf) {
+                  const last = segs[segs.length - 1];
+                  if (last && last.type === 'live' && last.fontKey === item.ttf.fontKey && last.fill === fillStr) {
+                    last.hex += item.gidHex;
+                  } else {
+                    segs.push({
+                      type: 'live',
+                      fontKey: item.ttf.fontKey,
+                      fill: fillStr,
+                      x: itemX,
+                      y: lineY,
+                      hex: item.gidHex,
+                    });
+                  }
+                } else if (item.ch !== ' ') {
                   segs.push({
-                    type: 'live',
-                    fontKey: item.ttf.fontKey,
+                    type: 'fallback',
+                    ch: item.ch,
+                    advMm: item.advMm,
                     fill: fillStr,
+                    weight: item.run.weight,
                     x: itemX,
-                    y: ty,
-                    hex: item.gidHex,
+                    y: lineY,
                   });
                 }
-              } else if (item.ch !== ' ') {
-                segs.push({
-                  type: 'fallback',
-                  ch: item.ch,
-                  advMm: item.advMm,
-                  fill: fillStr,
-                  weight: item.run.weight,
-                  x: itemX,
-                  y: ty,
-                });
+              }
+
+              for (const seg of segs) {
+                if (seg.type === 'live') {
+                  pdfLines.push(`/${seg.fontKey} ${f(fontSize)} Tf`);
+                  pdfLines.push(`1 0 0 -1 ${f(seg.x)} ${f(seg.y)} Tm`);
+                  pdfLines.push(`<${seg.hex}> Tj`);
+                } else if (seg.ch === 'ー') {
+                  // Japanese chouonpu bar
+                  const barOps = rectToPdfOps(seg.x + seg.advMm * 0.08, seg.y - fontSize * 0.42, seg.advMm * 0.84, fontSize * 0.09);
+                  emitShapeWithStyle(barOps, { ...curState, fill: seg.fill, stroke: 'none' });
+                } else {
+                  pdfLines.push(`1 0 0 -1 ${f(seg.x)} ${f(seg.y)} Tm`);
+                  pdfLines.push(encodePdfTextCmd(seg.ch, fontSize, Number(seg.weight) >= 600));
+                }
               }
             }
 
-            for (const seg of segs) {
-              const fillRgb = blendWithBg(parseHexOrNamedColor(seg.fill, defsGradMap) || [0.063, 0.094, 0.125], curState.opacity ?? 1);
-              if (seg.type === 'live') {
-                pdfLines.push('q');
-                pdfLines.push(`${f(fillRgb[0])} ${f(fillRgb[1])} ${f(fillRgb[2])} rg`);
-                pdfLines.push('BT');
-                if (Math.abs(lsMm) > 0.0005) {
-                  pdfLines.push(`${f(lsMm)} Tc`);
-                }
-                pdfLines.push(`/${seg.fontKey} ${f(fontSize)} Tf`);
-                pdfLines.push(`1 0 0 -1 ${f(seg.x)} ${f(seg.y)} Tm`);
-                pdfLines.push(`<${seg.hex}> Tj`);
-                pdfLines.push('ET');
-                pdfLines.push('Q');
-              } else if (seg.ch === 'ー') {
-                const barOps = rectToPdfOps(seg.x + seg.advMm * 0.08, seg.y - fontSize * 0.42, seg.advMm * 0.84, fontSize * 0.09);
-                emitShapeWithStyle(barOps, { ...curState, fill: seg.fill, stroke: 'none' });
-              } else {
-                pdfLines.push('q');
-                pdfLines.push(`${f(fillRgb[0])} ${f(fillRgb[1])} ${f(fillRgb[2])} rg`);
-                pdfLines.push('BT');
-                pdfLines.push(`1 0 0 -1 ${f(seg.x)} ${f(seg.y)} Tm`);
-                pdfLines.push(encodePdfTextCmd(seg.ch, fontSize, Number(seg.weight) >= 600));
-                pdfLines.push('ET');
-                pdfLines.push('Q');
-              }
-            }
+            pdfLines.push('ET');
+            pdfLines.push('Q');
           }
         }
       }

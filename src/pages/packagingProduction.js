@@ -80,7 +80,7 @@ const LINE_PRESETS = {
       RIGHT: [
         {
           fieldKey: '영양기능정보',
-          textContent: '영양·기능 정보\n1일 섭취량 : 26.97 g (액상 26.05 g + 정제 0.92 g)\n1일 섭취량 당 함량 : 열량 15 kcal, 탄수화물 4 g (1%), 당류 0 g, 단백질 0 g (0%), 지방 0 g (0%), 나트륨 5 mg (0%), 비타민B1 48 mg (4,000%), 판토텐산 50 mg (1,000%), 카테킨 360 mg, Daidzin, Glycitin, Genistin의 합 36 mg, L-카르니틴 300 mg\n※ ( )안의 수치는 1일 영양성분 기준치에 대한 비율임\n녹차추출물 항산화·체지방 감소·혈중 콜레스테롤 개선에 도움을 줄 수 있음  APIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 수 있음  비타민B1 탄수화물과 에너지 대사에 필요  APIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 수 있음  판토텐산 지방, 탄수화물, 단백질 대사와 에너지 생성에 필요',
+          textContent: '1일 섭취량 : 26.97 g (액상 26.05 g + 정제 0.92 g)\n1일 섭취량 당 함량 : 열량 15 kcal, 탄수화물 4 g (1%), 당류 0 g, 단백질 0 g (0%), 지방 0 g (0%), 나트륨 5 mg (0%), 비타민B1 48 mg (4,000%), 판토텐산 50 mg (1,000%), 카테킨 360 mg, Daidzin, Glycitin, Genistin의 합 36 mg, L-카르니틴 300 mg\n※ ( )안의 수치는 1일 영양성분 기준치에 대한 비율임\n녹차추출물 항산화·체지방 감소·혈중 콜레스테롤 개선에 도움을 줄 수 있음\nAPIC대두배아열수추출물등복합물 체지방 감소에 도움을 줄 수 있음\n비타민B1 탄수화물과 에너지 대사에 필요\n판토텐산 지방, 탄수화물, 단백질 대사와 에너지 생성에 필요',
         },
         {
           fieldKey: '정보',
@@ -90,12 +90,12 @@ const LINE_PRESETS = {
       BACK: [
         { fieldKey: '제품명', textContent: '메타그린 부스터샷' },
         { fieldKey: '제품 설명', textContent: '다이어트 정체기, 흡수 빠른 앰플로 집중 공략 다이어트 체지방 감소 2중 기능성으로 달라지는 눈바디를 도와주는 슬리밍 앰플' },
-        { fieldKey: '섭취량 및 섭취방법', textContent: '섭취량 및 섭취방법  성인 1일 1회, 1 앰플을 흔들어 섭취하세요. 상단 실링지를 제거하여 정제를 꺼내신 후, 하단의 액상과 함께 섭취하세요.' },
-        { fieldKey: '섭취 시 주의사항', textContent: '섭취 시 주의사항  어린이, 임산부 및 수유부는 섭취를 피해주시기 바랍니다. 식사후 섭취해주시기 바랍니다. 카페인이 함유되어있어 초조감, 불면 등을 나타낼 수 있습니다. 카페인을 함유한 식품의 섭취에 주의해주시기 바랍니다. 간질환이 있거나 의약품 복용 시 전문가와 상담하시기 바랍니다. 이상사례 발생 시 섭취를 중단하고 전문가와 상담하시기 바랍니다. 질병으로 치료 중이시거나 알레르기, 특이체질이신 분은 본제품의 원료를 확인하시고 섭취 전에 전문가와 상담하시기 바랍니다. 알레르기성 비염, 천식, 우유, 대두 알레르기 반응을 나타내는 사람은 섭취에 주의, 에스트로겐 호르몬에 민감한 사람은 섭취에 주의 바랍니다. [대두함유]' },
-        { fieldKey: '주의사항', textContent: '주의사항  보관 방법에 따라 식물성 침전물이 생길 수 있으나, 이는 APIC대두배아열수추출물등 복합물 원료특성상 생길 수 있는 현상으로 안심하고 드셔도 됩니다.' },
-        { fieldKey: '보관상 주의사항', textContent: '보관상 주의사항  직사광선 및 고온 다습한 곳을 피하여 서늘한 장소에 보관 하시고 개봉 후에는 바로 드시기 바랍니다. (살균제품)' },
+        { fieldKey: '섭취량 및 섭취방법', textContent: '성인 1일 1회, 1 앰플을 흔들어 섭취하세요. 상단 실링지를 제거하여 정제를 꺼내신 후, 하단의 액상과 함께 섭취하세요.' },
+        { fieldKey: '섭취 시 주의사항', textContent: '어린이, 임산부 및 수유부는 섭취를 피해주시기 바랍니다. 식사후 섭취해주시기 바랍니다. 카페인이 함유되어있어 초조감, 불면 등을 나타낼 수 있습니다. 카페인을 함유한 식품의 섭취에 주의해주시기 바랍니다. 간질환이 있거나 의약품 복용 시 전문가와 상담하시기 바랍니다. 이상사례 발생 시 섭취를 중단하고 전문가와 상담하시기 바랍니다. 질병으로 치료 중이시거나 알레르기, 특이체질이신 분은 본제품의 원료를 확인하시고 섭취 전에 전문가와 상담하시기 바랍니다. 알레르기성 비염, 천식, 우유, 대두 알레르기 반응을 나타내는 사람은 섭취에 주의, 에스트로겐 호르몬에 민감한 사람은 섭취에 주의 바랍니다. [대두함유]' },
+        { fieldKey: '주의사항', textContent: '보관 방법에 따라 식물성 침전물이 생길 수 있으나, 이는 APIC대두배아열수추출물등 복합물 원료특성상 생길 수 있는 현상으로 안심하고 드셔도 됩니다.' },
+        { fieldKey: '보관상 주의사항', textContent: '직사광선 및 고온 다습한 곳을 피하여 서늘한 장소에 보관 하시고 개봉 후에는 바로 드시기 바랍니다. (살균제품)' },
         { fieldKey: '원료명 및 기타 사항', textContent: '원료명 및 기타 사항은 설명서에 표기되어있습니다.' },
-        { fieldKey: '교환문의 구입처 및 고객상담실', textContent: '교환문의처  구입처 및 고객상담실\n고객상담전화  080-023-5454\n제조원 : (주)아모레퍼시픽\n반품교환소재지 : 서울특별시 용산구 한강대로 100' },
+        { fieldKey: '교환문의처', textContent: '구입처 및 고객상담실\n고객상담전화  080-023-5454\n제조원 : (주)아모레퍼시픽\n반품교환소재지 : 서울특별시 용산구 한강대로 100' },
       ],
       LEFT: [
         { fieldKey: '제품명', textContent: '메타그린 부스터샷' },
@@ -744,7 +744,7 @@ export function renderPackagingProductionPage(el) {
     const preset = LINE_PRESETS[selectedLine] || LINE_PRESETS.metagreen;
     const country = COUNTRY_CONFIG[selectedCountry] || COUNTRY_CONFIG.KR;
     const { meta, panelBlocks } = getActiveData();
-    const canShowSimulation = true;
+    const canShowSimulation = Boolean(hasExcelUploaded || hasDielineUploaded);
 
     // 항상 전체 6면 전개도 기준으로 넘침 여부(overflowDetails)와 다운로드용 전체 원화 생성
     const fullRender = canShowSimulation
@@ -784,7 +784,7 @@ export function renderPackagingProductionPage(el) {
       <!-- 헤더 설명 및 가이드 엑셀 다운로드 버튼 -->
       <div style="margin-bottom:20px; border-left:2px solid #D5D8DE; padding-left:14px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
         <p style="font-size:13.5px; color:#475467; margin:0; line-height:1.6; max-width:780px;">
-          인허가(RA) 승인 엑셀 문안과 패키지 도면(.eps / .ai)을 업로드하면 좌우 2mm 마진·본문 10pt·후면 제품명 15pt(판형별 13pt)·분류별 0.3mm 구분선(상하 1.5mm 간격)·소비기한 11mm 박스(하단 15mm 띄움 / 미국 12mm) 규칙으로 자동 조판합니다.
+          인허가(RA) 승인 엑셀 문안과 패키지 도면(.eps / .ai)을 기반으로 브랜드 가이드 조판 규칙(좌우 2mm 마진, 본문 10pt, 후면 제품명 15pt/13pt, 문안별 0.3mm 구분선, 소비기한 11mm 박스 등)을 자동 적용하여 인쇄용 6면 패키지 원화를 실시간으로 자동 조판하고 AI/PDF 파일로 다운로드하는 기능입니다.
         </p>
         <button type="button" id="pp-btn-download-guide-excel" class="btn btn-outline btn-sm" style="font-size:12px; font-weight:700; border-color:#101820; color:#101820; padding:8px 14px; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;">
           📊 통합 디자인 가이드 엑셀 다운로드 (.xlsx)
@@ -817,16 +817,16 @@ export function renderPackagingProductionPage(el) {
         <!-- 엑셀 전용 드롭존 -->
         <div style="background:#FFFFFF; border:1px solid #EAECF0; padding:18px 20px;">
           <label style="display:block; font-size:11px; font-weight:700; color:#101820; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">STEP 3. 승인 EXCEL 업로드</label>
-          <div id="pp-excel-dropzone" style="border:1.5px dashed #101820; padding:26px 16px; text-align:center; background:#FFFFFF; cursor:pointer;">
+          <div id="pp-excel-dropzone" style="border:1.5px ${hasExcelUploaded ? 'solid #10B981' : 'dashed #101820'}; padding:24px 16px; text-align:center; background:${hasExcelUploaded ? '#F0FDF4' : '#FFFFFF'}; cursor:pointer; transition:all 0.2s;">
             <input type="file" id="pp-excel-file" accept=".xlsx,.xls,.csv" style="display:none;" />
             ${hasExcelUploaded ? `
-              <div style="font-size:12.5px; font-weight:800; color:#101820; margin-bottom:4px;">
-                ✓ 엑셀 업로드 완료: ${uploadedExcelName}
+              <div style="font-size:13.5px; font-weight:800; color:#059669; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                <span style="font-size:16px; color:#10B981; font-weight:900;">✓</span> 엑셀 업로드 완료: ${uploadedExcelName}
               </div>
-              <div style="font-size:11.5px; color:#475467; margin-bottom:10px;">
+              <div style="font-size:11.5px; color:#065F46; margin-bottom:12px;">
                 코드: <strong>${meta.code || '-'}</strong> · 제품명: <strong>${meta.productLine || ''} ${meta.productName || ''}</strong> · 분류: <strong>${meta.packageType || 'Carton'}</strong>
               </div>
-              <span style="display:inline-block; padding:5px 12px; background:#FFFFFF; color:#101820; font-size:11px; font-weight:600; border:1px solid #101820;">
+              <span style="display:inline-block; padding:5px 14px; background:#FFFFFF; color:#065F46; font-size:11px; font-weight:700; border:1px solid #10B981;">
                 다른 엑셀 파일 변경
               </span>
             ` : `
@@ -846,18 +846,18 @@ export function renderPackagingProductionPage(el) {
         <!-- 도면(.eps / .ai) 전용 드롭존 -->
         <div style="background:#FFFFFF; border:1px solid #EAECF0; padding:18px 20px;">
           <label style="display:block; font-size:11px; font-weight:700; color:#101820; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">STEP 4. 도면 (.EPS / .AI) 업로드</label>
-          <div id="pp-dieline-dropzone" style="border:1.5px dashed #101820; padding:26px 16px; text-align:center; background:#FFFFFF; cursor:pointer;">
+          <div id="pp-dieline-dropzone" style="border:1.5px ${hasDielineUploaded ? 'solid #10B981' : 'dashed #101820'}; padding:24px 16px; text-align:center; background:${hasDielineUploaded ? '#F0FDF4' : '#FFFFFF'}; cursor:pointer; transition:all 0.2s;">
             <input type="file" id="pp-dieline-file" accept=".eps,.ai,.pdf,.svg" style="display:none;" />
             ${hasDielineUploaded ? `
-              <div style="font-size:12.5px; font-weight:800; color:#101820; margin-bottom:4px;">
-                ✓ 도면 업로드 완료: ${uploadedDielineName}
+              <div style="font-size:13.5px; font-weight:800; color:#059669; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                <span style="font-size:16px; color:#10B981; font-weight:900;">✓</span> 도면 업로드 완료: ${uploadedDielineName}
               </div>
-              <div style="font-size:11.5px; color:#475467; margin-bottom:10px;">
+              <div style="font-size:11.5px; color:#065F46; margin-bottom:12px;">
                 ${uploadedDielineInfo?.panels
                   ? `전면(${uploadedDielineInfo.panels.FRONT.w}×${uploadedDielineInfo.panels.FRONT.h}mm) · 측면(${uploadedDielineInfo.panels.LEFT.w}mm) · 후면(${uploadedDielineInfo.panels.BACK.w}mm) 6면 인식됨`
                   : '전면 · 측면 · 후면 · 상단 · 하단 6면 도면 인식 완료'}
               </div>
-              <span style="display:inline-block; padding:5px 12px; background:#FFFFFF; color:#101820; font-size:11px; font-weight:600; border:1px solid #101820;">
+              <span style="display:inline-block; padding:5px 14px; background:#FFFFFF; color:#065F46; font-size:11px; font-weight:700; border:1px solid #10B981;">
                 다른 도면(.eps/.ai) 파일 변경
               </span>
             ` : `
@@ -925,7 +925,18 @@ export function renderPackagingProductionPage(el) {
             </div>
           </div>
         </div>
-      ` : ''}
+      ` : `
+        <!-- 업로드 전 대기 안내 영역 -->
+        <div style="background:#F9FAFB; border:1.5px dashed #D0D5DD; padding:44px 20px; text-align:center; margin-bottom:24px;">
+          <div style="font-size:26px; margin-bottom:8px;">📦</div>
+          <div style="font-size:14px; font-weight:800; color:#101820; margin-bottom:6px;">
+            STEP 5. 패키지 조판 시뮬레이션 대기 중
+          </div>
+          <div style="font-size:12px; color:#667085; line-height:1.6; max-width:540px; margin:0 auto;">
+            상단의 <strong>STEP 3 승인 EXCEL</strong> 또는 <strong>STEP 4 도면(.eps / .ai)</strong> 파일을 업로드하시면 브랜드 가이드 조판 규칙(좌우 2mm 마진, 본문 10pt, 문안별 0.3mm 구분선 등)이 자동 적용된 6면 패키지 전개도 시뮬레이션이 생성됩니다.
+          </div>
+        </div>
+      `}
     `;
 
     bindEvents(fullRender.svg, meta, preset);
