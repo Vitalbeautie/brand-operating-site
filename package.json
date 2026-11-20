@@ -6,8 +6,8 @@
   "description": "브랜드 가이드라인을 이해하고, 만들고, 검증하고, 축적하는 내부 운영 플랫폼",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "deploy": "vite build && gh-pages -d dist",
+    "build": "vite build && node scripts/build_single_html.js",
+    "deploy": "npm run build && gh-pages -d dist",
     "preview": "vite preview"
   },
   "dependencies": {
