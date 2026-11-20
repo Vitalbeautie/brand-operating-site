@@ -67,21 +67,21 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
 
         <div class="block-visual-column">
           <div>
-            <!-- Top Row: English & Korean side by side (Only vertical center divider) -->
-            <div style="display:grid; grid-template-columns:1fr 1fr;">
-              <div style="padding:56px 32px 44px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #ECEEF2;">
-                <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE English" style="max-width:290px; width:82%; height:auto; display:block;" />
-                <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:#8C929E; margin-top:22px;">ENGLISH</span>
+            <!-- Top Row: English & Korean side by side (Clean alignment without box borders) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:32px; padding:20px 0 36px;">
+              <div style="display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end;">
+                <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="VITALBEAUTIE English" style="max-width:280px; width:100%; height:auto; display:block;" />
+                <span style="font-family:var(--font-en); font-size:10px; letter-spacing:2px; color:#8C929E; margin-top:16px;">ENGLISH</span>
               </div>
-              <div style="padding:56px 32px 44px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="바이탈뷰티 Korean" style="max-width:190px; width:62%; height:auto; display:block;" />
-                <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:#8C929E; margin-top:22px;">KOREAN</span>
+              <div style="display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end;">
+                <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="바이탈뷰티 Korean" style="max-width:180px; width:70%; height:auto; display:block;" />
+                <span style="font-family:var(--font-en); font-size:10px; letter-spacing:2px; color:#8C929E; margin-top:16px;">KOREAN</span>
               </div>
             </div>
             <!-- Bottom Row: White on VITALBEAUTIE BLACK -->
-            <div style="background:#101820; padding:54px 32px 42px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div style="background:#101820; padding:40px 32px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
               <img src="./assets/logos/vitalbeautie_wordmark_en_white.png" alt="White on VITALBEAUTIE BLACK" style="max-width:260px; width:65%; height:auto; display:block;" />
-              <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:rgba(255,255,255,0.48); margin-top:20px;">WHITE ON VITALBEAUTIE BLACK</span>
+              <span style="font-family:var(--font-en); font-size:9.5px; letter-spacing:2px; color:rgba(255,255,255,0.48); margin-top:18px;">WHITE ON VITALBEAUTIE BLACK</span>
             </div>
           </div>
         </div>
@@ -134,12 +134,12 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         </div>
 
         <div class="block-visual-column">
-          <div style="display:grid; grid-template-columns:1fr 1fr;">
-            <div style="padding:36px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #ECEEF2;">
+          <div style="display:flex; align-items:flex-end; gap:48px; padding:20px 0;">
+            <div style="display:flex; flex-direction:column; align-items:flex-start;">
               <img src="./assets/logos/vitalbeautie_wordmark_en_black.png" alt="English 20mm" style="height:16px; width:auto; display:block;" />
               <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">English · 20mm</span>
             </div>
-            <div style="padding:36px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div style="display:flex; flex-direction:column; align-items:flex-start;">
               <img src="./assets/logos/vitalbeautie_wordmark_ko_black.png" alt="Korean 30mm" style="height:18px; width:auto; display:block;" />
               <span style="font-family:var(--font-en); font-size:11px; color:#555; margin-top:12px;">Korean · 30mm</span>
             </div>
@@ -243,11 +243,11 @@ export function renderGuidelinePage(container, targetSection = 'wordmark') {
         </div>
 
         <div class="block-visual-column">
-          <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center;">
-            <div style="padding:32px 24px; display:flex; align-items:center; justify-content:center; background:#ffffff; min-height:160px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:24px;">
+            <div style="padding:24px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
               <img src="./assets/logos/vitalbeautie_monogram_lab_proven_black.png" alt="LAB PROVEN Black" style="width:72px; height:72px; display:block;" />
             </div>
-            <div style="padding:32px 24px; display:flex; align-items:center; justify-content:center; background:#101820; min-height:160px;">
+            <div style="padding:24px; display:flex; align-items:center; justify-content:center; background:#101820;">
               <img src="./assets/logos/vitalbeautie_monogram_lab_proven_white.png" alt="LAB PROVEN White" style="width:72px; height:72px; display:block;" />
             </div>
           </div>

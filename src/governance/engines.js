@@ -2226,24 +2226,65 @@ export function suggestFamilyLook(options = {}) {
     };
 
     const pickShadeCards = (pool) => {
-      // 사용자가 설정한 최소 색차(minDeltaE) 이상이고 기존 제품과 겹치지 않는 칩만 우선 필터링
-      let filtered = pool.filter(c => !usedCodes.has(c.normCode) && c.minD >= minDeltaE);
+      const available = pool.filter(c => !usedCodes.has(c.normCode));
+      if (!available.length) return [];
 
-      // 최소 색차 기준이 엄격(예: ΔE 20)하여 후보가 부족한 경우, 해당 음영 풀에서 색차가 가장 큰(최대 차별성) 상위 칩들로 자동 보강하여 항상 제안을 제공
-      if (filtered.length < 3) {
-        const sortedByDist = pool
-          .filter(c => !usedCodes.has(c.normCode))
-          .sort((a, b) => b.minD - a.minD);
-        filtered = sortedByDist.slice(0, 6);
+      // minD 오름차순 정렬하여 분위수(Quantile) 분석
+      const sortedByD = [...available].sort((a, b) => a.minD - b.minD);
+      const N = sortedByD.length;
+
+      // 4단계 색차 버튼(6, 10, 15, 20)별 타겟 분위수 및 타겟 색차값 (완벽한 계단식 차별화)
+      // 6 : 유사·조화 (분위수 ~0.15, 은은한 조화)
+      // 10: 표준 균형 (분위수 ~0.45, 표준 차별화)
+      // 15: 고대비 차별 (분위수 ~0.72, 선명한 독립 컬러)
+      // 20: 극대화 차별 (분위수 ~0.98, 가장 거리가 먼 초고차별 컬러)
+      let targetQ = 0.45;
+      let targetDeVal = 11.0;
+      if (minDeltaE === 6) {
+        targetQ = 0.15;
+        targetDeVal = 7.0;
+      } else if (minDeltaE === 10) {
+        targetQ = 0.45;
+        targetDeVal = 11.0;
+      } else if (minDeltaE === 15) {
+        targetQ = 0.72;
+        targetDeVal = 15.5;
+      } else { // 20
+        targetQ = 0.98;
+        targetDeVal = 24.0;
       }
 
-      return filtered
-        .sort((a, b) => {
-          const aScore = a.minD * 1.8 + (a.C || 0) * 0.6;
-          const bScore = b.minD * 1.8 + (b.C || 0) * 0.6;
-          return bScore - aScore;
-        })
-        .slice(0, 8);
+      const scored = sortedByD.map((c, idx) => {
+        const q = N > 1 ? idx / (N - 1) : 0.5;
+        const qDist = Math.abs(q - targetQ);
+        const dDist = Math.abs(c.minD - targetDeVal);
+
+        const priBonus = priorityCodes.includes(c.pantoneCode) ? 10 : 0;
+        const chromaBonus = (c.C || 0) * 0.2;
+
+        let fitness = 0;
+        if (minDeltaE === 20) {
+          // 20: 상위 분위수(q: 0.8~1.0) 및 minD 최상위 칩 절대 우선
+          fitness = c.minD * 18 + (q * 80) - (Math.max(0, 0.85 - q) * 300) + priBonus + chromaBonus;
+        } else if (minDeltaE === 15) {
+          // 15: 중상위 분위수(q: 0.6~0.85) 칩 우선 (20과 10 사이 독자 구간)
+          const in15Zone = (q >= 0.55 && q <= 0.88) ? 60 : 0;
+          fitness = 200 - (qDist * 220) - (dDist * 5) + in15Zone + priBonus + chromaBonus;
+        } else if (minDeltaE === 10) {
+          // 10: 중간 분위수(q: 0.35~0.65) 칩 우선
+          const in10Zone = (q >= 0.30 && q <= 0.65) ? 50 : 0;
+          fitness = 200 - (qDist * 220) - (dDist * 6) + in10Zone + priBonus + chromaBonus;
+        } else {
+          // 6: 하위 분위수(q: 0.0~0.35) 칩 우선
+          const in6Zone = (q <= 0.35) ? 50 : 0;
+          fitness = 200 - (qDist * 220) - (dDist * 7) + in6Zone + priBonus + chromaBonus;
+        }
+
+        return { ...c, fitness };
+      });
+
+      scored.sort((a, b) => b.fitness - a.fitness);
+      return scored.slice(0, 8);
     };
 
     const proposedDeep = pickShadeCards(poolDeep);

@@ -948,18 +948,10 @@ function setupIconGenerator(el) {
         <div class="ig-insp-meta-main">${motif.title} Lv.${curLevel} (${levelObj.label})</div>
         <div class="ig-insp-meta-tags">${levelObj.desc} · 영문: ${activeEn}</div>
 
-        <div class="ig-insp-sec-title">바이탈뷰티 배지 디자인 가이드</div>
-        <ul class="ig-insp-list">
-          <li>· 모티프 베이스 디자인에 디테일이 단계별로 누적(Progressive Detailing)</li>
-          <li>· 단색 VB 블랙 (#101820), 선 끝·모서리 라운드 (round stroke)</li>
-          <li>· ${variant.frameDesc}</li>
-          <li>· 영문 원호 문안 및 국문 키워드 실시간 커스텀 적용</li>
-        </ul>
-
-        <div class="ig-insp-actions">
-          <button type="button" id="ig-dl-single-pdf" class="ig-btn-outline">↓ .PDF (30×30)</button>
-          <button type="button" id="ig-dl-single-ai" class="ig-btn-black">↓ .AI (30×30)</button>
-          <button type="button" id="ig-dl-single-svg" class="ig-btn-outline">↓ .SVG</button>
+        <div class="ig-insp-actions" style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; width:100%; box-sizing:border-box; margin-top:18px;">
+          <button type="button" id="ig-dl-single-pdf" class="ig-btn-outline" style="min-width:0; width:100%; padding:0 2px; font-size:11px; height:32px; justify-content:center; box-sizing:border-box;">↓ .PDF</button>
+          <button type="button" id="ig-dl-single-ai" class="ig-btn-black" style="min-width:0; width:100%; padding:0 2px; font-size:11px; height:32px; justify-content:center; box-sizing:border-box;">↓ .AI</button>
+          <button type="button" id="ig-dl-single-svg" class="ig-btn-outline" style="min-width:0; width:100%; padding:0 2px; font-size:11px; height:32px; justify-content:center; box-sizing:border-box;">↓ .SVG</button>
         </div>
 
         <p class="ig-insp-foot">
@@ -1072,7 +1064,7 @@ function setupIconGenerator(el) {
                 <span class="ig-slider-desc">특징: ${levelObj.desc}</span>
                 <span class="ig-slider-hint">바툴로 복잡도 실시간 조절</span>
               </div>
-              <input type="range" min="1" max="4" step="1" value="${curLevel}" class="ig-complexity-range" data-kw="${block.keyword}" data-motif-id="${motif.id}">
+              <input type="range" min="1" max="4" step="0.01" value="${curLevel}" class="ig-complexity-range" data-kw="${block.keyword}" data-motif-id="${motif.id}">
               <div class="ig-slider-ticks">
                 <span class="${curLevel === 1 ? 'active' : ''}">① 심플</span>
                 <span class="${curLevel === 2 ? 'active' : ''}">② 베이직</span>
@@ -1110,13 +1102,18 @@ function setupIconGenerator(el) {
 
     // 이벤트 바인딩: 각 모티프별 복잡도 조절 슬라이더 (부드러운 마우스 드래그 및 실시간 인플레이스 갱신)
     kwListEl.querySelectorAll('.ig-complexity-range').forEach(slider => {
-      slider.oninput = e => {
-        const kw = e.target.getAttribute('data-kw');
-        const motifId = e.target.getAttribute('data-motif-id');
-        const newLevel = Math.round(+e.target.value);
+      const updateSliderLevel = (val, snap = false) => {
+        const kw = slider.getAttribute('data-kw');
+        const motifId = slider.getAttribute('data-motif-id');
+        const newLevel = Math.min(4, Math.max(1, Math.round(val)));
+        const prevLevel = motifLevels[`${kw}:${motifId}`];
         motifLevels[`${kw}:${motifId}`] = newLevel;
         selectedKw = kw;
         selectedMotifId = motifId;
+
+        if (snap) {
+          slider.value = newLevel;
+        }
 
         const card = slider.closest('.ig-motif-card');
         if (card) {
@@ -1133,32 +1130,43 @@ function setupIconGenerator(el) {
               else tick.classList.remove('active');
             });
 
-            const cand = {
-              keyword: block.keyword,
-              enCopy: block.enCopy,
-              motif,
-              level: newLevel,
-              levelObj,
-            };
-            const customArc = el.querySelector('#ig-arc-input')?.value.trim();
-            const customKo = el.querySelector('#ig-ko-input')?.value.trim();
-            const activeKo = customKo || block.keyword;
-            const activeEn = customArc || block.enCopy;
+            if (prevLevel !== newLevel || snap) {
+              const cand = {
+                keyword: block.keyword,
+                enCopy: block.enCopy,
+                motif,
+                level: newLevel,
+                levelObj,
+              };
+              const customArc = el.querySelector('#ig-arc-input')?.value.trim();
+              const customKo = el.querySelector('#ig-ko-input')?.value.trim();
+              const activeKo = customKo || block.keyword;
+              const activeEn = customArc || block.enCopy;
 
-            card.querySelectorAll('.ig-motif-var-item').forEach(item => {
-              const vId = item.getAttribute('data-variant-id');
-              const vSvgEl = item.querySelector('.ig-motif-var-svg');
-              if (vSvgEl && vId) {
-                vSvgEl.innerHTML = renderBadgeVariantSvg(cand, vId, {
-                  size: 82,
-                  koText: activeKo,
-                  enText: activeEn,
-                });
-              }
-            });
+              card.querySelectorAll('.ig-motif-var-item').forEach(item => {
+                const vId = item.getAttribute('data-variant-id');
+                const vSvgEl = item.querySelector('.ig-motif-var-svg');
+                if (vSvgEl && vId) {
+                  vSvgEl.innerHTML = renderBadgeVariantSvg(cand, vId, {
+                    size: 82,
+                    koText: activeKo,
+                    enText: activeEn,
+                  });
+                }
+              });
+            }
           }
         }
-        renderInspector();
+        if (prevLevel !== newLevel || snap) {
+          renderInspector();
+        }
+      };
+
+      slider.oninput = e => {
+        updateSliderLevel(+e.target.value, false);
+      };
+      slider.onchange = e => {
+        updateSliderLevel(+e.target.value, true);
       };
     });
 

@@ -831,10 +831,10 @@ html {
 }
 
 .block-visual-column {
-  background-color: #ffffff;
-  border: 1px solid #ECEEF2;
-  border-radius: 6px;
-  overflow: hidden;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -845,7 +845,7 @@ html {
 }
 
 .block-visual-column:hover {
-  border-color: #ECEEF2;
+  border-color: transparent;
 }
 
 .guide-block.block-full-width {
@@ -3029,7 +3029,7 @@ input[type="range"].vb-range::-moz-range-thumb,
 
 .ig-insp-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   width: 100%;
   margin-top: 16px;
@@ -3038,7 +3038,8 @@ input[type="range"].vb-range::-moz-range-thumb,
 
 .ig-insp-actions button {
   width: 100%;
-  padding: 8px 4px;
+  min-width: 0;
+  padding: 6px 2px;
   font-size: 11px;
   white-space: nowrap;
   text-align: center;
