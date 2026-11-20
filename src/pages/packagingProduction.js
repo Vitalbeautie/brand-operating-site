@@ -787,7 +787,7 @@ export function renderPackagingProductionPage(el) {
           인허가(RA) 승인 엑셀 문안과 패키지 도면(.eps / .ai)을 기반으로 브랜드 가이드 조판 규칙(좌우 2mm 마진, 본문 10pt, 후면 제품명 15pt/13pt, 문안별 0.3mm 구분선, 소비기한 11mm 박스 등)을 자동 적용하여 인쇄용 6면 패키지 원화를 실시간으로 자동 조판하고 AI/PDF 파일로 다운로드하는 기능입니다.
         </p>
         <button type="button" id="pp-btn-download-guide-excel" class="btn btn-outline btn-sm" style="font-size:12px; font-weight:700; border-color:#101820; color:#101820; padding:8px 14px; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;">
-          📊 통합 디자인 가이드 엑셀 다운로드 (.xlsx)
+          통합 디자인 가이드 엑셀 다운로드 (.xlsx)
         </button>
       </div>
 
@@ -831,7 +831,7 @@ export function renderPackagingProductionPage(el) {
               </span>
             ` : `
               <div style="font-size:13px; font-weight:700; color:#101820; margin-bottom:4px;">
-                📊 승인 Excel(.xlsx / .csv) 파일 드롭
+                승인 Excel(.xlsx / .csv) 파일 드롭
               </div>
               <div style="font-size:11px; color:#667085; margin-bottom:12px;">
                 이곳에 엑셀 파일을 Drag &amp; Drop 하거나 클릭하여 선택하세요
@@ -862,7 +862,7 @@ export function renderPackagingProductionPage(el) {
               </span>
             ` : `
               <div style="font-size:13px; font-weight:700; color:#101820; margin-bottom:4px;">
-                📐 패키지 도면(.eps / .ai) 파일 드롭
+                패키지 도면(.eps / .ai) 파일 드롭
               </div>
               <div style="font-size:11px; color:#667085; margin-bottom:12px;">
                 이곳에 .eps 또는 .ai 도면 파일을 Drag &amp; Drop 하거나 클릭하여 선택하세요
@@ -917,7 +917,7 @@ export function renderPackagingProductionPage(el) {
 
             <div style="display:flex; gap:8px;">
               <button type="button" id="pp-btn-download-ai" style="padding:9px 16px; background:#101820; color:#FFFFFF; font-size:11.5px; font-weight:700; border:1px solid #101820; cursor:pointer;">
-                📥 ${aiDownloadFileName} 다운로드
+                ${aiDownloadFileName} 다운로드
               </button>
               <button type="button" id="pp-btn-download-pdf" style="padding:9px 16px; background:#FFFFFF; color:#101820; font-size:11.5px; font-weight:600; border:1px solid #101820; cursor:pointer;">
                 전체 원화(.PDF)
@@ -927,13 +927,9 @@ export function renderPackagingProductionPage(el) {
         </div>
       ` : `
         <!-- 업로드 전 대기 안내 영역 -->
-        <div style="background:#F9FAFB; border:1.5px dashed #D0D5DD; padding:44px 20px; text-align:center; margin-bottom:24px;">
-          <div style="font-size:26px; margin-bottom:8px;">📦</div>
-          <div style="font-size:14px; font-weight:800; color:#101820; margin-bottom:6px;">
+        <div style="background:#F9FAFB; border:1px solid #EAECF0; padding:28px 20px; text-align:center; margin-bottom:24px;">
+          <div style="font-size:13.5px; font-weight:700; color:#475467;">
             STEP 5. 패키지 조판 시뮬레이션 대기 중
-          </div>
-          <div style="font-size:12px; color:#667085; line-height:1.6; max-width:540px; margin:0 auto;">
-            상단의 <strong>STEP 3 승인 EXCEL</strong> 또는 <strong>STEP 4 도면(.eps / .ai)</strong> 파일을 업로드하시면 브랜드 가이드 조판 규칙(좌우 2mm 마진, 본문 10pt, 문안별 0.3mm 구분선 등)이 자동 적용된 6면 패키지 전개도 시뮬레이션이 생성됩니다.
           </div>
         </div>
       `}
